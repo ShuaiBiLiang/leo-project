@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Window Border Style - jQuery EasyUI Demo</title>
+	<link rel="stylesheet" type="text/css" href="../../themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="../../themes/icon.css">
+	<link rel="stylesheet" type="text/css" href="../../themes/color.css">
+	<link rel="stylesheet" type="text/css" href="../demo.css">
+	<script type="text/javascript" src="../../jquery.min.js"></script>
+	<script type="text/javascript" src="../../jquery.easyui.min.js"></script>
+	<script type="text/javascript" src="refreshPrice.js"></script>
+</head>
+<body>
+	<h2>当前最高价:<input id="maxPrice"  type="text" name="" /> coin数目:<input id="allCoinTotal"  type="text" name="" />
+		<a href="javascript:void(0)" class="easyui-linkbutton" onclick="commitAllOrder(12,'/admin/leo/commit')">全部提交</a></h2>
+	<p id="commitStatus"></p>
+
+	<div style="position:relative;overflow:auto;height:350px;border:1px solid #ddd">
+		<div class="easyui-window" title="Window" data-options="width:400,height:450,left:5,top:10,inline:true" style="width:450px;height:350px;padding:10px">
+			<div class="easyui-panel" title="价格刷新器" style="width:400px">
+				<div style="padding:10px 60px 20px 60px">
+					<form id="ff" method="post">
+						<table cellpadding="5">
+							<tr><td>cookie信息:<input id="cookie0" class="easyui-textbox" type="textarea" name="cookie"
+														data-options="required:true"/></td>
+							</tr>
+							<tr><td>coin价格:<input id="priceInput0" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<tr><td>coin数目:<input id="totalCoin0" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<input type="hidden" id="refreshFlag0" value="start"/>
+						</table>
+					</form>
+					<div style="text-align:center;padding:5px">
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="startRefresh('0','/admin/leo/price')">启动刷新</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="commitPrice('0','/admin/leo/commit')">提交订单</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="stopRefresh('0')">暂停</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm('0')">清空</a>
+					</div>
+				</div>
+			</div>
+			<p id="status0"></p>
+			<p class="w-content" id="w0">Window content</p>
+		</div>
+		<div class="easyui-window" title="Window" data-options="width:400,height:150,left:450,top:10,inline:true,cls:'c1'"  style="width:450px;height:350px;padding:10px">
+			<div class="easyui-panel" title="价格刷新器" style="width:400px">
+				<div style="padding:10px 60px 20px 60px">
+					<form id="ff1" method="post">
+						<table cellpadding="5">
+							<tr><td>cookie信息:<input id="cookie1" class="easyui-textbox" type="textarea" name="cookie"
+														data-options="required:true"/></td>
+							</tr>
+							<tr><td>coin价格:<input id="priceInput1" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<tr><td>coin数目:<input id="totalCoin1" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<input type="hidden" id="refreshFlag1" value="start"/>
+						</table>
+					</form>
+					<div style="text-align:center;padding:5px">
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="startRefresh('1','/admin/leo/price')">启动刷新</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="commitPrice('1','/admin/leo/commit')">提交订单</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="stopRefresh('1')">暂停</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm('1')">清空</a>
+					</div>
+				</div>
+			</div>
+			<p id="status1"></p>
+			<p class="w-content" id="w1">Window content</p>
+		</div>
+		<div class="easyui-window" title="Window" data-options="width:400,height:150,left:905,top:10,inline:true,cls:'c2'" style="width:450px;height:350px;padding:10px">
+			<div class="easyui-panel" title="价格刷新器" style="width:400px">
+				<div style="padding:10px 60px 20px 60px">
+					<form id="ff2" method="post">
+						<table cellpadding="5">
+							<tr>
+								<td>cookie信息:<input id="cookie2" class="easyui-textbox" type="textarea"
+														name="cookie"
+														data-options="required:true"/></td>
+							</tr>
+							<tr>
+								<td>coin价格:<input id="priceInput2" class="easyui-textbox" type="text"
+												  name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<tr>
+								<td>coin数目:<input id="totalCoin2" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<input type="hidden" id="refreshFlag2" value="start"/>
+						</table>
+					</form>
+					<div style="text-align:center;padding:5px">
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="startRefresh('2','/admin/leo/price')">启动刷新</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="commitPrice('2','/admin/leo/commit')">提交订单</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="stopRefresh('2')">暂停</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm('2')">清空</a>
+					</div>
+				</div>
+			</div>
+			<p id="status2"></p>
+			<p class="w-content" id="w2">Window content</p>
+		</div>
+		<!--<div class="easyui-window" title="Window" data-options="width:300,height:150,left:10,top:180,inline:true,border:'thin',cls:'c5'">-->
+			<!--<p class="w-content">Window content</p>-->
+		<!--</div>-->
+		<!--<div class="easyui-window" title="Window" data-options="width:300,height:150,left:320,top:180,inline:true,border:'thin',cls:'c6'">-->
+			<!--<p class="w-content">Window content</p>-->
+		<!--</div>-->
+		<!--<div class="easyui-window" title="Window" data-options="width:300,height:150,left:630,top:180,inline:true,border:'thin',cls:'c7'">-->
+			<!--<p class="w-content">Window content</p>-->
+		<!--</div>-->
+	</div>
+
+
+	<div style="position:relative;overflow:auto;height:350px;border:1px solid #ddd">
+		<div class="easyui-window" title="Window" data-options="width:400,height:450,left:5,top:10,inline:true" style="width:450px;height:350px;padding:10px">
+			<div class="easyui-panel" title="价格刷新器" style="width:400px">
+				<div style="padding:10px 60px 20px 60px">
+					<form id="ff3" method="post">
+						<table cellpadding="5">
+							<tr><td>cookie信息:<input id="cookie3" class="easyui-textbox" type="textarea" name="cookie"
+														data-options="required:true"/></td>
+							</tr>
+							<tr><td>coin价格:<input id="priceInput3" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<tr><td>coin数目:<input id="totalCoin3" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<input type="hidden" id="refreshFlag3" value="start"/>
+						</table>
+					</form>
+					<div style="text-align:center;padding:5px">
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="startRefresh('3','/admin/leo/price')">启动刷新</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="commitPrice('3','/admin/leo/commit')">提交订单</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="stopRefresh('3')">暂停</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm('3')">清空</a>
+					</div>
+				</div>
+			</div>
+			<p id="status3"></p>
+			<p class="w-content" id="w3">Window content</p>
+		</div>
+		<div class="easyui-window" title="Window" data-options="width:400,height:150,left:450,top:10,inline:true,cls:'c1'"  style="width:450px;height:350px;padding:10px">
+			<div class="easyui-panel" title="价格刷新器" style="width:400px">
+				<div style="padding:10px 60px 20px 60px">
+					<form id="ff4" method="post">
+						<table cellpadding="5">
+							<tr><td>cookie信息:<input id="cookie4" class="easyui-textbox" type="textarea" name="cookie"
+														data-options="required:true"/></td>
+							</tr>
+							<tr><td>coin价格:<input id="priceInput4" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<tr><td>coin数目:<input id="totalCoin4" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<input type="hidden" id="refreshFlag4" value="start"/>
+						</table>
+					</form>
+					<div style="text-align:center;padding:5px">
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="startRefresh('4','/admin/leo/price')">启动刷新</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="commitPrice('4','/admin/leo/commit')">提交订单</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="stopRefresh('4')">暂停</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm('4')">清空</a>
+					</div>
+				</div>
+			</div>
+			<p id="status4"></p>
+			<p class="w-content" id="w4">Window content</p>
+		</div>
+		<div class="easyui-window" title="Window" data-options="width:400,height:150,left:905,top:10,inline:true,cls:'c2'" style="width:450px;height:350px;padding:10px">
+			<div class="easyui-panel" title="价格刷新器" style="width:400px">
+				<div style="padding:10px 60px 20px 60px">
+					<form id="ff5" method="post">
+						<table cellpadding="5">
+							<tr><td>cookie信息:<input id="cookie5" class="easyui-textbox" type="textarea" name="cookie"
+										   data-options="required:true"/></td>
+							</tr>
+							<tr><td>coin价格:<input id="priceInput5" class="easyui-textbox" type="text" name="currentPrice"
+										   data-options="required:false"/></td>
+							</tr>
+							<tr><td>coin数目:<input id="totalCoin5" class="easyui-textbox" type="text" name="currentPrice"
+													data-options="required:false"/></td>
+							</tr>
+							<input type="hidden" id="refreshFlag5" value="start"/>
+						</table>
+					</form>
+					<div style="text-align:center;padding:5px">
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="startRefresh('5','/admin/leo/price')">启动刷新</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="commitPrice('5','/admin/leo/commit')">提交订单</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="stopRefresh('5')">暂停</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm('5')">清空</a>
+					</div>
+				</div>
+			</div>
+			<p id="status5"></p>
+			<p class="w-content" id="w5">Window content</p>
+		</div>
+	</div>
+
+
+	<div style="position:relative;overflow:auto;height:350px;border:1px solid #ddd">
+		<div class="easyui-window" title="Window" data-options="width:400,height:450,left:5,top:10,inline:true" style="width:450px;height:350px;padding:10px">
+			<div class="easyui-panel" title="价格刷新器" style="width:400px">
+				<div style="padding:10px 60px 20px 60px">
+					<form id="ff6" method="post">
+						<table cellpadding="5">
+							<tr><td>cookie信息:<input id="cookie6" class="easyui-textbox" type="textarea" name="cookie"
+													data-options="required:true"/></td>
+							</tr>
+							<tr><td>coin价格:<input id="priceInput6" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<tr><td>coin数目:<input id="totalCoin6" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<input type="hidden" id="refreshFlag6" value="start"/>
+						</table>
+					</form>
+					<div style="text-align:center;padding:5px">
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="startRefresh('6','/admin/leo/price')">启动刷新</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="commitPrice('6','/admin/leo/commit')">提交订单</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="stopRefresh('6')">暂停</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm('6')">清空</a>
+					</div>
+				</div>
+			</div>
+			<p id="status6"></p>
+			<p class="w-content" id="w6">Window content</p>
+		</div>
+		<div class="easyui-window" title="Window" data-options="width:400,height:150,left:450,top:10,inline:true,cls:'c1'"  style="width:450px;height:350px;padding:10px">
+			<div class="easyui-panel" title="价格刷新器" style="width:400px">
+				<div style="padding:10px 60px 20px 60px">
+					<form id="ff7" method="post">
+						<table cellpadding="5">
+							<tr><td>cookie信息:<input id="cookie7" class="easyui-textbox" type="textarea" name="cookie"
+													data-options="required:true"/></td>
+							</tr>
+							<tr><td>coin价格:<input id="priceInput7" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<tr><td>coin数目:<input id="totalCoin7" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<input type="hidden" id="refreshFlag7" value="start"/>
+						</table>
+					</form>
+					<div style="text-align:center;padding:5px">
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="startRefresh('7','/admin/leo/price')">启动刷新</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="commitPrice('7','/admin/leo/commit')">提交订单</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="stopRefresh('7')">暂停</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm('7')">清空</a>
+					</div>
+				</div>
+			</div>
+			<p id="status7"></p>
+			<p class="w-content" id="w7">Window content</p>
+		</div>
+		<div class="easyui-window" title="Window" data-options="width:400,height:150,left:905,top:10,inline:true,cls:'c2'" style="width:450px;height:350px;padding:10px">
+			<div class="easyui-panel" title="价格刷新器" style="width:400px">
+				<div style="padding:10px 60px 20px 60px">
+					<form id="ff8" method="post">
+						<table cellpadding="5">
+							<tr><td>cookie信息:<input id="cookie8" class="easyui-textbox" type="textarea" name="cookie"
+													data-options="required:true"/></td>
+							</tr>
+							<tr><td>coin价格:<input id="priceInput8" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<tr><td>coin数目:<input id="totalCoin8" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<input type="hidden" id="refreshFlag8" value="start"/>
+						</table>
+					</form>
+					<div style="text-align:center;padding:5px">
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="startRefresh('8','/admin/leo/price')">启动刷新</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="commitPrice('8','/admin/leo/commit')">提交订单</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="stopRefresh('8')">暂停</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm('8')">清空</a>
+					</div>
+				</div>
+			</div>
+			<p id="status8"></p>
+			<p class="w-content" id="w8">Window content</p>
+		</div>
+	</div>
+
+
+	<div style="position:relative;overflow:auto;height:350px;border:1px solid #ddd">
+		<div class="easyui-window" title="Window" data-options="width:400,height:450,left:5,top:10,inline:true" style="width:450px;height:350px;padding:10px">
+			<div class="easyui-panel" title="价格刷新器" style="width:400px">
+				<div style="padding:10px 60px 20px 60px">
+					<form id="ff9" method="post">
+						<table cellpadding="5">
+							<tr><td>cookie信息:<input id="cookie9" class="easyui-textbox" type="textarea" name="cookie"
+													data-options="required:true"/></td>
+							</tr>
+							<tr><td>coin价格:<input id="priceInput9" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<tr><td>coin数目:<input id="totalCoin9" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<input type="hidden" id="refreshFlag9" value="start"/>
+						</table>
+					</form>
+					<div style="text-align:center;padding:5px">
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="startRefresh('9','/admin/leo/price')">启动刷新</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="commitPrice('9','/admin/leo/commit')">提交订单</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="stopRefresh('9')">暂停</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm('9')">清空</a>
+					</div>
+				</div>
+			</div>
+			<p id="status9"></p>
+			<p class="w-content" id="w9">Window content</p>
+		</div>
+		<div class="easyui-window" title="Window" data-options="width:400,height:150,left:450,top:10,inline:true,cls:'c1'"  style="width:450px;height:350px;padding:10px">
+			<div class="easyui-panel" title="价格刷新器" style="width:400px">
+				<div style="padding:10px 60px 20px 60px">
+					<form id="ff10" method="post">
+						<table cellpadding="5">
+							<tr><td>cookie信息:<input id="cookie10" class="easyui-textbox" type="textarea" name="cookie"
+													data-options="required:true"/></td>
+							</tr>
+							<tr><td>coin价格:<input id="priceInput10" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<tr><td>coin数目:<input id="totalCoin10" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<input type="hidden" id="refreshFlag10" value="start"/>
+						</table>
+					</form>
+					<div style="text-align:center;padding:5px">
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="startRefresh('10','/admin/leo/price')">启动刷新</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="commitPrice('10','/admin/leo/commit')">提交订单</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="stopRefresh('10')">暂停</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm('10')">清空</a>
+					</div>
+				</div>
+			</div>
+			<p id="status10"></p>
+			<p class="w-content" id="w10">Window content</p>
+		</div>
+		<div class="easyui-window" title="Window" data-options="width:400,height:150,left:905,top:10,inline:true,cls:'c2'" style="width:450px;height:350px;padding:10px">
+			<div class="easyui-panel" title="价格刷新器" style="width:400px">
+				<div style="padding:10px 60px 20px 60px">
+					<form id="ff11" method="post">
+						<table cellpadding="5">
+							<tr><td>cookie信息:<input id="cookie11" class="easyui-textbox" type="textarea" name="cookie"
+													data-options="required:true"/></td>
+							</tr>
+							<tr><td>coin价格:<input id="priceInput11" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<tr><td>coin数目:<input id="totalCoin11" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<input type="hidden" id="refreshFlag11" value="start"/>
+						</table>
+					</form>
+					<div style="text-align:center;padding:5px">
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="startRefresh('11','/admin/leo/price')">启动刷新</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="commitPrice('11','/admin/leo/commit')">提交订单</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="stopRefresh('11')">暂停</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm('11')">清空</a>
+					</div>
+				</div>
+			</div>
+			<p id="status11"></p>
+			<p class="w-content" id="w11">Window content</p>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		$('.easyui-window').window({
+			collapsible: false,
+			minimizable: false,
+			maximizable: false,
+			closable: false
+		});
+
+		function commitAllOrder(index ,url){
+			for(var i=0; i<index;i++){
+				commitPrice(i ,url);
+			}
+
+			stopRefreshAll(index);
+
+		}
+
+		function commitPrice(index ,url){
+
+			var cprice = $("#priceInput"+index).val();
+			if($("#maxPrice").val()){
+				cprice = $("#maxPrice").val();
+			}
+			var tempCookie = $("#cookie"+index).val();
+			var totalCoin = $("#totalCoinInput"+index).val();
+			if($("#allCoinTotal").val()){
+				totalCoin = $("#allCoinTotal").val();
+			}
+			if(totalCoin){
+
+			}else {
+				totalCoin = 50;
+			}
+			if(tempCookie==""||tempCookie==undefined){
+				return;
+			}
+
+			var param = {cookie:tempCookie,currentPrice:cprice,totalCoin:totalCoin};
+
+			$.ajax({
+				url: url,
+				data: param,
+				dataType: 'json',
+				success: function(data){
+					$("#w"+index).prepend("<span style='border:3px solid #ffa8a8'>"+data.data.msg+"</span></br>");
+				},
+				error: function(data){
+					$("#w"+index).prepend("<span style='border:3px solid #ffa8a8'>失败："+data.data.msg+"</span></br>");
+				}
+			});
+
+		}
+	</script>
+	<style type="text/css" scoped="scoped">
+		.w-content{
+			padding:5px 10px;
+		}
+	</style>
+</body>
+</html>
