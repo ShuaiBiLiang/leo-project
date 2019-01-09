@@ -129,7 +129,8 @@ public class LeoServiceImpl implements ILeoService{
                 +"&ctl00$txtUsername_value="+userArr[0]
                 +"&ctl00$txtPassword_value="+userArr[1];
         Map<String,String> map2 = new HashMap<>();
-        sendPostRequest(reqURL,sendData,cookie,true,null,null,map2);
+        String s = sendPostRequest(reqURL,sendData,cookie,true,null,null,map2);
+        logger.error("step-2:返回值，"+s.substring(0,100));
 
         logger.error("step-3,访问Leo平台，获取Etoken");
         String urlForStep3_1 = "https://www.learnearnown.com/Backoffice/LEOcoinPlatform.aspx";
@@ -142,13 +143,14 @@ public class LeoServiceImpl implements ILeoService{
         if (matcher.find()) {
             EToken= matcher.group(1);
         }
+        logger.error("step-3,返回值："+EToken);
 
         logger.error("step-4,用Etoken使cookie在leo平台生效");
-        String urlForStep4 = "http://www.platform.leocoin.org/Authentication.aspx";
+        String urlForStep4 = "https://www.platform.leocoin.org/Authentication.aspx";
         String sendDataForStep4 = "EToken="+EToken;
         Map<String,String> map4 = new HashMap<>();
-        sendPostRequest(urlForStep4,sendDataForStep4,cookie,true,null,null,map4);
-
+        String s4 = sendPostRequest(urlForStep4,sendDataForStep4,cookie,true,null,null,map4);
+        logger.error("step-4:返回值："+s4);
 
         /*String urlForStep5 = "http://www.platform.leocoin.org/VerificationCode.aspx";
         Map<String,String> map5 = new HashMap<>();
@@ -162,10 +164,10 @@ public class LeoServiceImpl implements ILeoService{
                                     +"&__EVENTVALIDATION=/wEWBALZh5GQDQKy88z7BwKOxfX2BQKV5d6EAzyRY4b92Dh/JgORfk5gIr3Cf2Op" +
                                     "&ctl00$ContentPlaceHolder1$txtVerificationCode_value=" +userArr[2]+
                                     "&ctl00$ContentPlaceHolder1$btnVerify=Verify";
-        String urlForStep6 = "http://www.platform.leocoin.org/VerificationCode.aspx";
+        String urlForStep6 = "https://www.platform.leocoin.org/VerificationCode.aspx";
         Map<String,String> map6 = new HashMap<>();
-        sendPostRequest(urlForStep6,sendDataForStep6,cookie,true,null,null,map6);
-
+        String s5 = sendPostRequest(urlForStep6,sendDataForStep6,cookie,true,null,null,map6);
+        logger.error("step5-返回值："+s5.substring(0,100));
 
         LeoMessage leoMessage = new LeoMessage();
         leoMessage.setMsg(cookie);
@@ -474,7 +476,7 @@ public class LeoServiceImpl implements ILeoService{
                 for(String str : sendData.split("&")){
                     formParams.add(new BasicNameValuePair(str.substring(0,str.indexOf("=")), str.substring(str.indexOf("=")+1)));
                 }
-                ContentType contentType = ContentType.create("application/x-www-form-urlencoded", Consts.UTF_8);
+                ContentType contentType = ContentType.create("text/plain", Consts.UTF_8);
                 httpPost.setEntity(new StringEntity(URLEncodedUtils.format(formParams, encodeCharset==null ? "UTF-8" : encodeCharset), contentType));
             }else{
                 httpPost.setEntity(new StringEntity(sendData));
