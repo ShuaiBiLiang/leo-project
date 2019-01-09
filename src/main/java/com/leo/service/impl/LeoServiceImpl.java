@@ -104,6 +104,8 @@ public class LeoServiceImpl implements ILeoService{
     @Override
     public LeoMessage getCookie(String userInfo) {
 
+        String user = "ldd0601 Leo170730776* da422d";
+        String[] userArr = user.split(" ");
         Map<String,String> map = getReponseString("https://www.learnearnown.com/");
 
         String cookie = map.get("cookie");
@@ -121,8 +123,8 @@ public class LeoServiceImpl implements ILeoService{
                 +"&__VIEWSTATE="+map.get("__VIEWSTATE")
                 +"&__VIEWSTATEGENERATOR="+map.get("__VIEWSTATEGENERATOR")
                 +"&__EVENTVALIDATION="+map.get("__EVENTVALIDATION")
-                +"&ctl00$txtUsername_value=fdm09"
-                +"&ctl00$txtPassword_value=Leo12345*";
+                +"&ctl00$txtUsername_value="+userArr[0]
+                +"&ctl00$txtPassword_value="+userArr[1];
         Map<String,String> map2 = new HashMap<>();
         String responseHtml = sendPostRequest(reqURL,sendData,cookie,true,null,null,map2);
         String cookieForStep3 = "";
@@ -166,7 +168,7 @@ public class LeoServiceImpl implements ILeoService{
         String responseHtmlForStep5 = getReponseStringForStep4(urlForStep5,cookieForStep5,map5);
 
 
-        String sendDataForStep6 = "ctl00$ContentPlaceHolder1$txtVerificationCode_value="+"9d422d"
+        String sendDataForStep6 = "ctl00$ContentPlaceHolder1$txtVerificationCode_value="+userArr[2]
                                     +"&ctl00$ContentPlaceHolder1$btnVerify=Verify"
                                     +"&__VIEWSTATE="+map5.get("__VIEWSTATE")
                                     +"&__EVENTVALIDATION="+map5.get("__EVENTVALIDATION");
@@ -210,8 +212,9 @@ public class LeoServiceImpl implements ILeoService{
 
     public static void main(String[] args) {
 
-        String r = getCookieForStep6("BNES_ASP.NET_SessionId=6zld2iaP89h\\MBqQlp5lcioJyYQVxZQX/DcJJEX9Y3QK3sYFp5CVShHVuDNFqMMp/0uTcuagFGpsxoEb2Mt9tetRveg/7G7zsVM6bHMdOyPt6944S7ZCVRA==;ASP.NET_SessionId=pce3jl45ms12m2iroa1mde45;");
-        System.out.println(r);
+//        String r = getCookieForStep6("BNES_ASP.NET_SessionId=6zld2iaP89h\\MBqQlp5lcioJyYQVxZQX/DcJJEX9Y3QK3sYFp5CVShHVuDNFqMMp/0uTcuagFGpsxoEb2Mt9tetRveg/7G7zsVM6bHMdOyPt6944S7ZCVRA==;ASP.NET_SessionId=pce3jl45ms12m2iroa1mde45;");
+        LeoMessage r = new LeoServiceImpl().getCookie("");
+        System.out.println(r.getCookies());
     }
 
 
