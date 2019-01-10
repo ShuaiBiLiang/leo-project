@@ -2,6 +2,8 @@ package com.leo.controller;
 
 import com.leo.common.ServerResponse;
 import com.leo.model.LeoMessage;
+import com.leo.model.NameCookies;
+import com.leo.model.NamePwdCookie;
 import com.leo.service.ILeoService;
 import com.leo.util.UrlConnectionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by liang on 2017/6/6.
@@ -60,6 +63,15 @@ public class LeoController {
     public ServerResponse<LeoMessage> getCookie(@RequestParam String userInfo, Model model) {
         LeoMessage leoMessage = leoService.getCookie(userInfo);
         ServerResponse<LeoMessage> response = ServerResponse.createBySuccess(leoMessage.getMsg(),leoMessage);
+        UrlConnectionUtil.setCommitPriceNow(false);
+        return response;
+    }
+
+    @RequestMapping("/leo/getCookies")
+    @ResponseBody
+    public ServerResponse<List<NamePwdCookie>> getCookies(@RequestParam String userInfo, Model model) {
+        List<NamePwdCookie> leoMessage = leoService.getCookies(userInfo);
+        ServerResponse<List<NamePwdCookie>> response = ServerResponse.createBySuccess("success",leoMessage);
         UrlConnectionUtil.setCommitPriceNow(false);
         return response;
     }

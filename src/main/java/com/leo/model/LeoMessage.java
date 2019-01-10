@@ -13,6 +13,7 @@ public class LeoMessage {
     String startTime;
     Date endDate;
     String endTime;
+    String error;
     List<String> cookies;
 
     public String getPrice() {
@@ -69,5 +70,13 @@ public class LeoMessage {
 
     public void setCookies(List<String> cookies) {
         this.cookies = cookies;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
     }
 }

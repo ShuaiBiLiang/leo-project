@@ -1,43 +1,39 @@
 package com.leo.service.impl;
 
 import com.leo.model.LeoMessage;
+import com.leo.model.NameCookies;
+import com.leo.model.NamePwdCookie;
 import com.leo.service.ILeoService;
-import com.leo.util.*;
-import org.apache.commons.codec.binary.StringUtils;
+import com.leo.util.GetCookiesThread;
+import com.leo.util.HttpClientSingleton;
+import com.leo.util.HttpClientUtil;
+import com.leo.util.UrlConnectionUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.*;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.DeflateDecompressingEntity;
 import org.apache.http.client.entity.GzipDecompressingEntity;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.message.BufferedHeader;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.ConcurrentMap;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -152,12 +148,6 @@ public class LeoServiceImpl implements ILeoService{
         String s4 = sendPostRequest(urlForStep4,sendDataForStep4,cookie,true,null,null,map4);
         logger.error("step-4:返回值："+s4);
 
-        /*String urlForStep5 = "http://www.platform.leocoin.org/VerificationCode.aspx";
-        Map<String,String> map5 = new HashMap<>();
-        getReponseStringForStep4(urlForStep5,cookie,map5);
-
-*/
-
         logger.error("step-5,leo平台输入验证码");
         String sendDataForStep6 = "__VIEWSTATE=/wEPDwUKMTIyNjE2NTc0NWRkq0vAtrZufxJRxDI0GAMwS+ShEt4="
                                     +"&__VIEWSTATEGENERATOR=19A82BBE"
@@ -174,26 +164,26 @@ public class LeoServiceImpl implements ILeoService{
         return leoMessage;
     }
 
-    public static String getCookieForStep6(String cookieResponseForStep3_1) {
-        if(org.springframework.util.StringUtils.isEmpty(cookieResponseForStep3_1)){
-            return "";
-        }else {
-            String resultCookie;
-            String ASP_NET_SessionId = "";
-            Pattern pattern = Pattern.compile("[\\s||;]ASP.NET_SessionId=([\\w=+\\/\\\\]*);");
-            Matcher matcher = pattern.matcher(cookieResponseForStep3_1);
-            if (matcher.find()) {
-                ASP_NET_SessionId = "ASP.NET_SessionId="+matcher.group(1)+"; ";
-            }
-            String BNES_ASP_NET_SessionId = "";
-            Pattern pattern2 = Pattern.compile("[\\s||;]BNES_ASP.NET_SessionId=([\\w=+\\/\\\\]*);");
-            Matcher matcher2 = pattern2.matcher(cookieResponseForStep3_1);
-            if (matcher2.find()) {
-                BNES_ASP_NET_SessionId = "BNES_ASP.NET_SessionId="+matcher2.group(1)+";";
-            }
-            resultCookie = ASP_NET_SessionId+BNES_ASP_NET_SessionId;
-            return resultCookie;
+    @Override
+    public List<NamePwdCookie> getCookies(String userInfo) {
+        String[] userArray = userInfo.split("\\$");
+        int userLength = userArray.length;
+        CountDownLatch latch = new CountDownLatch(userLength);
+        List<NamePwdCookie> namePwdCookieList = new ArrayList<>();
+        for(String user:userArray){
+            String[] userParams = user.split(" ");
+            NamePwdCookie namePwdCookie = new NamePwdCookie(userParams[0], userParams[1], userParams[2], "");
+            namePwdCookieList.add(namePwdCookie);
+            GetCookiesThread thread = new GetCookiesThread(this,latch,namePwdCookie);
+            thread.run();
         }
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return namePwdCookieList;
     }
 
     public static void main(String[] args) {
@@ -201,6 +191,10 @@ public class LeoServiceImpl implements ILeoService{
 //        String r = getCookieForStep6("BNES_ASP.NET_SessionId=6zld2iaP89h\\MBqQlp5lcioJyYQVxZQX/DcJJEX9Y3QK3sYFp5CVShHVuDNFqMMp/0uTcuagFGpsxoEb2Mt9tetRveg/7G7zsVM6bHMdOyPt6944S7ZCVRA==;ASP.NET_SessionId=pce3jl45ms12m2iroa1mde45;");
         LeoMessage r = new LeoServiceImpl().getCookie("");
         System.out.println(r.getMsg());
+//        List<NamePwdCookie> cookies = new LeoServiceImpl().getCookies("ldd0601 Leo170730776* da422d$hsx0601 Leo170730776* 3c27b8");
+//        for(NamePwdCookie cookie:cookies){
+//            System.out.println("name:"+cookie.getName() +" cookie:"+cookie.getCookie());
+//        }
     }
 
 
@@ -262,81 +256,6 @@ public class LeoServiceImpl implements ILeoService{
         return map.get("reponseHtml");
     }
 
-    private String getReponseStringForStep4(String url,String cookie,Map<String,String> map2) {
-        Map<String,String> map = new HashMap<>();
-        String result="";
-        HttpURLConnection conn;
-        URL realUrl = null;
-        try {
-            realUrl = new URL(url);
-
-            conn = (HttpURLConnection) realUrl.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setUseCaches(false);
-            conn.setReadTimeout(300000);
-            conn.setConnectTimeout(300000);
-            conn.setInstanceFollowRedirects(false);
-            conn.setRequestProperty("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
-            conn.setRequestProperty("Accept-Language","zh-CN,zh;q=0.8,en;q=0.6");
-            conn.setRequestProperty("Cache-Control","max-age=0");
-            conn.setRequestProperty("Connection","keep-alive");
-            conn.setRequestProperty("Host","www.learnearnown.com");
-            conn.setRequestProperty("Referer","http://www.learnearnown.com/");
-            conn.setRequestProperty("Upgrade-Insecure-Requests","1");
-            conn.setRequestProperty("Cookie",cookie);
-            conn.setRequestProperty("User-Agent","Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
-            try {
-                int code = conn.getResponseCode();
-                conn.getResponseMessage();
-                if (code == 200|| code==302) {
-                    List<String> list = conn.getHeaderFields().get("Set-Cookie");
-
-                    InputStream is = conn.getInputStream();
-                    BufferedReader in = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-                    StringBuffer buffer = new StringBuffer();
-                    String line = "";
-                    while ((line = in.readLine()) != null){
-                        buffer.append(line);
-                    }
-                    result = buffer.toString();
-                    if(map2!=null){
-                        if(map2!=null){
-//                            getResponseHeader(map2, response);
-                            getParamsFromHtml(map2,result);
-                        }
-                    }
-                    in.close();
-                    is.close();
-                }
-            } catch (Exception e) {
-                System.out.println( " - error: " + e);
-            } finally {
-                conn.disconnect();
-            }
-            map.put("reponseHtml", result);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return map.get("reponseHtml");
-    }
-
-    private static void getParamsFromHtml(Map<String, String> map2, String result) {
-        String __VIEWSTATE = "";
-        Pattern pattern = Pattern.compile("id=\"__VIEWSTATE\" value=\"([\\S]*)\"");
-        Matcher matcher = pattern.matcher(result);
-        if (matcher.find()) {
-            __VIEWSTATE= matcher.group(1);
-            map2.put("__VIEWSTATE",__VIEWSTATE);
-        }
-        String __EVENTVALIDATION="";
-        Pattern pattern2 = Pattern.compile("id=\"__EVENTVALIDATION\" value=\"([\\S]*)\"");
-        Matcher matcher2 = pattern2.matcher(result);
-        if (matcher2.find()) {
-            __EVENTVALIDATION= matcher2.group(1);
-            map2.put("__EVENTVALIDATION",__EVENTVALIDATION);
-        }
-
-    }
 
     private Map<String,String> getReponseString(String url){
         Map<String,String> map = new HashMap<>();
@@ -410,35 +329,6 @@ public class LeoServiceImpl implements ILeoService{
             e.printStackTrace();
         }
         return map;
-    }
-
-    public static String sendPostRequestByJava(String reqURL, String sendData, boolean isEncoder, String encodeCharset, String decodeCharset){
-
-        try {
-//            realUrl = new URL("http://www.platform.leocoin.org/Default.aspx");
-
-                HttpURLConnection conn = null;
-                URL realUrl = null;
-                conn = (HttpURLConnection) realUrl.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setUseCaches(false);
-                conn.setReadTimeout(300000);
-                conn.setConnectTimeout(300000);
-                conn.setInstanceFollowRedirects(false);
-                conn.setRequestProperty("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
-    //          conn.setRequestProperty("Accept-Encoding","gzip, deflate, sdch");
-                conn.setRequestProperty("Accept-Language","zh-CN,zh;q=0.8,en;q=0.6");
-                conn.setRequestProperty("Cache-Control","max-age=0");
-                conn.setRequestProperty("Connection","keep-alive");
-//                conn.setRequestProperty("Cookie",cookie);
-//                conn.setRequestProperty("Host","www.platform.leocoin.org"+threadName);
-                conn.setRequestProperty("Referer","http://www.platform.leocoin.org/Authentication.aspx");
-                conn.setRequestProperty("Upgrade-Insecure-Requests","1");
-//                conn.setRequestProperty("User-Agent","Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"+threadName);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
 
@@ -532,59 +422,4 @@ public class LeoServiceImpl implements ILeoService{
     }
 
 
-    public static String sendPostRequest1(String reqURL, String sendData,String cookie, boolean isEncoder, String encodeCharset, String decodeCharset){
-        String responseContent = null;
-//        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
-        CloseableHttpClient httpClient = HttpClientSingleton.getHttpClient();
-        HttpPost httpPost = new HttpPost(reqURL);
-
-        RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectTimeout(600000).setConnectionRequestTimeout(1000)
-                .setSocketTimeout(600000).build();
-        httpPost.setConfig(requestConfig);
-
-        httpPost.setHeader("Accept" , "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
-        httpPost.setHeader("Accept-Encoding", "gzip, deflate");
-        httpPost.setHeader("Accept-Language", "zh-CN,zh;q=0.8,en;q=0.6");
-        httpPost.setHeader("Cache-Control", "max-age=0");
-        httpPost.setHeader(HTTP.CONTENT_TYPE, "application/x-www-form-urlencoded");
-        httpPost.setHeader("Connection", "keep-alive");
-        httpPost.setHeader("Cookie",cookie);
-        httpPost.setHeader("Host", "www.platform.leocoin.org");
-        httpPost.setHeader("Origin", "http://www.platform.leocoin.org");
-        httpPost.setHeader("Referer", reqURL);
-        httpPost.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
-        try{
-            if(isEncoder){
-                List<NameValuePair> formParams = new ArrayList<NameValuePair>();
-                for(String str : sendData.split("&")){
-                    formParams.add(new BasicNameValuePair(str.substring(0,str.indexOf("=")), str.substring(str.indexOf("=")+1)));
-                }
-                ContentType contentType = ContentType.create("application/x-www-form-urlencoded", Consts.UTF_8);
-                httpPost.setEntity(new StringEntity(URLEncodedUtils.format(formParams, encodeCharset==null ? "UTF-8" : encodeCharset), contentType));
-            }else{
-                httpPost.setEntity(new StringEntity(sendData));
-            }
-            HttpResponse response = httpClient.execute(httpPost);
-            HttpEntity entity = response.getEntity();
-            if(null != entity){
-                if(entity.getContentEncoding()!=null){
-                    if("gzip".equalsIgnoreCase(entity.getContentEncoding().getValue())){
-                        entity = new GzipDecompressingEntity(entity);
-                    } else if("deflate".equalsIgnoreCase(entity.getContentEncoding().getValue())){
-                        entity = new DeflateDecompressingEntity(entity);
-                    }}
-                if(entity.getContentLength() > 2147483647L) {
-                    throw new IllegalArgumentException("HTTP entity too large to be buffered in memory");
-                }
-                responseContent = EntityUtils.toString(entity, "UTF-8");
-
-            }
-        }catch(Exception e){
-            logger.info("与[" + reqURL + "]通信过程中发生异常,堆栈信息如下", e);
-        }finally{
-//            httpClient.shutdown();
-        }
-        return responseContent;
-    }
 }
