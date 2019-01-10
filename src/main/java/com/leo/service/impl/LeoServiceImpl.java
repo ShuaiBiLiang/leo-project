@@ -465,8 +465,15 @@ public class LeoServiceImpl implements ILeoService{
                 .setSocketTimeout(600000).build();
         httpPost.setConfig(requestConfig);
 
+        httpPost.setHeader("Referer" , "https://www.learnearnown.com");
+        httpPost.setHeader("Accept-Language" , "zh-CN,zh;q=0.9");
+        httpPost.setHeader("Origin" , "https://www.learnearnown.com");
         httpPost.setHeader("Accept" , "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
-        httpPost.setHeader(HTTP.CONTENT_TYPE, "application/x-www-form-urlencoded");
+        httpPost.setHeader("Upgrade-Insecure-Requests" , "1");
+        httpPost.setHeader("Content-Type" , "application/x-www-form-urlencoded");
+        httpPost.setHeader("Cache-Control" , "max-age=0");
+        httpPost.setHeader("Accept-Encoding", "gzip, deflate, br");
+        httpPost.setHeader("User-Agent" , "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36");
         if(!org.springframework.util.StringUtils.isEmpty(cookie)){
             httpPost.setHeader("Cookie",cookie);
         }
