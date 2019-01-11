@@ -8,31 +8,41 @@ import com.leo.util.GetCookiesThread;
 import com.leo.util.HttpClientSingleton;
 import com.leo.util.HttpClientUtil;
 import com.leo.util.UrlConnectionUtil;
+import com.leo.util.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.*;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.DeflateDecompressingEntity;
 import org.apache.http.client.entity.GzipDecompressingEntity;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.message.BufferedHeader;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -46,7 +56,10 @@ public class LeoServiceImpl implements ILeoService{
 
     @Override
     public LeoMessage refreshPrice(String cookie, String currentPrice) {
-
+        SimpleDateFormat s1 = new SimpleDateFormat("HH:mm:ss");
+        String d1 = s1.format(new Date());
+        long t1 = System.currentTimeMillis();
+        logger.error("访问时间："+d1);
         LeoMessage leoMessage = new LeoMessage();
         if(UrlConnectionUtil.isCommitPriceNow()){
             leoMessage.setMsg("正在提交订单，价格刷新暂停执行。");
@@ -54,6 +67,9 @@ public class LeoServiceImpl implements ILeoService{
         }else {
             leoMessage = UrlConnectionUtil.executeGet(null,cookie);
         }
+        long t2 = System.currentTimeMillis();
+        String d2 = s1.format(new Date());
+        logger.error("返回时间："+d2+"  耗时："+(t2-t1)+"ms");
         return leoMessage;
     }
 
@@ -99,8 +115,10 @@ public class LeoServiceImpl implements ILeoService{
 
     @Override
     public LeoMessage getCookie(String userInfo) {
-
         String user = "ldd0601 Leo170730776* da422d";
+        if(StringUtils.hasText(userInfo)){
+            user = userInfo;
+        }
         String[] userArr = user.split(" ");
 
         logger.error("step-1,访问网页，获取cookie");
