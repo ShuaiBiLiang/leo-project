@@ -30,7 +30,7 @@ function refreshPrice(index ,url){
                 var tempFlag = $("#refreshFlag"+index).val();
                 if(tempFlag == "start"){
                     console.log('refreshPrice...');
-                    refreshPrice(index ,url);
+                    // refreshPrice(index ,url);
                 }
             },
             error: function(data){
@@ -46,7 +46,7 @@ function refreshPrice(index ,url){
                 var tempFlag = $("#refreshFlag"+index).val();
                 if(tempFlag == "start"){
                     console.log('refreshPrice...');
-                    refreshPrice(index ,url);
+                    // refreshPrice(index ,url);
                 }
             }
         });

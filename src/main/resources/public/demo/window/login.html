@@ -66,6 +66,51 @@
 
 	</div>
 
+	<div id="batchLogin" style="height:750px;border:1px solid #ddd">
+		<!--<div class="easyui-window" title="Window" data-options="width:800,height:450,left:5,top:10,inline:true" style="width:850px;height:350px;padding:10px">-->
+			<div class="easyui-panel" title="批量登录" style="width:400px;float:left;">
+				<div style="padding:10px 60px 20px 60px">
+					<form id="login" method="post">
+						<table cellpadding="5">
+							<tr><td>登录名 密码 验证码$登录名 密码 验证码:<input id="login_text" class="easyui-textbox" type="textarea"
+                                               data-options="multiline:true"/></td>
+							</tr>
+
+						</table>
+					</form>
+					<div style="text-align:center;padding:5px">
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="login()">登录</a>
+					</div>
+				</div>
+			</div>
+			<div class="easyui-panel" title="价格刷新器" style="width:400px;float:left;">
+				<div style="padding:10px 60px 20px 60px">
+					<form id="ff" method="post">
+						<table cellpadding="5">
+							<tr><td>cookie信息:<input id="cookie1" name="cookie"/></td>
+							</tr>
+							<tr><td>coin价格:<input id="priceInput1" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<tr><td>coin数目:<input id="totalCoin1" class="easyui-textbox" type="text" name="currentPrice"
+												  data-options="required:false"/></td>
+							</tr>
+							<input type="hidden" id="refreshFlag1" value="start"/>
+						</table>
+					</form>
+					<div style="text-align:center;padding:5px">
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="startRefresh('0','/admin/leo/price')">启动刷新</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="commitPrice('0','/admin/leo/commit')">提交订单</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="stopRefresh('0')">暂停</a>
+						<a href="javascript:void(0)" class="easyui-linkbutton" onclick="clearForm('0')">清空</a>
+					</div>
+				</div>
+			</div>
+			<p id="status0"></p>
+			<p class="w-content" id="w1">Window content</p>
+
+	</div>
+
 
 
 	<script type="text/javascript">
@@ -78,19 +123,17 @@
 
         function login(){
 
-            var name = $("#login_name").val();
-            var pwd = $("#login_pwd").val();
-            var validate_code = $("#login_validate").val();
-
-            var param = {userInfo:name+" "+pwd+" "+validate_code};
+            var name = $("#login_text").val();
+            var param = {userInfo:name};
 			var url = "/admin/leo/getCookie";
             $.ajax({
                 url: url,
                 data: param,
                 dataType: 'json',
                 success: function(data){
-                    alert(data.data.msg);
                     $("#cookie0").val(data.data.msg);
+                    $("#w0").prepend("<span style='border:3px solid #ffa8a8'>"+data.data.msg+"</span></br>");
+                    alert(JSON.stringify(data));
                 }
             });
 
