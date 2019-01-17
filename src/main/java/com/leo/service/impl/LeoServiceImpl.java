@@ -121,6 +121,9 @@ public class LeoServiceImpl implements ILeoService{
         }
         String[] userArr = user.split(" ");
 
+        try{
+
+
         logger.error("step-1,访问网页，获取cookie");
         Map<String,String> map = getReponseString("https://www.learnearnown.com/");
         logger.error("step-2,登录网页，使cookie生效");
@@ -144,7 +147,12 @@ public class LeoServiceImpl implements ILeoService{
                 +"&ctl00$txtPassword_value="+userArr[1];
         Map<String,String> map2 = new HashMap<>();
         String s = sendPostRequest(reqURL,sendData,cookie,true,null,null,map2);
-        logger.error("step-2:返回值，"+s.substring(0,100));
+//        logger.error("step-2:返回值，"+s.substring(0,100));
+        if(s.indexOf("Object moved to")<0){
+            LeoMessage leoMessage = new LeoMessage();
+            leoMessage.setMsg("密码错误");
+            return leoMessage;
+        }
 
         logger.error("step-3,访问Leo平台，获取Etoken");
         String urlForStep3_1 = "https://www.learnearnown.com/Backoffice/LEOcoinPlatform.aspx";
@@ -164,7 +172,7 @@ public class LeoServiceImpl implements ILeoService{
         String sendDataForStep4 = "EToken="+EToken;
         Map<String,String> map4 = new HashMap<>();
         String s4 = sendPostRequest(urlForStep4,sendDataForStep4,cookie,true,null,null,map4);
-        logger.error("step-4:返回值："+s4);
+//        logger.error("step-4:返回值："+s4);
 
         logger.error("step-5,leo平台输入验证码");
         String sendDataForStep6 = "__VIEWSTATE=/wEPDwUKMTIyNjE2NTc0NWRkq0vAtrZufxJRxDI0GAMwS+ShEt4="
@@ -175,10 +183,18 @@ public class LeoServiceImpl implements ILeoService{
         String urlForStep6 = "https://www.platform.leocoin.org/VerificationCode.aspx";
         Map<String,String> map6 = new HashMap<>();
         String s5 = sendPostRequest(urlForStep6,sendDataForStep6,cookie,true,null,null,map6);
-        logger.error("step5-返回值："+s5.substring(0,100));
-
+        if(s5.indexOf("Invalid Verification Code")>0){
+            cookie = "验证码错误！";
+        }
+//        logger.error("step5-返回值："+s5.substring(0,100));
+            LeoMessage leoMessage = new LeoMessage();
+            leoMessage.setMsg(cookie);
+            return leoMessage;
+        }catch (Exception e){
+            logger.error(e.getMessage(),e);
+        }
         LeoMessage leoMessage = new LeoMessage();
-        leoMessage.setMsg(cookie);
+        leoMessage.setMsg("登录错误：可能是网站连接比较慢。");
         return leoMessage;
     }
 
@@ -303,7 +319,7 @@ public class LeoServiceImpl implements ILeoService{
                 if (code == 200) {
                     List<String> list = conn.getHeaderFields().get("Set-Cookie");
                     map.put("cookie",list.get(0).substring(0,list.get(0).indexOf(";")+1) );
-                    /*InputStream is = conn.getInputStream();
+                    InputStream is = conn.getInputStream();
                     BufferedReader in = new BufferedReader(new InputStreamReader(is, "UTF-8"));
                     StringBuffer buffer = new StringBuffer();
                     String line = "";
@@ -313,29 +329,9 @@ public class LeoServiceImpl implements ILeoService{
                     result = buffer.toString();
 
 
-                    Pattern pattern = Pattern.compile("id=\"__VIEWSTATE\" value=\"([\\S]*)\"");
-                    Matcher matcher = pattern.matcher(result);
-                    if (matcher.find()) {
-                        String __VIEWSTATE= matcher.group(1);
-                        map.put("__VIEWSTATE",__VIEWSTATE);
-                    }
-                    pattern = Pattern.compile("id=\"__VIEWSTATEGENERATOR\" value=\"([\\S]*)\"");
-                    matcher = pattern.matcher(result);
-                    if (matcher.find()) {
-                        String __VIEWSTATEGENERATOR= matcher.group(1);
-                        map.put("__VIEWSTATEGENERATOR",__VIEWSTATEGENERATOR);
-                    }
-
-                    pattern = Pattern.compile("id=\"__EVENTVALIDATION\" value=\"([\\S]*)\"");
-                    matcher = pattern.matcher(result);
-                    if (matcher.find()) {
-                        String __EVENTVALIDATION= matcher.group(1);
-                        map.put("__EVENTVALIDATION",__EVENTVALIDATION);
-                    }
-
 
                     in.close();
-                    is.close();*/
+                    is.close();
                 }
             } catch (Exception e) {
                 System.out.println( " - error: " + e);

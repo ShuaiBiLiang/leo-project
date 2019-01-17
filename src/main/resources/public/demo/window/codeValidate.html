@@ -72,13 +72,13 @@
 <body id="ctl00_body">
 <form name="aspnetForm" method="post" action="VerificationCode.aspx" id="aspnetForm">
     <div>
-        <input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUKMTIyNjE2NTc0NQ9kFgJmD2QWAgIDD2QWAgIBD2QWAgIBD2QWAgIfDxYCHgRUZXh0BVZZb3VyIEVtYWlsIG9yIE1vYmlsZSBpcyBub3QgdmVyaWZpZWQsIHBsZWFzZSBnZXQgeW91ciBFbWFpbCBhbmQgTW9iaWxlIHZlcmlmaWVkIGZpcnN0LmRktn4M5XIv6KbS0etNDp5VGOt8iRk=" />
+        <input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="/wEPDwUKMTIyNjE2NTc0NQ9kFgJmD2QWAgIDD2QWAgIBD2QWAgIBD2QWBAIHDxYCHgdWaXNpYmxlZxYCAgEPFgIeBFRleHQFGUludmFsaWQgVmVyaWZpY2F0aW9uIENvZGVkAh8PFgIfAQVWWW91ciBFbWFpbCBvciBNb2JpbGUgaXMgbm90IHZlcmlmaWVkLCBwbGVhc2UgZ2V0IHlvdXIgRW1haWwgYW5kIE1vYmlsZSB2ZXJpZmllZCBmaXJzdC5kZDmCOSCdfAFkiFrj1l0I6DzpIAXB" />
     </div>
 
     <div>
 
         <input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="19A82BBE" />
-        <input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEWBALgpPaGAQKy88z7BwKOxfX2BQKV5d6EAwAdztzdvHnJNQgHGHb5LXPzbLe5" />
+        <input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="/wEWBAKymtu4CQKy88z7BwKOxfX2BQKV5d6EA+LecFsVO+/yMy27pq4bGA/ADg5H" />
     </div>
 
 
@@ -102,6 +102,8 @@
                 <div class="center-cell">
 
 
+                    <p class="bg-danger">Invalid Verification Code</p>
+
 
 
 
@@ -116,7 +118,7 @@
                             <label>Enter Verification Code</label>
                             <div class="input-group">
                                 <div class="input-group-addon"><i class="icon-password"></i></div>
-                                <input name="ctl00$ContentPlaceHolder1$txtVerificationCode_value" type="text" value="FB5253" id="ctl00_ContentPlaceHolder1_txtVerificationCode_value" class="form-control small-input" autocomplete="off" style="width:88px" /><input type="submit" name="ctl00$ContentPlaceHolder1$btnVerificationCode" value="Get Code" id="ctl00_ContentPlaceHolder1_btnVerificationCode" class="btn btn-primary getcode" style="border-top-left-radius: 0px; border-bottom-left-radius: 0px;" />
+                                <input name="ctl00$ContentPlaceHolder1$txtVerificationCode_value" type="text" value="FB5252" id="ctl00_ContentPlaceHolder1_txtVerificationCode_value" class="form-control small-input" autocomplete="off" style="width:88px" /><input type="submit" name="ctl00$ContentPlaceHolder1$btnVerificationCode" value="Get Code" id="ctl00_ContentPlaceHolder1_btnVerificationCode" class="btn btn-primary getcode" style="border-top-left-radius: 0px; border-bottom-left-radius: 0px;" />
                             </div>
                         </div>
                         <input type="submit" name="ctl00$ContentPlaceHolder1$btnVerify" value="Verify" id="ctl00_ContentPlaceHolder1_btnVerify" class="btn btn-default" />
@@ -160,12 +162,6 @@
         //        $('.InVisible').remove();
         //    }
         //}
-    </script>
-
-
-    <script type="text/javascript">
-        //<![CDATA[
-        parent.$.fancybox.close();//]]>
     </script>
 </form>
 </body>
