@@ -106,7 +106,9 @@ public class LeoServiceImpl implements ILeoService{
         long t2 = System.currentTimeMillis();
         if(responseHtml.indexOf("Your order has been saved")>-1){
             leoMessage.setMsg("Your order has been saved! 耗时："+(t2-t1)/1000+"秒");
+            leoMessage.setLoginError(false);
         }else {
+            leoMessage.setLoginError(true);
             leoMessage.setMsg("订单提交失败！ 耗时："+(t2-t1)/1000+"秒");
         }
         System.out.println(leoMessage.getMsg());
@@ -151,6 +153,7 @@ public class LeoServiceImpl implements ILeoService{
         if(s.indexOf("Object moved to")<0){
             LeoMessage leoMessage = new LeoMessage();
             leoMessage.setMsg("密码错误");
+            leoMessage.setLoginError(true);
             return leoMessage;
         }
 
@@ -184,7 +187,10 @@ public class LeoServiceImpl implements ILeoService{
         Map<String,String> map6 = new HashMap<>();
         String s5 = sendPostRequest(urlForStep6,sendDataForStep6,cookie,true,null,null,map6);
         if(s5.indexOf("Invalid Verification Code")>0){
-            cookie = "验证码错误！";
+            LeoMessage leoMessage = new LeoMessage();
+            leoMessage.setMsg("验证码错误！");
+            leoMessage.setLoginError(true);
+            return leoMessage;
         }
 //        logger.error("step5-返回值："+s5.substring(0,100));
             LeoMessage leoMessage = new LeoMessage();
@@ -195,17 +201,18 @@ public class LeoServiceImpl implements ILeoService{
         }
         LeoMessage leoMessage = new LeoMessage();
         leoMessage.setMsg("登录错误：可能是网站连接比较慢。");
+        leoMessage.setLoginError(true);
         return leoMessage;
     }
 
     @Override
     public List<NamePwdCookie> getCookies(String userInfo) {
-        String[] userArray = userInfo.split("\\$");
+        String[] userArray = userInfo.split("\\n");
         int userLength = userArray.length;
         CountDownLatch latch = new CountDownLatch(userLength);
         List<NamePwdCookie> namePwdCookieList = new ArrayList<>();
         for(String user:userArray){
-            String[] userParams = user.split(" ");
+            String[] userParams = user.trim().split(" ");
             NamePwdCookie namePwdCookie = new NamePwdCookie(userParams[0], userParams[1], userParams[2], "");
             namePwdCookieList.add(namePwdCookie);
             GetCookiesThread thread = new GetCookiesThread(this,latch,namePwdCookie);

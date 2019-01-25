@@ -11,6 +11,7 @@ public class NamePwdCookie {
     private String pwd;
     private String code;
     private String cookie;
+    private boolean loginError;
 
     public NamePwdCookie(String name, String pwd, String code, String cookie) {
         this.name = name;
@@ -49,5 +50,13 @@ public class NamePwdCookie {
 
     public void setCookie(String cookie) {
         this.cookie = cookie;
+    }
+
+    public boolean isLoginError() {
+        return loginError;
+    }
+
+    public void setLoginError(boolean loginError) {
+        this.loginError = loginError;
     }
 }

@@ -26,6 +26,7 @@ public class GetCookiesThread implements Runnable{
             LeoMessage msg = leoService.getCookie(namePwdCookie.getName()+" "+namePwdCookie.getPwd()+" "+namePwdCookie.getCode());
             String cookie = msg.getMsg();
             namePwdCookie.setCookie(cookie);
+            namePwdCookie.setLoginError(msg.isLoginError());
             latch.countDown();
         }
 

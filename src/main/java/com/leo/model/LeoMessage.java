@@ -8,6 +8,7 @@ import java.util.List;
  */
 public class LeoMessage {
     String msg;
+    String name;
     String price;
     Date startDate;
     String startTime;
@@ -15,6 +16,7 @@ public class LeoMessage {
     String endTime;
     String error;
     List<String> cookies;
+    boolean loginError;
 
     public String getPrice() {
         return price;
@@ -78,5 +80,21 @@ public class LeoMessage {
 
     public void setError(String error) {
         this.error = error;
+    }
+
+    public boolean isLoginError() {
+        return loginError;
+    }
+
+    public void setLoginError(boolean loginError) {
+        this.loginError = loginError;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }
