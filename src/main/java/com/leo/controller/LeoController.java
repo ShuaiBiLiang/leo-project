@@ -2,10 +2,7 @@ package com.leo.controller;
 
 import com.google.gson.Gson;
 import com.leo.common.ServerResponse;
-import com.leo.model.CommitParam;
-import com.leo.model.LeoMessage;
-import com.leo.model.NameCookies;
-import com.leo.model.NamePwdCookie;
+import com.leo.model.*;
 import com.leo.service.ILeoService;
 import com.leo.util.UrlConnectionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -82,7 +79,33 @@ public class LeoController {
     public ServerResponse<List<NamePwdCookie>> getCookies(@RequestBody Map<String,String> userInfo) {
         List<NamePwdCookie> leoMessage = leoService.getCookies(userInfo.get("userInfo"));
         ServerResponse<List<NamePwdCookie>> response = ServerResponse.createBySuccess("success",leoMessage);
-        UrlConnectionUtil.setCommitPriceNow(false);
+        return response;
+    }
+
+    @RequestMapping(value = "/leo/getOrders",method = RequestMethod.POST)
+    @ResponseBody
+    public ServerResponse<Map<String,List<OrderDetail>>> getOrders(@RequestBody List<CommitParam> userInfo) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+        Map<String,List<OrderDetail>> result = new HashMap<>();
+        for(CommitParam param:userInfo){
+            String cookie = param.getCookie();
+            String d1 = dateFormat.format(new Date());
+            List<OrderDetail> leoMessage = leoService.getOrders(cookie);
+//            leoMessage.setName(param.getName());
+            result.put(param.getName(),leoMessage);
+            String d2 = dateFormat.format(new Date());
+            System.out.println("查询订单明细:"+param.getName()+"开始-"+d1+"    结束："+d2);
+        }
+        ServerResponse<Map<String,List<OrderDetail>>> response = ServerResponse.createBySuccess("success",result);
+        return response;
+    }
+
+
+    @RequestMapping(value = "/leo/cancelOrders",method = RequestMethod.POST)
+    @ResponseBody
+    public ServerResponse<List<OrderDetail>> cancelOrders(@RequestBody List<OrderDetail> details) {
+        List<OrderDetail> leoMessage = leoService.cancelOrders(details);
+        ServerResponse<List<OrderDetail>> response = ServerResponse.createBySuccess("success",leoMessage);
         return response;
     }
 

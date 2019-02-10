@@ -1,8 +1,6 @@
 package com.leo.service;
 
-import com.leo.model.LeoMessage;
-import com.leo.model.NameCookies;
-import com.leo.model.NamePwdCookie;
+import com.leo.model.*;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -20,4 +18,10 @@ public interface ILeoService {
     LeoMessage getCookie(String userInfo);
 
     List<NamePwdCookie> getCookies(String userInfo);
+
+    List<OrderDetail> getOrders(String cookie);
+
+    OrderDetail cancelOrder(OrderDetail orderDetail);
+
+    List<OrderDetail> cancelOrders(List<OrderDetail> orderDetails);
 }
