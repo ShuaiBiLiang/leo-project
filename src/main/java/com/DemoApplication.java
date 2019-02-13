@@ -13,6 +13,7 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 @SpringBootApplication
@@ -55,7 +56,20 @@ public class DemoApplication {
 			for (String beanName : beanNames) {
 				System.out.println(beanName);
 			}
-
+			// 打开浏览器，输入地址。
+			try {
+				Runtime.getRuntime().exec(
+						"cmd   /c   start   http://localhost:4099/build/index.html#/example/table ");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			/*
+			---------------------
+					作者：爱的叹息
+			来源：CSDN
+			原文：https://blog.csdn.net/zp357252539/article/details/77896257/
+			版权声明：本文为博主原创文章，转载请附上博文链接！*/
 		};
 	}
 }
