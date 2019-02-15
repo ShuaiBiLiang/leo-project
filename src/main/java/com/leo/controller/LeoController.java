@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.leo.common.ServerResponse;
 import com.leo.model.*;
 import com.leo.service.ILeoService;
+import com.leo.util.RefreshPriceThread;
 import com.leo.util.UrlConnectionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.converter.json.GsonBuilderUtils;
@@ -106,6 +107,21 @@ public class LeoController {
     public ServerResponse<List<OrderDetail>> cancelOrders(@RequestBody List<OrderDetail> details) {
         List<OrderDetail> leoMessage = leoService.cancelOrders(details);
         ServerResponse<List<OrderDetail>> response = ServerResponse.createBySuccess("success",leoMessage);
+        return response;
+    }
+
+    @RequestMapping(value = "/leo/activeCookie",method = RequestMethod.POST)
+    @ResponseBody
+    public ServerResponse<Map<String,List<OrderDetail>>> activeCookie(@RequestBody List<CommitParam> userInfo) {
+        Map<String,List<OrderDetail>> result = new HashMap<>();
+        for(CommitParam param:userInfo){
+            NamePwdCookie namePwdCookie = new NamePwdCookie();
+            namePwdCookie.setCookie(param.getCookie());
+            namePwdCookie.setName(param.getName());
+            Thread thread = new Thread(new RefreshPriceThread(leoService,namePwdCookie));
+            thread.start();
+        }
+        ServerResponse<Map<String,List<OrderDetail>>> response = ServerResponse.createBySuccess("success",result);
         return response;
     }
 

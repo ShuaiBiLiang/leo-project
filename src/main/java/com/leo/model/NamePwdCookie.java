@@ -11,6 +11,9 @@ public class NamePwdCookie {
     private String cookie;
     private boolean loginError;
 
+    public NamePwdCookie() {
+    }
+
     public NamePwdCookie(String name, String pwd, String code, String cookie) {
         this.name = name;
         this.pwd = pwd;

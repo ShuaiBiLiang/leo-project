@@ -73,7 +73,7 @@ public class LeoServiceImpl implements ILeoService{
         HttpURLConnection conn = null;
         try {
             realUrl = new URL("http://www.platform.leocoin.org/Default.aspx");
-long l1 = System.currentTimeMillis();
+            long l1 = System.currentTimeMillis();
             conn = (HttpURLConnection) realUrl.openConnection();
             conn.setRequestMethod("GET");
             conn.setUseCaches(false);
@@ -282,10 +282,10 @@ long l1 = System.currentTimeMillis();
             String[] userParams = user.trim().split(" ");
             NamePwdCookie namePwdCookie = new NamePwdCookie(userParams[0], userParams[1], userParams[2], "");
             namePwdCookieList.add(namePwdCookie);
-            GetCookiesThread thread = new GetCookiesThread(this,latch,namePwdCookie);
-            thread.run();
-           /* Thread thread = new Thread(new GetCookiesThread(this,latch,namePwdCookie));
-            thread.start();*/
+            /*GetCookiesThread thread = new GetCookiesThread(this,latch,namePwdCookie);
+            thread.run();*/
+            Thread thread = new Thread(new GetCookiesThread(this,latch,namePwdCookie));
+            thread.start();
         }
         try {
             latch.await();
