@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.leo.common.ServerResponse;
 import com.leo.model.*;
 import com.leo.service.ILeoService;
+import com.leo.service.LeoUserService;
 import com.leo.util.RefreshPriceThread;
 import com.leo.util.UrlConnectionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,9 @@ public class LeoController {
 
     @Autowired
     protected ILeoService leoService;
+
+    @Autowired
+    protected LeoUserService leoUserService;
 
     @RequestMapping("/leo_in")
     @ResponseBody
@@ -122,6 +126,14 @@ public class LeoController {
             thread.start();
         }
         ServerResponse<Map<String,List<OrderDetail>>> response = ServerResponse.createBySuccess("success",result);
+        return response;
+    }
+
+    @RequestMapping(value = "/leo/login",method = RequestMethod.POST)
+    @ResponseBody
+    public ServerResponse<NamePwdCookie> userLogin(@RequestBody NamePwdCookie userInfo) {
+        Map<String,List<OrderDetail>> result = new HashMap<>();
+        ServerResponse<NamePwdCookie> response = leoUserService.login(userInfo);
         return response;
     }
 
