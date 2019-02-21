@@ -13,6 +13,8 @@ public interface ILeoService {
 
     LeoMessage refreshPrice(String cookie, String currentPrice);
 
+    LeoMessage refreshPrice(String cookie, String currentPrice, boolean notRecive);
+
     LeoMessage commitForm(String cookie, String price, String size);
 
     LeoMessage getCookie(String userInfo);

@@ -4,15 +4,17 @@ import com.google.gson.Gson;
 import com.leo.common.ServerResponse;
 import com.leo.model.*;
 import com.leo.service.ILeoService;
+import com.leo.util.*;
 import com.leo.service.LeoUserService;
-import com.leo.util.RefreshPriceThread;
-import com.leo.util.UrlConnectionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.converter.json.GsonBuilderUtils;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -122,8 +124,9 @@ public class LeoController {
             NamePwdCookie namePwdCookie = new NamePwdCookie();
             namePwdCookie.setCookie(param.getCookie());
             namePwdCookie.setName(param.getName());
-            Thread thread = new Thread(new RefreshPriceThread(leoService,namePwdCookie));
-            thread.start();
+//            Thread thread = new Thread(new RefreshPriceThread(leoService,namePwdCookie));
+            ExecutorPool.executeWithManualPool(new RefreshPriceThread(leoService,namePwdCookie));
+//            thread.start();
         }
         ServerResponse<Map<String,List<OrderDetail>>> response = ServerResponse.createBySuccess("success",result);
         return response;

@@ -58,27 +58,30 @@ public class LeoServiceImpl implements ILeoService{
 
     @Override
     public LeoMessage refreshPrice(String cookie, String currentPrice) {
+        return refreshPrice(cookie,currentPrice,false);
+    }
+
+    @Override
+    public LeoMessage refreshPrice(String cookie, String currentPrice, boolean notRecive) {
         SimpleDateFormat s1 = new SimpleDateFormat("HH:mm:ss");
         String d1 = s1.format(new Date());
         long t1 = System.currentTimeMillis();
         logger.error("访问时间："+d1);
         LeoMessage leoMessage = new LeoMessage();
-       /* if(UrlConnectionUtil.isCommitPriceNow()){
-            leoMessage.setMsg("正在提交订单，价格刷新暂停执行。");
-            leoMessage.setPrice("0");
-        }else {
-            leoMessage = UrlConnectionUtil.executeGet(null,cookie);
-        }*/
         URL realUrl = null;
         HttpURLConnection conn = null;
         try {
             realUrl = new URL("http://www.platform.leocoin.org/Default.aspx");
-            long l1 = System.currentTimeMillis();
             conn = (HttpURLConnection) realUrl.openConnection();
             conn.setRequestMethod("GET");
             conn.setUseCaches(false);
-            conn.setReadTimeout(300000);
-            conn.setConnectTimeout(300000);
+            if(notRecive){
+                conn.setReadTimeout(30000);
+                conn.setConnectTimeout(3000);
+            } else {
+                conn.setReadTimeout(300000);
+                conn.setConnectTimeout(300000);
+            }
             conn.setInstanceFollowRedirects(false);
             conn.setRequestProperty("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
             //          conn.setRequestProperty("Accept-Encoding","gzip, deflate, sdch");
@@ -92,8 +95,7 @@ public class LeoServiceImpl implements ILeoService{
             conn.setRequestProperty("User-Agent","Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
 
             int code = conn.getResponseCode();
-            long l2 = System.currentTimeMillis();
-            String d2 = s1.format(new Date());
+
             if (code == 200|| code==302) {
                 InputStream is = conn.getInputStream();
                 BufferedReader in = new BufferedReader(new InputStreamReader(is, "UTF-8"));
@@ -104,6 +106,8 @@ public class LeoServiceImpl implements ILeoService{
                 }
                 String result = buffer.toString();
                 int index = result.indexOf("ctl00$ContentPlaceHolder1$txtBuyMinPrice_value");
+                long l2 = System.currentTimeMillis();
+                String d2 = s1.format(new Date());
                 if(index>0){
                     String pricePiece = result.substring(index, index+80);
                     Pattern pattern = Pattern.compile("value=\"([\\d|.]*)\"");
@@ -111,11 +115,10 @@ public class LeoServiceImpl implements ILeoService{
                     if (matcher.find()) {
                         pricePiece= matcher.group(1);
                     }
-                    String msg = "【开始:"+d1+"结束:"+d2+";响应耗时："+(l2-l1)/1000+"秒;价格："+pricePiece+"】";
+                    String msg = "【开始:"+d1+"结束:"+d2+";响应耗时："+(l2-t1)/1000+"秒;价格："+pricePiece+"】";
                     leoMessage.setPrice(pricePiece);
                     leoMessage.setMsg(msg);
                 }
-
                 in.close();
                 is.close();
             }else {

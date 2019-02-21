@@ -14,6 +14,10 @@ public class LeoUser implements Serializable {
 
     private Long endtime;
 
+    private String token;
+
+    private Integer useSize;
+
     private static final long serialVersionUID = 1L;
 
     public LeoUser() {
@@ -24,6 +28,15 @@ public class LeoUser implements Serializable {
         this.name = name;
         this.pwd = pwd;
         this.endtime = endtime;
+    }
+
+    public LeoUser(Long id, String name, String pwd, Long endtime, String token, Integer useSize) {
+        this.id = id;
+        this.name = name;
+        this.pwd = pwd;
+        this.endtime = endtime;
+        this.token = token;
+        this.useSize = useSize;
     }
 
     public Long getId() {
@@ -56,6 +69,22 @@ public class LeoUser implements Serializable {
 
     public void setEndtime(Long endtime) {
         this.endtime = endtime;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public Integer getUseSize() {
+        return useSize;
+    }
+
+    public void setUseSize(Integer useSize) {
+        this.useSize = useSize;
     }
 
     @Override
