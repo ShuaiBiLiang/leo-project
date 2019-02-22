@@ -66,7 +66,7 @@ public class LeoServiceImpl implements ILeoService{
         SimpleDateFormat s1 = new SimpleDateFormat("HH:mm:ss");
         String d1 = s1.format(new Date());
         long t1 = System.currentTimeMillis();
-        logger.error("访问时间："+d1);
+        logger.error((notRecive?"(激活cookie)":"")+"刷新价格-访问时间："+d1);
         LeoMessage leoMessage = new LeoMessage();
         URL realUrl = null;
         HttpURLConnection conn = null;
@@ -139,7 +139,7 @@ public class LeoServiceImpl implements ILeoService{
         }
         long t2 = System.currentTimeMillis();
         String d2 = s1.format(new Date());
-        logger.error("返回时间："+d2+"  耗时："+(t2-t1)+"ms");
+        logger.error((notRecive?"(激活cookie)":"")+"返回时间："+d2+"  耗时："+(t2-t1)+"ms");
         return leoMessage;
     }
 

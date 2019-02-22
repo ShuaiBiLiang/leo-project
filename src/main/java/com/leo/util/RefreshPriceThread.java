@@ -21,7 +21,7 @@ public class RefreshPriceThread implements Runnable{
         @Override
         public void run() {
 
-            LeoMessage msg = leoService.refreshPrice(namePwdCookie.getCookie(),"");
+            LeoMessage msg = leoService.refreshPrice(namePwdCookie.getCookie(),"",true);
 
         }
 

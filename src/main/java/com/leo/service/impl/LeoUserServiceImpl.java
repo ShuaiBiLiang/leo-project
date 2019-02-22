@@ -18,7 +18,9 @@ public class LeoUserServiceImpl extends BaseServiceImpl<LeoUser, Long> implement
         user.setPwd(userInfo.getPwd());
         LeoUser selectOne = selectOne(user);
         if(selectOne!=null){
-            userInfo.setCookie(UUID.randomUUID().toString());
+            userInfo.setCookie(UUID.randomUUID().toString().replaceAll("-",""));
+            selectOne.setToken(userInfo.getCookie());
+            update(selectOne);
             return ServerResponse.createBySuccess(userInfo);
         }
         return ServerResponse.createByErrorMessage("用户名不存在或密码错误");
