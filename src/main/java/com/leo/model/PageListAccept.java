@@ -5,7 +5,7 @@ import java.util.Objects;
 /**
  * Created by liang on 2017/6/8.
  */
-public class NamePwdCookie {
+public class PageListAccept {
 
     private String name;
     private String pwd;
@@ -13,10 +13,10 @@ public class NamePwdCookie {
     private String cookie;
     private boolean loginError;
 
-    public NamePwdCookie() {
+    public PageListAccept() {
     }
 
-    public NamePwdCookie(String name, String pwd, String code, String cookie) {
+    public PageListAccept(String name, String pwd, String code, String cookie) {
         this.name = name;
         this.pwd = pwd;
         this.code = code;
@@ -67,7 +67,7 @@ public class NamePwdCookie {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        NamePwdCookie that = (NamePwdCookie) o;
+        PageListAccept that = (PageListAccept) o;
         return Objects.equals(name, that.name);
     }
 

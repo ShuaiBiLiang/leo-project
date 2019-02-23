@@ -1,8 +1,12 @@
 package com.leo.controller;
 
+import com.alibaba.druid.support.json.JSONUtils;
+import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.leo.common.ServerResponse;
 import com.leo.model.*;
+import com.leo.model.domain.LeoUser;
 import com.leo.service.ILeoService;
 import com.leo.util.*;
 import com.leo.service.LeoUserService;
@@ -17,6 +21,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
 
 /**
  * Created by liang on 2017/6/6.
@@ -30,6 +36,8 @@ public class LeoController {
 
     @Autowired
     protected LeoUserService leoUserService;
+
+
 
     @RequestMapping("/leo_in")
     @ResponseBody
@@ -83,10 +91,61 @@ public class LeoController {
 
     @RequestMapping(value = "/leo/getCookies",method = RequestMethod.POST)
     @ResponseBody
-    public ServerResponse<List<NamePwdCookie>> getCookies(@RequestBody Map<String,String> userInfo) {
-        List<NamePwdCookie> leoMessage = leoService.getCookies(userInfo.get("userInfo"));
+    public ServerResponse<List<NamePwdCookie>> getCookies(HttpServletRequest request,HttpServletResponse resp,@RequestBody Map<String,String> userInfo) {
+        String[] userArray = userInfo.get("userInfo").split("\\n");
+        List<NamePwdCookie> requestNames = new ArrayList<>();
+        for(String user:userArray) {
+            String[] userParams = user.trim().split(" ");
+            NamePwdCookie namePwdCookie = new NamePwdCookie(userParams[0], userParams[1], userParams[2], "");
+            requestNames.add(namePwdCookie);
+        }
+        String name= resp.getHeader("name");
+        String size= resp.getHeader("size");
+        List<NamePwdCookie> namePwdCookieList= UserLeoUtil.getInstance().get(name);
+        if(namePwdCookieList==null){
+            namePwdCookieList = new ArrayList<>();
+        }
+        int sizeInt = Integer.parseInt(size);
+        int newCount = countNewLeoNum(requestNames,namePwdCookieList);
+        if((namePwdCookieList.size()+newCount)>sizeInt){
+            String message = "挂币账号超过使用上限："+sizeInt;
+            if(namePwdCookieList.size()>0){
+                message+="已挂账号：";
+                for (NamePwdCookie namePwdCookie:namePwdCookieList){
+                    message+=namePwdCookie.getName();
+                }
+            }
+            return ServerResponse.createByErrorCodeMessage(88,message);
+        }
+
+        List<NamePwdCookie> leoMessage = leoService.getCookies(requestNames);
+
+
+
         ServerResponse<List<NamePwdCookie>> response = ServerResponse.createBySuccess("success",leoMessage);
+
+        if(UserLeoUtil.getInstance()!=null){
+
+            for(NamePwdCookie namePwdCookie:response.getData()){
+                if(!namePwdCookie.isLoginError() && !namePwdCookieList.contains(namePwdCookie)){
+                    namePwdCookieList.add(namePwdCookie);
+                }
+            }
+            UserLeoUtil.getInstance().put(name,namePwdCookieList);
+        }
         return response;
+    }
+
+    private int countNewLeoNum(List<NamePwdCookie> requestNames, List<NamePwdCookie> namePwdCookieList) {
+
+        int count=0;
+        for(NamePwdCookie requestItem:requestNames){
+            if(!namePwdCookieList.contains(requestItem)){
+                count++;
+            }
+        }
+
+        return count;
     }
 
     @RequestMapping(value = "/leo/getOrders",method = RequestMethod.POST)
@@ -137,6 +196,31 @@ public class LeoController {
     public ServerResponse<NamePwdCookie> userLogin(@RequestBody NamePwdCookie userInfo) {
         Map<String,List<OrderDetail>> result = new HashMap<>();
         ServerResponse<NamePwdCookie> response = leoUserService.login(userInfo);
+        return response;
+    }
+
+    @RequestMapping(value = "/user/list",method = RequestMethod.POST)
+    @ResponseBody
+    public ServerResponse<List<LeoUser>> userList(HttpServletResponse resp,@RequestBody PageListAccept accept) {
+        String name= resp.getHeader("name");
+        if(!name.equals("admin")){
+            return ServerResponse.createByError();
+        }
+        List<LeoUser> users = leoUserService.selectAll();
+        users = users.stream().filter(o->!o.getName().equals("admin")).collect(Collectors.toList());
+        ServerResponse<List<LeoUser>> response = ServerResponse.createBySuccess(users);
+        return response;
+    }
+
+    @RequestMapping(value = "/user/save",method = RequestMethod.POST)
+    @ResponseBody
+    public ServerResponse<LeoUser> userSave(HttpServletResponse resp,@RequestBody UserSaveAccept accept) {
+        String name= resp.getHeader("name");
+        if(!name.equals("admin")){
+            return ServerResponse.createByError();
+        }
+        LeoUser user = leoUserService.save(accept);
+        ServerResponse<LeoUser> response = ServerResponse.createBySuccess(user);
         return response;
     }
 

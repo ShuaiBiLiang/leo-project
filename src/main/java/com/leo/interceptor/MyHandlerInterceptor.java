@@ -27,14 +27,35 @@ public class MyHandlerInterceptor implements HandlerInterceptor {
         LeoUser leoUser = new LeoUser();
         leoUser.setToken(request.getHeader("X-Token"));
         LeoUser selectOne = leoUserService.selectOne(leoUser);
-        if(selectOne==null){
+        if(selectOne==null || (selectOne!=null && selectOne.getEndtime()<System.currentTimeMillis())){
+            response.reset();
+            response.setCharacterEncoding("UTF-8");
+            response.setContentType("application/json;charset=UTF-8");
+
+            PrintWriter pw = response.getWriter();
+            String ret = "";
+            if(selectOne==null){
+               ret = JSONObject.toJSONString(ServerResponse.createByErrorCodeMessage(99,"你已被登出，可以取消继续留在该页面，或者重新登录。"));
+            }else {
+                ret = JSONObject.toJSONString(ServerResponse.createByErrorCodeMessage(98,"账号已到期，请联系管理员登录。"));
+            }
+
+            pw.write(ret);
+
+            pw.flush();
+            pw.close();
+            return false;
+
+
+            /*
             response.setCharacterEncoding("UTF-8");
             response.setContentType("application/json; charset=utf-8");
+
             PrintWriter out = null ;
             try{
-                /*JSONObject res = new JSONObject();
+                *//*JSONObject res = new JSONObject();
                 res.put("success","false");
-                res.put("msg","xxxx");*/
+                res.put("msg","xxxx");*//*
                 ServerResponse serverResponse = ServerResponse.createByErrorCodeMessage(99,"登录信息失效，请重新登录。");
                 out = response.getWriter();
                 out.append(JSONObject.toJSONString(serverResponse));
@@ -43,9 +64,11 @@ public class MyHandlerInterceptor implements HandlerInterceptor {
                 e.printStackTrace();
                 response.sendError(500);
                 return false;
-            }
+            }*/
         }
-        System.out.println(leoUserService.select(new LeoUser()));
+        response.setHeader("name",selectOne.getName());
+        response.setHeader("size",selectOne.getUseSize()+"");
+        System.out.println(selectOne);
         return true;
     }
 

@@ -4,8 +4,11 @@ import com.google.common.base.MoreObjects;
 import java.io.Serializable;
 import lombok.*;
 
+import javax.persistence.Id;
+
 
 public class LeoUser implements Serializable {
+    @Id
     private Long id;
 
     private String name;

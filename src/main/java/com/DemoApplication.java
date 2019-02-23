@@ -1,12 +1,16 @@
 package com;
 
+import com.leo.interceptor.KuaYuFilter;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.support.SpringBootServletInitializer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.Ordered;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -18,6 +22,7 @@ import java.util.Arrays;
 
 @SpringBootApplication
 @RestController
+@EnableScheduling
 // extends SpringBootServletInitializer
 public class DemoApplication {
 
@@ -59,7 +64,7 @@ public class DemoApplication {
 			// 打开浏览器，输入地址。
 			try {
 				Runtime.getRuntime().exec(
-						"cmd   /c   start   http://localhost:4099/build/index.html#/example/table ");
+						"cmd   /c   start   http://localhost:4099/build/index.html");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -71,5 +76,16 @@ public class DemoApplication {
 			原文：https://blog.csdn.net/zp357252539/article/details/77896257/
 			版权声明：本文为博主原创文章，转载请附上博文链接！*/
 		};
+	}
+
+	@Bean
+	public FilterRegistrationBean registerFilter() {
+		FilterRegistrationBean bean = new FilterRegistrationBean();
+		bean.addUrlPatterns("/*");
+		bean.setFilter(new KuaYuFilter());
+		// 过滤顺序，从小到大依次过滤
+		bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
+
+		return bean;
 	}
 }

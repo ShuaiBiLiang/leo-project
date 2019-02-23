@@ -56,6 +56,7 @@ import java.util.regex.Pattern;
 public class LeoServiceImpl implements ILeoService{
     private static Log logger = LogFactory.getLog(LeoServiceImpl.class);
 
+
     @Override
     public LeoMessage refreshPrice(String cookie, String currentPrice) {
         return refreshPrice(cookie,currentPrice,false);
@@ -276,18 +277,12 @@ public class LeoServiceImpl implements ILeoService{
     }
 
     @Override
-    public List<NamePwdCookie> getCookies(String userInfo) {
-        String[] userArray = userInfo.split("\\n");
-        int userLength = userArray.length;
-        CountDownLatch latch = new CountDownLatch(userLength);
+    public List<NamePwdCookie> getCookies(List<NamePwdCookie> requestNames) {
+        CountDownLatch latch = new CountDownLatch(requestNames.size());
         List<NamePwdCookie> namePwdCookieList = new ArrayList<>();
-        for(String user:userArray){
-            String[] userParams = user.trim().split(" ");
-            NamePwdCookie namePwdCookie = new NamePwdCookie(userParams[0], userParams[1], userParams[2], "");
-            namePwdCookieList.add(namePwdCookie);
-            /*GetCookiesThread thread = new GetCookiesThread(this,latch,namePwdCookie);
-            thread.run();*/
-            Thread thread = new Thread(new GetCookiesThread(this,latch,namePwdCookie));
+        for(NamePwdCookie user:requestNames){
+            Thread thread = new Thread(new GetCookiesThread(this,latch,user));
+            namePwdCookieList.add(user);
             thread.start();
         }
         try {

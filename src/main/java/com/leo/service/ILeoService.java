@@ -19,7 +19,7 @@ public interface ILeoService {
 
     LeoMessage getCookie(String userInfo);
 
-    List<NamePwdCookie> getCookies(String userInfo);
+    List<NamePwdCookie> getCookies(List<NamePwdCookie> requestNames);
 
     List<OrderDetail> getOrders(String cookie);
 
