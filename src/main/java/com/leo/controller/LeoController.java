@@ -108,11 +108,16 @@ public class LeoController {
         int sizeInt = Integer.parseInt(size);
         int newCount = countNewLeoNum(requestNames,namePwdCookieList);
         if((namePwdCookieList.size()+newCount)>sizeInt){
-            String message = "挂币账号超过使用上限："+sizeInt;
+            String message = "挂币账号超过上限!";
+
             if(namePwdCookieList.size()>0){
-                message+="已挂账号：";
+                if(namePwdCookieList.size()<sizeInt){
+                    message+="<br/> 只能再挂("+(sizeInt-namePwdCookieList.size())+"个)。";
+                }
+
+                message+="<br/> 已挂账号("+namePwdCookieList.size()+"个)：";
                 for (NamePwdCookie namePwdCookie:namePwdCookieList){
-                    message+=namePwdCookie.getName();
+                    message+="【"+namePwdCookie.getName()+"】";
                 }
             }
             return ServerResponse.createByErrorCodeMessage(88,message);
@@ -193,9 +198,8 @@ public class LeoController {
 
     @RequestMapping(value = "/leo/login",method = RequestMethod.POST)
     @ResponseBody
-    public ServerResponse<NamePwdCookie> userLogin(@RequestBody NamePwdCookie userInfo) {
-        Map<String,List<OrderDetail>> result = new HashMap<>();
-        ServerResponse<NamePwdCookie> response = leoUserService.login(userInfo);
+    public ServerResponse<LeoUserVo> userLogin(@RequestBody NamePwdCookie userInfo) {
+        ServerResponse<LeoUserVo> response = leoUserService.login(userInfo);
         return response;
     }
 
@@ -221,6 +225,21 @@ public class LeoController {
         }
         LeoUser user = leoUserService.save(accept);
         ServerResponse<LeoUser> response = ServerResponse.createBySuccess(user);
+        return response;
+    }
+
+    @RequestMapping(value = "/user/resetPwd",method = RequestMethod.POST)
+    @ResponseBody
+    public ServerResponse<LeoUser> resetPwd(HttpServletResponse resp,@RequestBody UserSaveAccept accept) {
+        String name= resp.getHeader("name");
+        if(name.equals("admin")){
+            return ServerResponse.createByError();
+        }
+        ServerResponse<LeoUser> response = leoUserService.resetPwd(name,accept);
+        /*if(user==null){
+            return ServerResponse.createByError();
+        }
+        ServerResponse<LeoUser> response = ServerResponse.createBySuccess(user);*/
         return response;
     }
 

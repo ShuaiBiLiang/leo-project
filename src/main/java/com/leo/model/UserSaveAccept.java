@@ -11,6 +11,8 @@ public class UserSaveAccept {
 
     private String name;
 
+    private String oldPwd;
+
     private String pwd;
 
     private Long endtime;
@@ -67,5 +69,13 @@ public class UserSaveAccept {
         this.pwd = pwd;
         this.endtime = endtime;
         this.useSize = useSize;
+    }
+
+    public String getOldPwd() {
+        return oldPwd;
+    }
+
+    public void setOldPwd(String oldPwd) {
+        this.oldPwd = oldPwd;
     }
 }
