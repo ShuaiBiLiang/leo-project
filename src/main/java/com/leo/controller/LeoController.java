@@ -85,7 +85,6 @@ public class LeoController {
     public ServerResponse<LeoMessage> getCookie(@RequestBody String userInfo, Model model) {
         LeoMessage leoMessage = leoService.getCookie(userInfo);
         ServerResponse<LeoMessage> response = ServerResponse.createBySuccess(leoMessage.getMsg(),leoMessage);
-        UrlConnectionUtil.setCommitPriceNow(false);
         return response;
     }
 

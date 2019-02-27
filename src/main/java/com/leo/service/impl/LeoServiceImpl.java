@@ -1,47 +1,33 @@
 package com.leo.service.impl;
 
 import com.leo.model.LeoMessage;
-import com.leo.model.NameCookies;
 import com.leo.model.NamePwdCookie;
 import com.leo.model.OrderDetail;
 import com.leo.service.ILeoService;
+import com.leo.util.CancleOrderThread;
 import com.leo.util.GetCookiesThread;
 import com.leo.util.HttpClientSingleton;
 import com.leo.util.HttpClientUtil;
-import com.leo.util.UrlConnectionUtil;
-import com.leo.util.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.*;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.DeflateDecompressingEntity;
 import org.apache.http.client.entity.GzipDecompressingEntity;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.message.BufferedHeader;
-import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -124,15 +110,11 @@ public class LeoServiceImpl implements ILeoService{
                 is.close();
             }else {
                 leoMessage.setPrice("");
-                leoMessage.setMsg("页面访问失败；可能是cookie失效；");
+                leoMessage.setMsg("【刷新价格】页面访问失败；可能是cookie失效；");
             }
 
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (ProtocolException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            logger.error("刷新价格出错",e);
         } finally {
             if(conn!=null){
                 conn.disconnect();
@@ -140,7 +122,9 @@ public class LeoServiceImpl implements ILeoService{
         }
         long t2 = System.currentTimeMillis();
         String d2 = s1.format(new Date());
-        logger.error((notRecive?"(激活cookie)":"")+"返回时间："+d2+"  耗时："+(t2-t1)+"ms");
+        if(!notRecive){
+            logger.error((notRecive?"(激活cookie)":"")+"返回时间："+d2+"  耗时："+(t2-t1)+"ms");
+        }
         return leoMessage;
     }
 
@@ -148,11 +132,11 @@ public class LeoServiceImpl implements ILeoService{
     public LeoMessage commitForm(String cookie, String price, String size) {
 
         long t1 = System.currentTimeMillis();
-        System.out.println("提交订单：----第一步，点击[Sell Order]，cookie："+cookie.substring(0,20));
+        logger.debug("提交订单：----第一步，点击[Sell Order]，cookie："+cookie.substring(0,20));
 
-       String url = "http://www.platform.leocoin.org/SellCoin.aspx?TotalCoin="+size+"&Price="+price;
-       String html = HttpClientUtil.sendGetRequestReturnWithHtml(cookie,url,null);
-        System.out.println("提交订单：----第二步，[点击确认]，cookie："+cookie.substring(0,20));
+        String url = "http://www.platform.leocoin.org/SellCoin.aspx?TotalCoin="+size+"&Price="+price;
+        String html = HttpClientUtil.sendGetRequestReturnWithHtml(cookie,url,null);
+        logger.debug("提交订单：----第二步，[点击确认]，cookie："+cookie.substring(0,20));
         String param1 = "__VIEWSTATE";
         String param2 = "__EVENTVALIDATION";
         Pattern pattern = Pattern.compile("id=\"__VIEWSTATE\" value=\"([\\S]*)\"");
@@ -168,7 +152,7 @@ public class LeoServiceImpl implements ILeoService{
             value2= matcher.group(1);
         }
         if(org.springframework.util.StringUtils.isEmpty(value1) || org.springframework.util.StringUtils.isEmpty(value2)){
-            System.out.println("提交订单：----第一步出错，点击确认页面，没有拿到有效的信息。，cookie："+cookie.substring(0,20));
+            logger.debug("提交订单：----第一步出错，点击确认页面，没有拿到有效的信息。，cookie："+cookie.substring(0,20));
         }
         String reqURL = url;
         String sendData = param1+"="+value1+"&"+param2+"="+value2+"&ctl00$ContentPlaceHolder1$btnSell=Confirm";
@@ -182,7 +166,7 @@ public class LeoServiceImpl implements ILeoService{
             leoMessage.setLoginError(true);
             leoMessage.setMsg("订单提交失败！ 耗时："+(t2-t1)/1000+"秒");
         }
-        System.out.println(leoMessage.getMsg());
+        logger.debug(leoMessage.getMsg());
         return leoMessage;
     }
 
@@ -263,7 +247,6 @@ public class LeoServiceImpl implements ILeoService{
             leoMessage.setLoginError(true);
             return leoMessage;
         }
-//        logger.error("step5-返回值："+s5.substring(0,100));
             LeoMessage leoMessage = new LeoMessage();
             leoMessage.setMsg(cookie);
             return leoMessage;
@@ -308,34 +291,10 @@ public class LeoServiceImpl implements ILeoService{
     @Override
     public OrderDetail cancelOrder(OrderDetail orderDetail) {
         String reqURL= "https://www.platform.leocoin.org/cancelSellOrder.aspx?Id="+orderDetail.getId();
-        String sendData = "";
-        Map<String,String> map2 = new HashMap<>();
-        Map<String,String> reponseMap = getCookieReponseString(reqURL,orderDetail.getCookie());
-        String reponseHtml = reponseMap.get("reponseHtml");
-
-        /*String __VIEWSTATE = "";
-        Pattern pattern = Pattern.compile("id=\"__VIEWSTATE\"([\\S|\\s]*?)value=\"([\\S]*)\"");
-        Matcher matcher = pattern.matcher(reponseHtml);
-        if (matcher.find()) {
-            __VIEWSTATE= matcher.group(2);
-        }
-        String __VIEWSTATEGENERATOR = "";
-        Pattern pattern2 = Pattern.compile("id=\"__VIEWSTATEGENERATOR\" value=\"([\\S]*)\"");
-        Matcher matcher2 = pattern2.matcher(reponseHtml);
-        if (matcher2.find()) {
-            __VIEWSTATEGENERATOR= matcher2.group(1);
-        }
-
-        String __EVENTVALIDATION = "";
-        Pattern pattern3 = Pattern.compile("id=\"__EVENTVALIDATION\" value=\"([\\S]*)\"");
-        Matcher matcher3 = pattern3.matcher(reponseHtml);
-        if (matcher3.find()) {
-            __EVENTVALIDATION= matcher3.group(1);
-        }*/
 
         String sendDataForStep6 = "__VIEWSTATE=/wEPDwULLTExOTc2NzMzMzkPZBYCZg9kFgICAw9kFgICAQ9kFgICAQ9kFgoCAw8WAh4EVGV4dAUBMGQCCQ9kFgICAQ8WAh8AZWQCCw9kFgICAQ8WAh8AZWQCDQ9kFgICAQ8WAh8AZWQCFQ8QZGQWAGRkQ6neP72HoAqi41zUqYFFvZY7csY="
-                +"&__VIEWSTATEGENERATOR=1C0F98BC"
-                +"&__EVENTVALIDATION=/wEWAgLZ5+HBBQKrlNGpBtzBaAkuCf0UNbFWvEAfHqkfpC8i"
+                + "&__VIEWSTATEGENERATOR=1C0F98BC"
+                + "&__EVENTVALIDATION=/wEWAgLZ5+HBBQKrlNGpBtzBaAkuCf0UNbFWvEAfHqkfpC8i"
                 + "&ctl00$ContentPlaceHolder1$btnConfirm=Confirm";
 
         Map<String,String> map6 = new HashMap<>();
@@ -368,177 +327,21 @@ public class LeoServiceImpl implements ILeoService{
 
 //        String r = getCookieForStep6("BNES_ASP.NET_SessionId=6zld2iaP89h\\MBqQlp5lcioJyYQVxZQX/DcJJEX9Y3QK3sYFp5CVShHVuDNFqMMp/0uTcuagFGpsxoEb2Mt9tetRveg/7G7zsVM6bHMdOyPt6944S7ZCVRA==;ASP.NET_SessionId=pce3jl45ms12m2iroa1mde45;");
 //        LeoMessage r = new LeoServiceImpl().getCookie("");
-//        System.out.println(r.getMsg());
+//        logger.debug(r.getMsg());
 //        List<NamePwdCookie> cookies = new LeoServiceImpl().getCookies("ldd0601 Leo170730776* da422d$hsx0601 Leo170730776* 3c27b8");
 //        for(NamePwdCookie cookie:cookies){
-//            System.out.println("name:"+cookie.getName() +" cookie:"+cookie.getCookie());
+//            logger.debug("name:"+cookie.getName() +" cookie:"+cookie.getCookie());
 //        }
         List<OrderDetail> details = getOrderDetailFromHtml("");
-        details.forEach(o-> System.out.println(o));
+        details.forEach(o-> logger.debug(o));
     }
 
     private static List<OrderDetail> getOrderDetailFromHtml(String html) {
-        String tbody = "<tbody>\t\t\t\n" +
-                "                        \n" +
-                "                <tr class='Active'>\n" +
-                "                    <td class=\"text-center\">Sell</td>\n" +
-                "                    <td class=\"text-right\">10</td>\n" +
-                "                    <td class=\"text-right\">0.166</td>\n" +
-                "                    <td class=\"text-right\">1.66</td>\n" +
-                "                    <td class=\"text-center\">Jan 30 2019 10:42PM</td>\n" +
-                "                    <td class=\"text-center\">Active</td>\n" +
-                "                    \n" +
-                "                    <td class=\"text-center\">\n" +
-                "                        \n" +
-                "                         \n" +
-                "                            <a href=\"cancelSellOrder.aspx?Id=2064902\"><i class='icon icon-link'></i></a>\n" +
-                "                        \n" +
-                "                    </td>\n" +
-                "                </tr>\n" +
-                "                \n" +
-                "                <tr class='Active'>\n" +
-                "                    <td class=\"text-center\">Sell</td>\n" +
-                "                    <td class=\"text-right\">10</td>\n" +
-                "                    <td class=\"text-right\">0.1666</td>\n" +
-                "                    <td class=\"text-right\">1.67</td>\n" +
-                "                    <td class=\"text-center\">Jan 30 2019 10:42PM</td>\n" +
-                "                    <td class=\"text-center\">Active</td>\n" +
-                "                    \n" +
-                "                    <td class=\"text-center\">\n" +
-                "                        \n" +
-                "                         \n" +
-                "                            <a href=\"cancelSellOrder.aspx?Id=2064901\"><i class='icon icon-link'></i></a>\n" +
-                "                        \n" +
-                "                    </td>\n" +
-                "                </tr>\n" +
-                "                \n" +
-                "                <tr class='Active'>\n" +
-                "                    <td class=\"text-center\">Sell</td>\n" +
-                "                    <td class=\"text-right\">10</td>\n" +
-                "                    <td class=\"text-right\">0.1777</td>\n" +
-                "                    <td class=\"text-right\">1.78</td>\n" +
-                "                    <td class=\"text-center\">Jan 30 2019 10:41PM</td>\n" +
-                "                    <td class=\"text-center\">Active</td>\n" +
-                "                    \n" +
-                "                    <td class=\"text-center\">\n" +
-                "                        \n" +
-                "                         \n" +
-                "                            <a href=\"cancelSellOrder.aspx?Id=2064900\"><i class='icon icon-link'></i></a>\n" +
-                "                        \n" +
-                "                    </td>\n" +
-                "                </tr>\n" +
-                "                \n" +
-                "                <tr class='Active'>\n" +
-                "                    <td class=\"text-center\">Sell</td>\n" +
-                "                    <td class=\"text-right\">10</td>\n" +
-                "                    <td class=\"text-right\">0.1666</td>\n" +
-                "                    <td class=\"text-right\">1.67</td>\n" +
-                "                    <td class=\"text-center\">Jan 30 2019 10:41PM</td>\n" +
-                "                    <td class=\"text-center\">Active</td>\n" +
-                "                    \n" +
-                "                    <td class=\"text-center\">\n" +
-                "                        \n" +
-                "                         \n" +
-                "                            <a href=\"cancelSellOrder.aspx?Id=2064899\"><i class='icon icon-link'></i></a>\n" +
-                "                        \n" +
-                "                    </td>\n" +
-                "                </tr>\n" +
-                "                \n" +
-                "                <tr class='Active'>\n" +
-                "                    <td class=\"text-center\">Sell</td>\n" +
-                "                    <td class=\"text-right\">10</td>\n" +
-                "                    <td class=\"text-right\">0.1555</td>\n" +
-                "                    <td class=\"text-right\">1.56</td>\n" +
-                "                    <td class=\"text-center\">Jan 30 2019 10:40PM</td>\n" +
-                "                    <td class=\"text-center\">Active</td>\n" +
-                "                    \n" +
-                "                    <td class=\"text-center\">\n" +
-                "                        \n" +
-                "                         \n" +
-                "                            <a href=\"cancelSellOrder.aspx?Id=2064898\"><i class='icon icon-link'></i></a>\n" +
-                "                        \n" +
-                "                    </td>\n" +
-                "                </tr>\n" +
-                "                \n" +
-                "                <tr class='Expired'>\n" +
-                "                    <td class=\"text-center\">Sell</td>\n" +
-                "                    <td class=\"text-right\">12</td>\n" +
-                "                    <td class=\"text-right\">0.1416</td>\n" +
-                "                    <td class=\"text-right\">1.70</td>\n" +
-                "                    <td class=\"text-center\">Jan 25 2019 10:36AM</td>\n" +
-                "                    <td class=\"text-center\">Expired</td>\n" +
-                "                    \n" +
-                "                    <td class=\"text-center\">\n" +
-                "                        \n" +
-                "                         \n" +
-                "                    </td>\n" +
-                "                </tr>\n" +
-                "                \n" +
-                "                <tr class='Expired'>\n" +
-                "                    <td class=\"text-center\">Sell</td>\n" +
-                "                    <td class=\"text-right\">12</td>\n" +
-                "                    <td class=\"text-right\">0.1499</td>\n" +
-                "                    <td class=\"text-right\">1.80</td>\n" +
-                "                    <td class=\"text-center\">Jan 25 2019 10:29AM</td>\n" +
-                "                    <td class=\"text-center\">Expired</td>\n" +
-                "                    \n" +
-                "                    <td class=\"text-center\">\n" +
-                "                        \n" +
-                "                         \n" +
-                "                    </td>\n" +
-                "                </tr>\n" +
-                "                \n" +
-                "                <tr class='Expired'>\n" +
-                "                    <td class=\"text-center\">Sell</td>\n" +
-                "                    <td class=\"text-right\">11</td>\n" +
-                "                    <td class=\"text-right\">0.1499</td>\n" +
-                "                    <td class=\"text-right\">1.65</td>\n" +
-                "                    <td class=\"text-center\">Jan 25 2019  9:41AM</td>\n" +
-                "                    <td class=\"text-center\">Expired</td>\n" +
-                "                    \n" +
-                "                    <td class=\"text-center\">\n" +
-                "                        \n" +
-                "                         \n" +
-                "                    </td>\n" +
-                "                </tr>\n" +
-                "                \n" +
-                "                <tr class='Expired'>\n" +
-                "                    <td class=\"text-center\">Sell</td>\n" +
-                "                    <td class=\"text-right\">11</td>\n" +
-                "                    <td class=\"text-right\">0.1499</td>\n" +
-                "                    <td class=\"text-right\">1.65</td>\n" +
-                "                    <td class=\"text-center\">Jan 25 2019  9:39AM</td>\n" +
-                "                    <td class=\"text-center\">Expired</td>\n" +
-                "                    \n" +
-                "                    <td class=\"text-center\">\n" +
-                "                        \n" +
-                "                         \n" +
-                "                    </td>\n" +
-                "                </tr>\n" +
-                "                \n" +
-                "                <tr class='Expired'>\n" +
-                "                    <td class=\"text-center\">Sell</td>\n" +
-                "                    <td class=\"text-right\">10</td>\n" +
-                "                    <td class=\"text-right\">0.1499</td>\n" +
-                "                    <td class=\"text-right\">1.50</td>\n" +
-                "                    <td class=\"text-center\">Jan 25 2019  9:38AM</td>\n" +
-                "                    <td class=\"text-center\">Expired</td>\n" +
-                "                    \n" +
-                "                    <td class=\"text-center\">\n" +
-                "                        \n" +
-                "                         \n" +
-                "                    </td>\n" +
-                "                </tr>\n" +
-                "                \n" +
-                "                    </tbody>";
-
-        String tbody1 = "<tr class='Active'>asdfsads\nfssdfsdfs</tr>";
 
         Pattern pattern = Pattern.compile("<tr class='Active'>([\\S|\\s]*?)<\\/tr>");
         Matcher matcher = pattern.matcher(html);
         List<OrderDetail> orderDetails = new ArrayList<>();
         while (matcher.find()) {
-//            System.out.println(matcher.group(1));
             String tr = matcher.group(1);
             Pattern patternTd = Pattern.compile("<td class=\"(.)*?\">([\\S|\\s]*?)<\\/td>");
             Matcher matcher2 = patternTd.matcher(tr);
@@ -546,7 +349,6 @@ public class LeoServiceImpl implements ILeoService{
             OrderDetail detail = new OrderDetail();
             while (matcher2.find()) {
                 String value = matcher2.group(2);
-//                System.out.println("字段_"+i+":"+value);
                 if(i==1){
                     detail.setOrderType(matcher2.group(2));
                 } else if(i==2){
@@ -569,7 +371,6 @@ public class LeoServiceImpl implements ILeoService{
                 i++;
             }
             orderDetails.add(detail);
-//            System.out.println("--------------");
         }
         return orderDetails;
     }
@@ -622,7 +423,7 @@ public class LeoServiceImpl implements ILeoService{
                     is.close();
                 }
             } catch (Exception e) {
-                System.out.println( " - error: " + e);
+                logger.debug( " - error: " + e);
             } finally {
                 conn.disconnect();
             }
@@ -675,13 +476,13 @@ public class LeoServiceImpl implements ILeoService{
                     is.close();
                 }
             } catch (Exception e) {
-                System.out.println( " - error: " + e);
+                logger.debug( " - error: " + e);
             } finally {
                 conn.disconnect();
             }
             map.put("reponseHtml", result);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("",e);
         }
         return map;
     }
@@ -727,13 +528,13 @@ public class LeoServiceImpl implements ILeoService{
                     is.close();
                 }
             } catch (Exception e) {
-                System.out.println( " - error: " + e);
+                logger.error( " - error: " , e);
             } finally {
                 conn.disconnect();
             }
             map.put("reponseHtml", result);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("",e);
         }
         return map;
     }
@@ -757,7 +558,7 @@ public class LeoServiceImpl implements ILeoService{
         HttpPost httpPost = new HttpPost(reqURL);
 
         RequestConfig requestConfig = RequestConfig.custom()
-                .setConnectTimeout(600000).setConnectionRequestTimeout(1000)
+                .setConnectTimeout(600000).setConnectionRequestTimeout(6000)
                 .setSocketTimeout(600000).build();
         httpPost.setConfig(requestConfig);
 

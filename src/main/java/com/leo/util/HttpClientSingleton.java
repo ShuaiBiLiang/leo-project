@@ -72,13 +72,13 @@ public class HttpClientSingleton {
         cm.setDefaultMaxPerRoute(100);
 
         // 将目标主机的最大连接数增加到200
-        HttpHost localhost = new HttpHost("http://www.platform.leocoin.org/",80);
+        HttpHost localhost = new HttpHost("www.platform.leocoin.org/",80);
         cm.setMaxPerRoute(new HttpRoute(localhost), 200);
 
         //请求重试处理
         HttpRequestRetryHandler httpRequestRetryHandler = new HttpRequestRetryHandler() {
             public boolean retryRequest(IOException exception, int executionCount, HttpContext context) {
-                if (executionCount >= 5) {// 如果已经重试了5次，就放弃
+                if (executionCount >= 2) {// 如果已经重试了5次，就放弃
                     return false;
                 }
                 if (exception instanceof NoHttpResponseException) {// 如果服务器丢掉了连接，那么就重试

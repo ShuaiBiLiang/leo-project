@@ -50,7 +50,7 @@ public class DemoApplication {
 		};
 	}
 
-	@Bean
+//	@Bean
 	public CommandLineRunner commandLineRunner(ApplicationContext ctx) {
 		return args -> {
 
