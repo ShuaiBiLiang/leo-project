@@ -14,6 +14,7 @@ import org.apache.http.*;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.DeflateDecompressingEntity;
 import org.apache.http.client.entity.GzipDecompressingEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.entity.ContentType;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -574,6 +576,8 @@ public class LeoServiceImpl implements ILeoService{
         if(!org.springframework.util.StringUtils.isEmpty(cookie)){
             httpPost.setHeader("Cookie",cookie);
         }
+
+        CloseableHttpResponse response = null;
         try{
             if(isEncoder){
                 List<NameValuePair> formParams = new ArrayList<NameValuePair>();
@@ -585,7 +589,7 @@ public class LeoServiceImpl implements ILeoService{
             }else{
                 httpPost.setEntity(new StringEntity(sendData));
             }
-            HttpResponse response = httpClient.execute(httpPost);
+            response = httpClient.execute(httpPost);
             HttpEntity entity = response.getEntity();
             if(null != entity){
                 if(entity.getContentEncoding()!=null){
@@ -603,9 +607,15 @@ public class LeoServiceImpl implements ILeoService{
                 }
             }
         }catch(Exception e){
-            logger.info("与[" + reqURL + "]通信过程中发生异常,堆栈信息如下", e);
+            logger.error("与[" + reqURL + "]通信过程中发生异常,堆栈信息如下", e);
         }finally{
-//            httpClient.shutdown();
+            if(response!=null){
+                try {
+                    response.close();
+                }  catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         return responseContent;
     }

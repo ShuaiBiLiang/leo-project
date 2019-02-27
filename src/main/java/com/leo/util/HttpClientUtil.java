@@ -288,11 +288,11 @@ public class HttpClientUtil {
 //                System.out.println("响应内容: ");
 
         }catch(ClientProtocolException e){
-            logger.info("该异常通常是协议错误导致,比如构造HttpGet对象时传入的协议不对(将'http'写成'htp')或者服务器端返回的内容不符合HTTP协议要求等,堆栈信息如下", e);
+            logger.error("该异常通常是协议错误导致,比如构造HttpGet对象时传入的协议不对(将'http'写成'htp')或者服务器端返回的内容不符合HTTP协议要求等,堆栈信息如下", e);
         }catch(ParseException e){
-            logger.info(e.getMessage(), e);
+            logger.error(e.getMessage(), e);
         }catch(IOException e){
-            logger.info("该异常通常是网络原因引起的,如HTTP服务器未启动等,堆栈信息如下", e);
+            logger.error("该异常通常是网络原因引起的,如HTTP服务器未启动等,堆栈信息如下", e);
         } finally{
             httpGet.releaseConnection();
             if(response != null) {
