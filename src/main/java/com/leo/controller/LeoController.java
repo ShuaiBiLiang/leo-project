@@ -1,27 +1,25 @@
 package com.leo.controller;
 
-import com.alibaba.druid.support.json.JSONUtils;
-import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.leo.common.ServerResponse;
 import com.leo.model.*;
 import com.leo.model.domain.LeoUser;
 import com.leo.service.ILeoService;
-import com.leo.util.*;
 import com.leo.service.LeoUserService;
+import com.leo.service.impl.LeoServiceImpl;
+import com.leo.util.ExecutorPool;
+import com.leo.util.RefreshPriceThread;
+import com.leo.util.UserLeoUtil;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.converter.json.GsonBuilderUtils;
 import org.springframework.ui.Model;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 /**
@@ -30,6 +28,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/admin")
 public class LeoController {
+    private static Log logger = LogFactory.getLog(LeoController.class);
 
     @Autowired
     protected ILeoService leoService;
@@ -55,7 +54,7 @@ public class LeoController {
         LeoMessage leoMessage = leoService.refreshPrice(cookie,currentPrice);
         ServerResponse<LeoMessage> response = ServerResponse.createBySuccess(leoMessage.getMsg(),leoMessage);
         String d2 = dateFormat.format(new Date());
-        System.out.println("刷新请求：开始-"+d1+"  "+leoMessage.getMsg()+"  结束："+d2);
+        logger.error("刷新请求：开始-"+d1+"  "+leoMessage.getMsg()+"  结束："+d2);
         return response;
     }
 
@@ -69,12 +68,12 @@ public class LeoController {
             String currentPrice = param.getPrice();
             String totalCoin = param.getNum();
             String d1 = dateFormat.format(new Date());
-            System.out.println("提交请求开始。。。"+cookie.substring(0,20));
+            logger.debug("提交请求开始。。。"+cookie.substring(0,20));
             LeoMessage leoMessage = leoService.commitForm(cookie,currentPrice,totalCoin);
             result.add(leoMessage);
             String d2 = dateFormat.format(new Date());
             leoMessage.setName(param.getName());
-            System.out.println("提交请求：开始-"+d1+"  "+leoMessage.getMsg()+"  结束："+d2);
+            logger.error("提交请求：开始-"+d1+"  "+leoMessage.getMsg()+"  结束："+d2);
         }
         ServerResponse<List<LeoMessage>> response = ServerResponse.createBySuccess("",result);
         return response;
@@ -164,7 +163,7 @@ public class LeoController {
 //            leoMessage.setName(param.getName());
             result.put(param.getName(),leoMessage);
             String d2 = dateFormat.format(new Date());
-            System.out.println("查询订单明细:"+param.getName()+"开始-"+d1+"    结束："+d2);
+            logger.debug("查询订单明细:"+param.getName()+"开始-"+d1+"    结束："+d2);
         }
         ServerResponse<Map<String,List<OrderDetail>>> response = ServerResponse.createBySuccess("success",result);
         return response;
@@ -249,10 +248,10 @@ public class LeoController {
         leoMessage.add(n1);
         leoMessage.add(n2);
         ServerResponse<List<NamePwdCookie>> response = ServerResponse.createBySuccess("success",leoMessage);
-        System.out.println(new Gson().toJson(response));*/
+        logger.debug(new Gson().toJson(response));*/
         Map<String,String> i = new HashMap<>();
         i.put("userInfo","asdfsda asdfasdf  sadfas");
         i.put("userInfo2","asdfsda asdfasdf  sadfas");
-        System.out.println(new Gson().toJson(i));
+        logger.debug(new Gson().toJson(i));
     }
 }

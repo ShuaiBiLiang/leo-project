@@ -73,7 +73,6 @@ public class LeoServiceImpl implements ILeoService {
             }
             conn.setInstanceFollowRedirects(false);
             conn.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
-            //          conn.setRequestProperty("Accept-Encoding","gzip, deflate, sdch");
             conn.setRequestProperty("Accept-Language", "zh-CN,zh;q=0.8,en;q=0.6");
             conn.setRequestProperty("Cache-Control", "max-age=0");
             conn.setRequestProperty("Connection", "keep-alive");
@@ -439,6 +438,22 @@ public class LeoServiceImpl implements ILeoService {
 
 
     private Map<String, String> getReponseString(String url) {
+        Map<String,String> requestHeader = new HashMap<>();
+
+        requestHeader.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+        requestHeader.put("Accept-Language", "zh-CN,zh;q=0.8,en;q=0.6");
+        requestHeader.put("Cache-Control", "max-age=0");
+        requestHeader.put("Connection", "keep-alive");
+        requestHeader.put("Host", "www.platform.leocoin.org");
+        requestHeader.put("Referer", "http://www.learnearnown.com/");
+        requestHeader.put("Upgrade-Insecure-Requests", "1");
+        requestHeader.put("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
+
+
+        String resultHtml = HttpClientUtil.sendGetRequest(url,requestHeader);
+
+
+
         Map<String, String> map = new HashMap<>();
         String result = "";
         HttpURLConnection conn;
@@ -501,58 +516,10 @@ public class LeoServiceImpl implements ILeoService {
         requestHeader.put("Upgrade-Insecure-Requests", "1");
         requestHeader.put("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
         requestHeader.put("Cookie", cookie);
-        String resultHtml = HttpClientUtil.sendGetRequest(cookie,url,requestHeader);
+        String resultHtml = HttpClientUtil.sendGetRequest(url,requestHeader);
         Map<String, String> map1 = new HashMap<>();
         map1.put("reponseHtml", resultHtml);
         return map1;
-//        Map<String, String> map = new HashMap<>();
-//        String result = "";
-//        HttpURLConnection conn;
-//        URL realUrl = null;
-//        try {
-//            realUrl = new URL(url);
-//            conn = (HttpURLConnection) realUrl.openConnection();
-//            conn.setRequestMethod("GET");
-//            conn.setUseCaches(false);
-//            conn.setReadTimeout(300000);
-//            conn.setConnectTimeout(300000);
-//            conn.setInstanceFollowRedirects(true);
-//            conn.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
-//            conn.setRequestProperty("Accept-Language", "zh-CN,zh;q=0.8,en;q=0.6");
-//            conn.setRequestProperty("Cache-Control", "max-age=0");
-//            conn.setRequestProperty("Connection", "keep-alive");
-//            conn.setRequestProperty("Host", "www.platform.leocoin.org");
-//            conn.setRequestProperty("Referer", "https://www.platform.leocoin.org/Default.aspx");
-//            conn.setRequestProperty("Upgrade-Insecure-Requests", "1");
-//            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
-//            conn.setRequestProperty("Cookie", cookie);
-//            try {
-//                int code = conn.getResponseCode();
-//                conn.getResponseMessage();
-//                if (code == 200) {
-////                    List<String> list = conn.getHeaderFields().get("Set-Cookie");
-////                    map.put("cookie",list.get(0).substring(0,list.get(0).indexOf(";")+1) );
-//                    InputStream is = conn.getInputStream();
-//                    BufferedReader in = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-//                    StringBuffer buffer = new StringBuffer();
-//                    String line = "";
-//                    while ((line = in.readLine()) != null) {
-//                        buffer.append(line);
-//                    }
-//                    result = buffer.toString();
-//                    in.close();
-//                    is.close();
-//                }
-//            } catch (Exception e) {
-//                logger.error(" - error: ", e);
-//            } finally {
-//                conn.disconnect();
-//            }
-//            map.put("reponseHtml", result);
-//        } catch (Exception e) {
-//            logger.error("", e);
-//        }
-//        return map;
     }
 
 

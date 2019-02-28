@@ -787,7 +787,7 @@ public class HttpClientUtil {
         return null;
     }
 
-    public static String sendGetRequest(String cookie, String url, Map<String,String> requestHeader){
+    public static String sendGetRequest( String url, Map<String,String> requestHeader){
 
         SimpleDateFormat s1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         long responseLength = 0;       //响应长度
