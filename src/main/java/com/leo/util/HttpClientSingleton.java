@@ -77,6 +77,7 @@ public class HttpClientSingleton {
 
         //请求重试处理
         HttpRequestRetryHandler httpRequestRetryHandler = new HttpRequestRetryHandler() {
+            @Override
             public boolean retryRequest(IOException exception, int executionCount, HttpContext context) {
                 if (executionCount >= 2) {// 如果已经重试了5次，就放弃
                     return false;

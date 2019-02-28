@@ -41,13 +41,13 @@ import java.util.regex.Pattern;
  * Created by liang on 2017/6/6.
  */
 @Component("leoService")
-public class LeoServiceImpl implements ILeoService{
+public class LeoServiceImpl implements ILeoService {
     private static Log logger = LogFactory.getLog(LeoServiceImpl.class);
 
 
     @Override
     public LeoMessage refreshPrice(String cookie, String currentPrice) {
-        return refreshPrice(cookie,currentPrice,false);
+        return refreshPrice(cookie, currentPrice, false);
     }
 
     @Override
@@ -55,7 +55,7 @@ public class LeoServiceImpl implements ILeoService{
         SimpleDateFormat s1 = new SimpleDateFormat("HH:mm:ss");
         String d1 = s1.format(new Date());
         long t1 = System.currentTimeMillis();
-        logger.error((notRecive?"(激活cookie)":"")+"刷新价格-访问时间："+d1);
+        logger.error((notRecive ? "(激活cookie)" : "") + "刷新价格-访问时间：" + d1);
         LeoMessage leoMessage = new LeoMessage();
         URL realUrl = null;
         HttpURLConnection conn = null;
@@ -64,68 +64,68 @@ public class LeoServiceImpl implements ILeoService{
             conn = (HttpURLConnection) realUrl.openConnection();
             conn.setRequestMethod("GET");
             conn.setUseCaches(false);
-            if(notRecive){
+            if (notRecive) {
                 conn.setReadTimeout(30000);
                 conn.setConnectTimeout(3000);
             } else {
-                conn.setReadTimeout(300000);
+                conn.setReadTimeout(500000);
                 conn.setConnectTimeout(300000);
             }
             conn.setInstanceFollowRedirects(false);
-            conn.setRequestProperty("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+            conn.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
             //          conn.setRequestProperty("Accept-Encoding","gzip, deflate, sdch");
-            conn.setRequestProperty("Accept-Language","zh-CN,zh;q=0.8,en;q=0.6");
-            conn.setRequestProperty("Cache-Control","max-age=0");
-            conn.setRequestProperty("Connection","keep-alive");
-            conn.setRequestProperty("Cookie",cookie);
-            conn.setRequestProperty("Host","www.platform.leocoin.org");
-            conn.setRequestProperty("Referer","http://www.platform.leocoin.org/Authentication.aspx");
-            conn.setRequestProperty("Upgrade-Insecure-Requests","1");
-            conn.setRequestProperty("User-Agent","Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
+            conn.setRequestProperty("Accept-Language", "zh-CN,zh;q=0.8,en;q=0.6");
+            conn.setRequestProperty("Cache-Control", "max-age=0");
+            conn.setRequestProperty("Connection", "keep-alive");
+            conn.setRequestProperty("Cookie", cookie);
+            conn.setRequestProperty("Host", "www.platform.leocoin.org");
+            conn.setRequestProperty("Referer", "http://www.platform.leocoin.org/Authentication.aspx");
+            conn.setRequestProperty("Upgrade-Insecure-Requests", "1");
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
 
             int code = conn.getResponseCode();
 
-            if (code == 200|| code==302) {
+            if (code == 200 || code == 302) {
                 InputStream is = conn.getInputStream();
                 BufferedReader in = new BufferedReader(new InputStreamReader(is, "UTF-8"));
                 StringBuffer buffer = new StringBuffer();
                 String line = "";
-                while ((line = in.readLine()) != null){
+                while ((line = in.readLine()) != null) {
                     buffer.append(line);
                 }
                 String result = buffer.toString();
                 int index = result.indexOf("ctl00$ContentPlaceHolder1$txtBuyMinPrice_value");
                 long l2 = System.currentTimeMillis();
                 String d2 = s1.format(new Date());
-                if(index>0){
-                    String pricePiece = result.substring(index, index+80);
+                if (index > 0) {
+                    String pricePiece = result.substring(index, index + 80);
                     Pattern pattern = Pattern.compile("value=\"([\\d|.]*)\"");
                     Matcher matcher = pattern.matcher(pricePiece);
                     if (matcher.find()) {
-                        pricePiece= matcher.group(1);
+                        pricePiece = matcher.group(1);
                     }
-                    String msg = "【开始:"+d1+"结束:"+d2+";响应耗时："+(l2-t1)/1000+"秒;价格："+pricePiece+"】";
+                    String msg = "【开始:" + d1 + "结束:" + d2 + ";响应耗时：" + (l2 - t1) / 1000 + "秒;价格：" + pricePiece + "】";
                     leoMessage.setPrice(pricePiece);
                     leoMessage.setMsg(msg);
                 }
                 in.close();
                 is.close();
-            }else {
+            } else {
                 leoMessage.setPrice("");
                 leoMessage.setMsg("【刷新价格】页面访问失败；可能是cookie失效；");
             }
 
         } catch (Exception e) {
-            logger.error("刷新价格出错",e);
+            logger.error("刷新价格出错", e);
         } finally {
-            if(conn!=null){
+            if (conn != null) {
                 conn.disconnect();
             }
         }
         long t2 = System.currentTimeMillis();
         String d2 = s1.format(new Date());
-        if(!notRecive){
-            logger.error((notRecive?"(激活cookie)":"")+"返回时间："+d2+"  耗时："+(t2-t1)+"ms");
+        if (!notRecive) {
+            logger.error((notRecive ? "(激活cookie)" : "") + "返回时间：" + d2 + "  耗时：" + (t2 - t1) + "ms");
         }
         return leoMessage;
     }
@@ -134,39 +134,39 @@ public class LeoServiceImpl implements ILeoService{
     public LeoMessage commitForm(String cookie, String price, String size) {
 
         long t1 = System.currentTimeMillis();
-        logger.debug("提交订单：----第一步，点击[Sell Order]，cookie："+cookie.substring(0,20));
+        logger.debug("提交订单：----第一步，点击[Sell Order]，cookie：" + cookie.substring(0, 20));
 
-        String url = "http://www.platform.leocoin.org/SellCoin.aspx?TotalCoin="+size+"&Price="+price;
-        String html = HttpClientUtil.sendGetRequestReturnWithHtml(cookie,url,null);
-        logger.debug("提交订单：----第二步，[点击确认]，cookie："+cookie.substring(0,20));
+        String url = "http://www.platform.leocoin.org/SellCoin.aspx?TotalCoin=" + size + "&Price=" + price;
+        String html = HttpClientUtil.sendGetRequestReturnWithHtml(cookie, url, null);
+        logger.debug("提交订单：----第二步，[点击确认]，cookie：" + cookie.substring(0, 20));
         String param1 = "__VIEWSTATE";
         String param2 = "__EVENTVALIDATION";
         Pattern pattern = Pattern.compile("id=\"__VIEWSTATE\" value=\"([\\S]*)\"");
         Matcher matcher = pattern.matcher(html);
         String value1 = "";
         if (matcher.find()) {
-            value1= matcher.group(1);
+            value1 = matcher.group(1);
         }
         pattern = Pattern.compile("id=\"__EVENTVALIDATION\" value=\"([\\S]*)\"");
         matcher = pattern.matcher(html);
         String value2 = "";
         if (matcher.find()) {
-            value2= matcher.group(1);
+            value2 = matcher.group(1);
         }
-        if(org.springframework.util.StringUtils.isEmpty(value1) || org.springframework.util.StringUtils.isEmpty(value2)){
-            logger.debug("提交订单：----第一步出错，点击确认页面，没有拿到有效的信息。，cookie："+cookie.substring(0,20));
+        if (org.springframework.util.StringUtils.isEmpty(value1) || org.springframework.util.StringUtils.isEmpty(value2)) {
+            logger.debug("提交订单：----第一步出错，点击确认页面，没有拿到有效的信息。，cookie：" + cookie.substring(0, 20));
         }
         String reqURL = url;
-        String sendData = param1+"="+value1+"&"+param2+"="+value2+"&ctl00$ContentPlaceHolder1$btnSell=Confirm";
-        String responseHtml = sendPostRequest(reqURL,sendData,cookie,true,null,null,null);
+        String sendData = param1 + "=" + value1 + "&" + param2 + "=" + value2 + "&ctl00$ContentPlaceHolder1$btnSell=Confirm";
+        String responseHtml = sendPostRequest(reqURL, sendData, cookie, true, null, null, null);
         LeoMessage leoMessage = new LeoMessage();
         long t2 = System.currentTimeMillis();
-        if(responseHtml.indexOf("Your order has been saved")>-1){
-            leoMessage.setMsg("Your order has been saved! 耗时："+(t2-t1)/1000+"秒");
+        if (responseHtml.indexOf("Your order has been saved") > -1) {
+            leoMessage.setMsg("Your order has been saved! 耗时：" + (t2 - t1) / 1000 + "秒");
             leoMessage.setLoginError(false);
-        }else {
+        } else {
             leoMessage.setLoginError(true);
-            leoMessage.setMsg("订单提交失败！ 耗时："+(t2-t1)/1000+"秒");
+            leoMessage.setMsg("订单提交失败！ 耗时：" + (t2 - t1) / 1000 + "秒");
         }
         logger.debug(leoMessage.getMsg());
         return leoMessage;
@@ -174,86 +174,87 @@ public class LeoServiceImpl implements ILeoService{
 
     @Override
     public LeoMessage getCookie(String userInfo) {
-        String user = "ldd0601 Leo170730776* da422d";
-        if(StringUtils.hasText(userInfo)){
+        String user = "";
+        if (StringUtils.hasText(userInfo)) {
             user = userInfo;
+        } else {
+            return null;
         }
+        user = user.replaceAll("  ", " ");
         String[] userArr = user.split(" ");
 
-        try{
+        try {
+            logger.error("step-1,访问网页，获取cookie");
+            Map<String, String> map = getReponseString("https://www.learnearnown.com/");
+            logger.error("step-2,登录网页，使cookie生效");
 
-
-        logger.error("step-1,访问网页，获取cookie");
-        Map<String,String> map = getReponseString("https://www.learnearnown.com/");
-        logger.error("step-2,登录网页，使cookie生效");
-
-        String cookie = map.get("cookie");
-        String reqURL= "https://www.learnearnown.com/";
-        String sendData =
-                "ctl00$hdlid=1" +
-                "&ctl00$hdlname=English" +
-                "&ctl00$chkRememberMe=on" +
-                "&ctl00$btnLoginHeader=Login" +
-                "&ctl00$hdnContentType=0" +
-                "&ctl00$hdFlagURL=/assets/images/flags/24/United_Kingdom.png" +
-                "&ctl00$btnLoginHeader=Login" +
-                "&__SCROLLPOSITIONY=210" +
-                "&__SCROLLPOSITIONY=0"
-                +"&__VIEWSTATE=/wEPDwUJMzExMDcwMzkyD2QWAmYPZBYCAgMPZBYOAgYPDxYCHgRUZXh0BQjCoyAtIEdCUGRkAgcPFgIeC18hSXRlbUNvdW50AgkWEgIBD2QWAmYPFQQDMTgzByQgLSBVU0QBMQckIC0gVVNEZAICD2QWAmYPFQQCMjkHJCAtIENBRAEzByQgLSBDQURkAgMPZBYCZg8VBAMxODEIwqMgLSBHQlABNAjCoyAtIEdCUGQCBA9kFgJmDxUEAAnigqwgLSBFVVIBNQnigqwgLSBFVVJkAgUPZBYCZg8VBAMxMzEJUnMuIC0gUEtSATYJUnMuIC0gUEtSZAIGD2QWAmYPFQQDMTc2CeKCuiAtIFRSWQE3CeKCuiAtIFRSWWQCBw9kFgJmDxUEAzEzNgrigrEgLSBQZXNvATkK4oKxIC0gUGVzb2QCCA9kFgJmDxUEAjc5CFJwIC0gSURSAjExCFJwIC0gSURSZAIJD2QWAmYPFQQCNzgJ4oK5IC0gSU5SAjEyCeKCuSAtIElOUmQCCQ8WAh8BAgcWDmYPZBYGZg8VAQM5NjlkAgEPFgIfAAUQTEVPIFN0YXJ0ZXIgUGFja2QCAg8VAgM5NjkQTEVPIFN0YXJ0ZXIgUGFja2QCAQ9kFgZmDxUBAzk3MGQCAQ8WAh8ABRFMRU8gQnVzaW5lc3MgUGFja2QCAg8VAgM5NzARTEVPIEJ1c2luZXNzIFBhY2tkAgIPZBYGZg8VAQM5NzFkAgEPFgIfAAUMTEVPIFZJUCBQYWNrZAICDxUCAzk3MQxMRU8gVklQIFBhY2tkAgMPZBYGZg8VAQQxMDAzZAIBDxYCHwAFFENoaWxkIEVkdWNhdGlvbiBQYWNrZAICDxUCBDEwMDMUQ2hpbGQgRWR1Y2F0aW9uIFBhY2tkAgQPZBYGZg8VAQM4NjFkAgEPFgIfAAUJR29sZCBQYWNrZAICDxUCAzg2MQlHb2xkIFBhY2tkAgUPZBYGZg8VAQM5MDdkAgEPFgIfAAUkUXVpY2sgV2lucyBTZXJpZXMgdG8gQnVpbGQgWW91ciBUZWFtZAICDxUCAzkwNyRRdWljayBXaW5zIFNlcmllcyB0byBCdWlsZCBZb3VyIFRlYW1kAgYPZBYGZg8VAQM0MjhkAgEPFgIfAAUcVGhlIFBvd2VyIG9mIFNtYXJ0IFF1ZXN0aW9uc2QCAg8VAgM0MjgcVGhlIFBvd2VyIG9mIFNtYXJ0IFF1ZXN0aW9uc2QCCg8PFgIeB1Zpc2libGVoZGQCDA8PFgIfAmhkZAIsD2QWCgIFD2QWAgIJDxBkZBYAZAIGD2QWBgIJDxBkZBYAZAILD2QWAgIDDxBkZBYBZmQCFQ9kFgICAw8QZGQWAWZkAgcPZBYGAgkPEGRkFgBkAg0PEGRkFgBkAhcPZBYCAgEPEGRkFgFmZAIID2QWBAIJDxBkZBYAZAINDxBkZBYAZAIJD2QWBAIJDxBkZBYAZAINDxBkZBYAZAItD2QWCAIDDxYCHwECBRYKAgEPZBYEZg8VAgExIi9hc3NldHMvaW1hZ2VzL3NsaWRlcnMvSW1hZ2U5MC5qcGdkAgEPFgIfAQICFgRmD2QWAmYPFQGxCDxkaXYgY2xhc3M9InRwLWNhcHRpb24gbWVkaXVtX2RhcmsgY3VzdG9taW4gY3VzdG9tb3V0IHRwLXJlc2l6ZW1lICAgYmFubmVyX3AiDQppZD0ic2xpZGUzLWxheWVyMiINCmRhdGEteD0iMCIgZGF0YS1ob2Zmc2V0PSIiDQpkYXRhLXk9IiAiIGRhdGEtdm9mZnNldD0iIg0KZGF0YS1lbGVtZW50ZGVsYXk9IiINCmRhdGEtc3RhcnQ9IjEyMDAiDQpkYXRhLXNwZWVkPSI2MDAiDQpkYXRhLWVhc2luZz0iQmFjay5lYXNlSW5PdXQiDQpkYXRhLWN1c3RvbWluPSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6OTA7cm90YXRpb25ZOjA7cm90YXRpb25aOjA7c2NhbGVYOjE7c2NhbGVZOjE7c2tld1g6MDtza2V3WTowO29wYWNpdHk6MDt0cmFuc2Zvcm1QZXJzcGVjdGl2ZToyMDA7dHJhbnNmb3JtT3JpZ2luOjUwJSAwJTsiDQpkYXRhLWN1c3RvbW91dD0ieDowO3k6MDt6OjA7cm90YXRpb25YOjA7cm90YXRpb25ZOjA7cm90YXRpb25aOjA7c2NhbGVYOjAuNzU7c2NhbGVZOjAuNzU7c2tld1g6MDtza2V3WTowO29wYWNpdHk6MDt0cmFuc2Zvcm1QZXJzcGVjdGl2ZTo2MDA7dHJhbnNmb3JtT3JpZ2luOjUwJSA1MCU7Ig0KZGF0YS1jYXB0aW9uaGlkZGVuPSJvbiINCmRhdGEtd2lkdGg9IlsnNDQwcHgnLCc0NDBweCcsJzQwMHB4JywnMTYwcHgnXSINCmRhdGEtaGVpZ2h0PSJbJ2F1dG8nLCdhdXRvJywnYXV0bycsJ2F1dG8nXSINCmRhdGEtc3BsaXRpbj0ibm9uZSINCmRhdGEtc3BsaXRvdXQ9Im5vbmUiDQpkYXRhLXJlc3BvbnNpdmVfb2Zmc2V0PSJvbiINCmRhdGEtZGVsYXk9IjIwMCINCnN0eWxlPSJtYXJnaW4tdG9wOjMxMHB4OyBtYXJnaW4tYm90dG9tOjIwcHg7IGZvbnQtc2l6ZTogMTZweDsgbGV0dGVyLXNwYWNpbmc6IG5vcm1hbDsgbGluZS1oZWlnaHQ6IDIwcHg7IHdoaXRlLXNwYWNlOiBub3JtYWw7IGNvbG9yOiAjRkZGOyI+DQpJZiB5b3UgYXR0ZW5lZGVkIHRoZSBMRU8gTW9tZW50dW0gVG91cnMgb2YgMjAxOCwgeW91IGtub3cganVzdCBob3cgcG93ZXJmdWwgdGhlc2UgZXZlbnRzIGNhbiBiZSEgWW91IG9ubHkgaGF2ZSB1bnRpbCAyOCBGZWJydWFyeSAyMDE5IHRvIHF1YWxpZnkhIA0KPC9kaXY+ZAIBD2QWAmYPFQGhBzxhIGhyZWY9Imh0dHA6Ly9tb21lbnR1bS5sZWFybmVhcm5vd24uY29tLw0KIiB0YXJnZXQ9Il9ibGFuayIgY2xhc3M9InRwLWNhcHRpb24gbWVkaXVtX2RhcmsgYmFubmVyX2J0biAgY3VzdG9taW4gY3VzdG9tb3V0IHRwLXJlc2l6ZW1lIGJ0biBidG4tcHJpbWFyeSINCmlkPSJzbGlkZTYtbGF5ZXIyIg0KZGF0YS14PSIwIiBkYXRhLWhvZmZzZXQ9IiINCmRhdGEteT0iIiBkYXRhLXZvZmZzZXQ9IiINCmRhdGEtZWxlbWVudGRlbGF5PSIiDQpkYXRhLXN0YXJ0PSIxNDAwIg0KZGF0YS1zcGVlZD0iNjAwIg0KZGF0YS1lYXNpbmc9IkJhY2suZWFzZUluT3V0Ig0KZGF0YS1jdXN0b21pbj0ieDowO3k6MDt6OjA7cm90YXRpb25YOjkwO3JvdGF0aW9uWTowO3JvdGF0aW9uWjowO3NjYWxlWDoxO3NjYWxlWToxO3NrZXdYOjA7c2tld1k6MDtvcGFjaXR5OjA7dHJhbnNmb3JtUGVyc3BlY3RpdmU6MjAwO3RyYW5zZm9ybU9yaWdpbjo1MCUgMCU7Ig0KZGF0YS1jdXN0b21vdXQ9Ing6MDt5OjA7ejowO3JvdGF0aW9uWDowO3JvdGF0aW9uWTowO3JvdGF0aW9uWjowO3NjYWxlWDowLjc1O3NjYWxlWTowLjc1O3NrZXdYOjA7c2tld1k6MDtvcGFjaXR5OjA7dHJhbnNmb3JtUGVyc3BlY3RpdmU6NjAwO3RyYW5zZm9ybU9yaWdpbjo1MCUgNTAlOyINCmRhdGEtY2FwdGlvbmhpZGRlbj0ib24iDQpkYXRhLXdpZHRoPSJbJ2F1dG8nLCdhdXRvJywnYXV0bycsJ2F1dG8nXSINCmRhdGEtaGVpZ2h0PSJbJ2F1dG8nLCdhdXRvJywnYXV0bycsJ2F1dG8nXSINCmRhdGEtc3BsaXRpbj0ibm9uZSINCmRhdGEtc3BsaXRvdXQ9Im5vbmUiDQpkYXRhLXJlc3BvbnNpdmVfb2Zmc2V0PSJvbiINCmRhdGEtZGVsYXk9IjIwMCIgc3R5bGU9ImJhY2tncm91bmQ6ICNmZjI1ZjI7IG1hcmdpbi1sZWZ0OiA1MHB4OyBkaXNwbGF5OmlubGluZS1ibG9jayI+bW9yZSBpbmZvDQo8L2E+ZAICD2QWBGYPFQIBMigvYXNzZXRzL2ltYWdlcy9zbGlkZXJzL3NsaWRlcmltYWdlZDMuanBnZAIBDxYCHwECBRYKZg9kFgJmDxUBjQo8ZGl2IGNsYXNzPSJ0cC1jYXB0aW9uIG1lZGl1bWxhcmdlX2xpZ2h0X3doaXRlX2NlbnRlciBjdXN0b21pbiBjdXN0b21vdXQgc3RhcnQiICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGlkPSJzbGlkZTEtbGF5ZXIxIiAgICAgICBkYXRhLXg9ImNlbnRlciIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZGF0YS1ob2Zmc2V0PSIwIiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBkYXRhLXk9IjAiICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRhdGEtY3VzdG9taW49Ing6MDt5OjA7ejowO3JvdGF0aW9uWDo5MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MTtzY2FsZVk6MTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjIwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDAlOyIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZGF0YS1jdXN0b21vdXQ9Ing6MDt5OjA7ejowO3JvdGF0aW9uWDowO3JvdGF0aW9uWTowO3JvdGF0aW9uWjowO3NjYWxlWDowLjc1O3NjYWxlWTowLjc1O3NrZXdYOjA7c2tld1k6MDtvcGFjaXR5OjA7dHJhbnNmb3JtUGVyc3BlY3RpdmU6NjAwO3RyYW5zZm9ybU9yaWdpbjo1MCUgNTAlOyIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZGF0YS1zcGVlZD0iMTAwMCIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZGF0YS1zdGFydD0iNjAwIiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBkYXRhLWVhc2luZz0iQmFjay5lYXNlSW5PdXQiICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRhdGEtZW5kc3BlZWQ9IjMwMCIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc3R5bGU9ImZvbnQtc2l6ZTogMjVweDsgbWFyZ2luLXRvcDoxNTBweDsgbWFyZ2luLWJvdHRvbToyMHB4OyB3aGl0ZS1zcGFjZTpub3JtYWwgIWltcG9ydGFudCI+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFRocm91Z2ggZGVsaXZlcmluZyBrbm93bGVkZ2Ugd2UgaW5zcGlyZSBwZW9wbGUgdG8gbGl2ZSB0aGVpciBkcmVhbS4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5kAgEPZBYCZg8VAaUGPGRpdiBjbGFzcz0ibGVvX2J0bnMgY2xlYXJmaXgiICA+DQogIDxkaXYgY2xhc3M9InRwLWNhcHRpb24gbWVkaXVtbGFyZ2VfbGlnaHRfd2hpdGVfY2VudGVyIGN1c3RvbWluIGN1c3RvbW91dCBzdGFydCBsYXllcjIgdHAtcmVzaXplbWUgbGVhcm5fZGl2IiBpZD0ic2xpZGUxLWxheWVyMiIgZGF0YS14PSIwIiAgZGF0YS1ob2Zmc2V0PSIiIGRhdGEteT0iIiBkYXRhLWN1c3RvbWluPSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6OTA7cm90YXRpb25ZOjA7cm90YXRpb25aOjA7c2NhbGVYOjE7c2NhbGVZOjE7c2tld1g6MDtza2V3WTowO29wYWNpdHk6MDt0cmFuc2Zvcm1QZXJzcGVjdGl2ZToyMDA7dHJhbnNmb3JtT3JpZ2luOjUwJSAwJTsiIGRhdGEtY3VzdG9tb3V0PSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MC43NTtzY2FsZVk6MC43NTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjYwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDUwJTsiIGRhdGEtc3BlZWQ9IjEwMDAiIGRhdGEtc3RhcnQ9IjgwMCIgZGF0YS1lYXNpbmc9IkJhY2suZWFzZUluT3V0IiBkYXRhLWVuZHNwZWVkPSIzMDAiIHN0eWxlPSJmb250LXdlaWdodDogNzAwOyBmb250LXNpemU6IDUwcHg7IGxldHRlci1zcGFjaW5nOiAxcHg7IGxpbmUtaGVpZ2h0OiA1MHB4OyBjb2xvcjogd2hpdGU7ICAgICBkaXNwbGF5OiBpbmxpbmUtYmxvY2s7Ij48YSBocmVmPSIvQWJvdXRMRU8vTGVhcm4iIHRhcmdldD0iX2JsYW5rIiBjbGFzcz0iYm94ZXMiPkxFQVJOPC9hPjwvZGl2PmQCAg9kFgJmDxUBhAY8ZGl2IGNsYXNzPSJ0cC1jYXB0aW9uIG1lZGl1bWxhcmdlX2xpZ2h0X3doaXRlX2NlbnRlciBjdXN0b21pbiBjdXN0b21vdXQgc3RhcnQgIGxheWVyMiB0cC1yZXNpemVtZSBlYXJuX2RpdiIgaWQ9InNsaWRlMS1sYXllcjMiIGRhdGEteD0iY2VudGVyIiAgZGF0YS1ob2Zmc2V0PSIiIGRhdGEteT0iIiBkYXRhLWN1c3RvbWluPSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6OTA7cm90YXRpb25ZOjA7cm90YXRpb25aOjA7c2NhbGVYOjE7c2NhbGVZOjE7c2tld1g6MDtza2V3WTowO29wYWNpdHk6MDt0cmFuc2Zvcm1QZXJzcGVjdGl2ZToyMDA7dHJhbnNmb3JtT3JpZ2luOjUwJSAwJTsiIGRhdGEtY3VzdG9tb3V0PSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MC43NTtzY2FsZVk6MC43NTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjYwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDUwJTsiIGRhdGEtc3BlZWQ9IjEwMDAiIGRhdGEtc3RhcnQ9IjEwMDAiIGRhdGEtZWFzaW5nPSJCYWNrLmVhc2VJbk91dCIgZGF0YS1lbmRzcGVlZD0iMzAwIiBzdHlsZT0iZm9udC13ZWlnaHQ6IDcwMDsgZm9udC1zaXplOiA1MHB4OyBsZXR0ZXItc3BhY2luZzogMXB4OyBsaW5lLWhlaWdodDogNTBweDsgY29sb3I6IHdoaXRlOyAgICAgZGlzcGxheTogaW5saW5lLWJsb2NrOyI+PGEgaHJlZj0iL0Fib3V0TEVPL0Vhcm4iIHRhcmdldD0iX2JsYW5rIiBjbGFzcz0iYm94ZXMiPkVBUk48L2E+PC9kaXY+ZAIDD2QWAmYPFQGvBjxkaXYgY2xhc3M9InRwLWNhcHRpb24gbWVkaXVtbGFyZ2VfbGlnaHRfd2hpdGVfY2VudGVyIGN1c3RvbWluIGN1c3RvbW91dCBzdGFydCBsYXllcjIgdHAtcmVzaXplbWUgb3duX2RpdiIgaWQ9InNsaWRlMS1sYXllcjQiICBkYXRhLXg9ImNlbnRlciIgZGF0YS1ob2Zmc2V0PSIiIGRhdGEteT0iIiBkYXRhLWN1c3RvbWluPSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6OTA7cm90YXRpb25ZOjA7cm90YXRpb25aOjA7c2NhbGVYOjE7c2NhbGVZOjE7c2tld1g6MDtza2V3WTowO29wYWNpdHk6MDt0cmFuc2Zvcm1QZXJzcGVjdGl2ZToyMDA7dHJhbnNmb3JtT3JpZ2luOjUwJSAwJTsiIGRhdGEtY3VzdG9tb3V0PSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MC43NTtzY2FsZVk6MC43NTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjYwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDUwJTsiIGRhdGEtc3BlZWQ9IjEwMDAiIGRhdGEtc3RhcnQ9IjEyMDAiIGRhdGEtZWFzaW5nPSJCYWNrLmVhc2VJbk91dCIgZGF0YS1lbmRzcGVlZD0iMzAwIiBzdHlsZT0iZm9udC13ZWlnaHQ6IDcwMDsgZm9udC1zaXplOiA1MHB4OyBsZXR0ZXItc3BhY2luZzogMXB4OyBsaW5lLWhlaWdodDogNTBweDsgY29sb3I6IHdoaXRlOyAgICBkaXNwbGF5OiBpbmxpbmUtYmxvY2s7Ij48YSBocmVmPSIvQWJvdXRMRU8vT3duIiB0YXJnZXQ9Il9ibGFuayIgY2xhc3M9ImJveGVzIj5PV048L2E+PC9kaXY+DQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPC9kaXY+ZAIED2QWAmYPFQGUDDxkaXYgY2xhc3M9InRwLWNhcHRpb24gbWVkaXVtX2RhcmsgY3VzdG9taW4gY3VzdG9tb3V0IHRwLXJlc2l6ZW1lIGNsZWFyZml4ICIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgaWQ9InNsaWRlMS1sYXllcjUiICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRhdGEteD0iY2VudGVyIiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBkYXRhLXk9IiIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZGF0YS1zcGxpdGluPSIiICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRhdGEtZWxlbWVudGRlbGF5PSIiICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRhdGEtc3RhcnQ9IjE0MDAiICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRhdGEtc3BlZWQ9IjYwMCIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZGF0YS1lYXNpbmc9IkJhY2suZWFzZUluT3V0IiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBkYXRhLWN1c3RvbWluPSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6OTA7cm90YXRpb25ZOjA7cm90YXRpb25aOjA7c2NhbGVYOjE7c2NhbGVZOjE7c2tld1g6MDtza2V3WTowO29wYWNpdHk6MDt0cmFuc2Zvcm1QZXJzcGVjdGl2ZToyMDA7dHJhbnNmb3JtT3JpZ2luOjUwJSAwJTsiICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRhdGEtY3VzdG9tb3V0PSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MC43NTtzY2FsZVk6MC43NTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjYwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDUwJTsiICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRhdGEtY2FwdGlvbmhpZGRlbj0ib24iICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRhdGEtaG9mZnNldD0iMCIgZGF0YS13aWR0aD0nWyI3MDBweCIsIjYwMHB4IiwiNDAwcHgiLCIzMDBweCJdJyBzdHlsZT0iY29sb3I6IHdoaXRlOyBmb250LXNpemU6IDI1cHg7IGxpbmUtaGVpZ2h0OiA2MHB4OyBmb250LXdlaWdodDogMzAwOyBsZXR0ZXItc3BhY2luZzogMHB4OyB0ZXh0LWFsaWduOmNlbnRlcjsgd2hpdGUtc3BhY2U6IG5vcm1hbDsgbWFyZ2luLXRvcDoyMHB4OyBsaW5lLWhlaWdodDogMjVweCI+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFdlIG9mZmVyIGFuIGlubm92YXRpdmUgYW5kIGNyZWF0aXZlIGFwcHJvYWNoIHRvIGxlYXJuaW5nIHdpdGggbXVsdGlsaW5ndWFsIHByb2R1Y3RzIGZvciBmbGV4aWJsZSwgaGFuZHMtb24gbGVhcm5pbmcuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPC9kaXY+ZAIDD2QWBGYPFQIBMyIvYXNzZXRzL2ltYWdlcy9zbGlkZXJzL0ltYWdlNzYuanBnZAIBDxYCHwECAxYGZg9kFgJmDxUB1Qg8ZGl2IGNsYXNzPSJ0cC1jYXB0aW9uIG1lZGl1bV9kYXJrIGN1c3RvbWluIGN1c3RvbW91dCB0cC1yZXNpemVtZSAgIGJhbm5lcl9oMSINCiAgICAgaWQ9InNsaWRlMy1sYXllcjEiDQogICAgIGRhdGEteD0iMCIgZGF0YS1ob2Zmc2V0PSIiDQogICAgIGRhdGEteT0iIiBkYXRhLXZvZmZzZXQ9IiINCiAgICAgZGF0YS1lbGVtZW50ZGVsYXk9IiINCiAgICAgZGF0YS1zdGFydD0iMTAwMCINCiAgICAgZGF0YS1zcGVlZD0iNjAwIg0KICAgICBkYXRhLWVhc2luZz0iQmFjay5lYXNlSW5PdXQiDQogICAgIGRhdGEtY3VzdG9taW49Ing6MDt5OjA7ejowO3JvdGF0aW9uWDo5MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MTtzY2FsZVk6MTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjIwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDAlOyINCiAgICAgZGF0YS1jdXN0b21vdXQ9Ing6MDt5OjA7ejowO3JvdGF0aW9uWDowO3JvdGF0aW9uWTowO3JvdGF0aW9uWjowO3NjYWxlWDowLjc1O3NjYWxlWTowLjc1O3NrZXdYOjA7c2tld1k6MDtvcGFjaXR5OjA7dHJhbnNmb3JtUGVyc3BlY3RpdmU6NjAwO3RyYW5zZm9ybU9yaWdpbjo1MCUgNTAlOyINCiAgICAgZGF0YS1jYXB0aW9uaGlkZGVuPSJvbiINCiAgICAgZGF0YS13aWR0aD0iWyc2MDBweCcsJzYwMHB4JywnMzUwcHgnLCcyMDBweCddIg0KICAgICBkYXRhLWhlaWdodD0iWydhdXRvJywnYXV0bycsJ2F1dG8nLCdhdXRvJ10iDQogICAgIGRhdGEtc3BsaXRpbj0ibm9uZSINCiAgICAgZGF0YS1zcGxpdG91dD0ibm9uZSINCiAgICAgZGF0YS1yZXNwb25zaXZlX29mZnNldD0ib24iDQogICAgIGRhdGEtZGVsYXk9IjIwMCINCiAgICAgc3R5bGU9Im1hcmdpbi10b3A6MTUwcHg7IG1hcmdpbi1ib3R0b206MTNweDsgdGV4dC10cmFuc2Zvcm06IHVwcGVyY2FzZTsgY29sb3I6ICNGRkY7IHdvcmQtd3JhcDogbm9ybWFsOyB3aGl0ZS1zcGFjZTogbm9ybWFsOyBsZXR0ZXItc3BhY2luZzogMC42cHg7IGZvbnQtd2VpZ2h0OiBib2xkOyBsaW5lLWhlaWdodDogNTBweDsiPg0KICAgIEludHJvZHVjaW5nIHRoZSBuZXcgbGVhZGluZyBwbGF5ZXJzIGZyb20gTEVPDQoNCjwvZGl2PmQCAQ9kFgJmDxUB2Ag8ZGl2IGNsYXNzPSJ0cC1jYXB0aW9uIG1lZGl1bV9kYXJrIGN1c3RvbWluIGN1c3RvbW91dCB0cC1yZXNpemVtZSAgIGJhbm5lcl9wIg0KaWQ9InNsaWRlMy1sYXllcjIiDQpkYXRhLXg9IjAiIGRhdGEtaG9mZnNldD0iIg0KZGF0YS15PSIgIiBkYXRhLXZvZmZzZXQ9IiINCmRhdGEtZWxlbWVudGRlbGF5PSIiDQpkYXRhLXN0YXJ0PSIxMjAwIg0KZGF0YS1zcGVlZD0iNjAwIg0KZGF0YS1lYXNpbmc9IkJhY2suZWFzZUluT3V0Ig0KZGF0YS1jdXN0b21pbj0ieDowO3k6MDt6OjA7cm90YXRpb25YOjkwO3JvdGF0aW9uWTowO3JvdGF0aW9uWjowO3NjYWxlWDoxO3NjYWxlWToxO3NrZXdYOjA7c2tld1k6MDtvcGFjaXR5OjA7dHJhbnNmb3JtUGVyc3BlY3RpdmU6MjAwO3RyYW5zZm9ybU9yaWdpbjo1MCUgMCU7Ig0KZGF0YS1jdXN0b21vdXQ9Ing6MDt5OjA7ejowO3JvdGF0aW9uWDowO3JvdGF0aW9uWTowO3JvdGF0aW9uWjowO3NjYWxlWDowLjc1O3NjYWxlWTowLjc1O3NrZXdYOjA7c2tld1k6MDtvcGFjaXR5OjA7dHJhbnNmb3JtUGVyc3BlY3RpdmU6NjAwO3RyYW5zZm9ybU9yaWdpbjo1MCUgNTAlOyINCmRhdGEtY2FwdGlvbmhpZGRlbj0ib24iDQpkYXRhLXdpZHRoPSJbJzU1MHB4JywnNDAwcHgnLCczMDBweCcsJzEzMHB4J10iDQpkYXRhLWhlaWdodD0iWydhdXRvJywnYXV0bycsJ2F1dG8nLCdhdXRvJ10iDQpkYXRhLXNwbGl0aW49Im5vbmUiDQpkYXRhLXNwbGl0b3V0PSJub25lIg0KZGF0YS1yZXNwb25zaXZlX29mZnNldD0ib24iDQpkYXRhLWRlbGF5PSIyMDAiDQpzdHlsZT0ibWFyZ2luLWJvdHRvbToyMHB4OyBmb250LXNpemU6IDE2cHg7IGxldHRlci1zcGFjaW5nOiBub3JtYWw7IGxpbmUtaGVpZ2h0OiAyMHB4OyB3aGl0ZS1zcGFjZTogbm9ybWFsOyBjb2xvcjogI0ZGRjsiPg0KTEVPIGlzIHByb3VkIHRvIGFubm91bmNlIHRoZSBsYXVuY2ggb2YgMyBuZXcgUHJvZHVjdCBQYWNrcywgd2hpY2ggaXMgZ3JlYXQgbmV3cyBmb3IgeW91IGFuZCB5b3VyIHRlYW0sIHlvdXIgcHJvc3BlY3RzIGFuZCwgYmVjYXVzZSBpdCB3aWxsIHNwZWVkIHlvdSB0b3dhcmRzIHlvdXIgTGVhcm4sIEVhcm4gYW5kIE93biBnb2FscywgZm9yIExFTyB0b28uDQo8L2Rpdj4NCmQCAg9kFgJmDxUBywc8YSBocmVmPSJodHRwczovL3d3dy5sZWFybmVhcm5vd24uY29tL2xlby9TaG9wL0NhdGVnb3J5L1Byb2R1Y3QtUGFja3MiIHRhcmdldD0iX2JsYW5rIiBjbGFzcz0idHAtY2FwdGlvbiBtZWRpdW1fZGFyayBjdXN0b21pbiBjdXN0b21vdXQgdHAtcmVzaXplbWUgYnRuIGJ0bi1wcmltYXJ5IGJhbm5lcl9idG4iICBzdHlsZT0iYmFja2dyb3VuZC1jb2xvcjojZDUzYjU4ICFpbXBvcnRhbnQ7IGRpc3BsYXk6aW5saW5lLWJsb2NrIiAgaWQ9InNsaWRlMy1sYXllcjMiICAgZGF0YS14PSIwIiBkYXRhLWhvZmZzZXQ9IiIgICBkYXRhLXk9IiIgZGF0YS12b2Zmc2V0PSIiICAgZGF0YS1lbGVtZW50ZGVsYXk9IiIgICBkYXRhLXN0YXJ0PSIxNDAwIiAgIGRhdGEtc3BlZWQ9IjYwMCIgICBkYXRhLWVhc2luZz0iQmFjay5lYXNlSW5PdXQiICAgZGF0YS1jdXN0b21pbj0ieDowO3k6MDt6OjA7cm90YXRpb25YOjkwO3JvdGF0aW9uWTowO3JvdGF0aW9uWjowO3NjYWxlWDoxO3NjYWxlWToxO3NrZXdYOjA7c2tld1k6MDtvcGFjaXR5OjA7dHJhbnNmb3JtUGVyc3BlY3RpdmU6MjAwO3RyYW5zZm9ybU9yaWdpbjo1MCUgMCU7IiAgIGRhdGEtY3VzdG9tb3V0PSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MC43NTtzY2FsZVk6MC43NTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjYwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDUwJTsiICAgZGF0YS1jYXB0aW9uaGlkZGVuPSJvbiIgICBkYXRhLXdpZHRoPSJbJ2F1dG8nLCdhdXRvJywnYXV0bycsJ2F1dG8nXSIgICBkYXRhLWhlaWdodD0iWydhdXRvJywnYXV0bycsJ2F1dG8nLCdhdXRvJ10iICAgZGF0YS1zcGxpdGluPSJub25lIiAgIGRhdGEtc3BsaXRvdXQ9Im5vbmUiICAgZGF0YS1yZXNwb25zaXZlX29mZnNldD0ib24iICAgZGF0YS1kZWxheT0iMjAwIj4gICBGSU5EIE9VVCBNT1JFPC9hPmQCBA9kFgRmDxUCATQiL2Fzc2V0cy9pbWFnZXMvc2xpZGVycy9JbWFnZTY4LmpwZ2QCAQ8WAh8BAgMWBmYPZBYCZg8VAecIPGRpdiBjbGFzcz0idHAtY2FwdGlvbiBtZWRpdW1fZGFyayBjdXN0b21pbiBjdXN0b21vdXQgdHAtcmVzaXplbWUgYmFubmVyX2gxICINCiAgICAgaWQ9InNsaWRlMy1sYXllcjEiDQogICAgIGRhdGEteD0iMCIgZGF0YS1ob2Zmc2V0PSIiDQogICAgIGRhdGEteT0iIiBkYXRhLXZvZmZzZXQ9IiINCiAgICAgZGF0YS1lbGVtZW50ZGVsYXk9IiINCiAgICAgZGF0YS1zdGFydD0iMTAwMCINCiAgICAgZGF0YS1zcGVlZD0iNjAwIg0KICAgICBkYXRhLWVhc2luZz0iQmFjay5lYXNlSW5PdXQiDQogICAgIGRhdGEtY3VzdG9taW49Ing6MDt5OjA7ejowO3JvdGF0aW9uWDo5MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MTtzY2FsZVk6MTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjIwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDAlOyINCiAgICAgZGF0YS1jdXN0b21vdXQ9Ing6MDt5OjA7ejowO3JvdGF0aW9uWDowO3JvdGF0aW9uWTowO3JvdGF0aW9uWjowO3NjYWxlWDowLjc1O3NjYWxlWTowLjc1O3NrZXdYOjA7c2tld1k6MDtvcGFjaXR5OjA7dHJhbnNmb3JtUGVyc3BlY3RpdmU6NjAwO3RyYW5zZm9ybU9yaWdpbjo1MCUgNTAlOyINCiAgICAgZGF0YS1jYXB0aW9uaGlkZGVuPSJvbiINCiAgICAgZGF0YS13aWR0aD0iWyc2MDBweCcsJzYwMHB4JywnMzUwcHgnLCcyMDBweCddIg0KICAgICBkYXRhLWhlaWdodD0iWydhdXRvJywnYXV0bycsJ2F1dG8nLCdhdXRvJ10iDQogICAgIGRhdGEtc3BsaXRpbj0ibm9uZSINCiAgICAgZGF0YS1zcGxpdG91dD0ibm9uZSINCiAgICAgZGF0YS1yZXNwb25zaXZlX29mZnNldD0ib24iDQogICAgIGRhdGEtZGVsYXk9IjIwMCINCiAgICAgc3R5bGU9Im1hcmdpbi10b3A6MTUwcHg7IG1hcmdpbi1ib3R0b206MjBweDsgdGV4dC10cmFuc2Zvcm06IHVwcGVyY2FzZTsgY29sb3I6ICNGRkY7IHdvcmQtd3JhcDogbm9ybWFsOyB3aGl0ZS1zcGFjZTogbm9ybWFsOyBsZXR0ZXItc3BhY2luZzogMC42cHg7IGZvbnQtd2VpZ2h0OiBib2xkOyBsaW5lLWhlaWdodDogNTBweDsiPg0KICAgIE91ciBtaXNzaW9uIGlzIHNlcnZpY2UgdG8gbWFua2luZCBieSB1bmxlYXNoaW5nIGh1bWFuIHBvdGVudGlhbA0KDQo8L2Rpdj5kAgEPZBYCZg8VAeYIPGRpdiBjbGFzcz0idHAtY2FwdGlvbiBtZWRpdW1fZGFyayBjdXN0b21pbiBjdXN0b21vdXQgdHAtcmVzaXplbWUgYmFubmVyX3AiDQppZD0ic2xpZGUzLWxheWVyMiINCmRhdGEteD0iMCIgZGF0YS1ob2Zmc2V0PSIiDQpkYXRhLXk9IiIgZGF0YS12b2Zmc2V0PSIiDQpkYXRhLWVsZW1lbnRkZWxheT0iIg0KZGF0YS1zdGFydD0iMTIwMCINCmRhdGEtc3BlZWQ9IjYwMCINCmRhdGEtZWFzaW5nPSJCYWNrLmVhc2VJbk91dCINCmRhdGEtY3VzdG9taW49Ing6MDt5OjA7ejowO3JvdGF0aW9uWDo5MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MTtzY2FsZVk6MTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjIwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDAlOyINCmRhdGEtY3VzdG9tb3V0PSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MC43NTtzY2FsZVk6MC43NTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjYwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDUwJTsiDQpkYXRhLWNhcHRpb25oaWRkZW49Im9uIg0KZGF0YS13aWR0aD0iWyc2MDBweCcsJzYwMHB4JywnMzUwcHgnLCcyMDBweCddIg0KZGF0YS1oZWlnaHQ9IlsnYXV0bycsJ2F1dG8nLCdhdXRvJywnYXV0byddIg0KZGF0YS1zcGxpdGluPSJub25lIg0KZGF0YS1zcGxpdG91dD0ibm9uZSINCmRhdGEtcmVzcG9uc2l2ZV9vZmZzZXQ9Im9uIg0KZGF0YS1kZWxheT0iMjAwIg0Kc3R5bGU9Im1hcmdpbi1ib3R0b206MjBweDtmb250LXNpemU6IDE2cHg7IGxldHRlci1zcGFjaW5nOiBub3JtYWw7IGxpbmUtaGVpZ2h0OiAyMHB4OyB3aGl0ZS1zcGFjZTogbm9ybWFsOyBjb2xvcjogI0ZGRjsiPg0KVGhyb3VnaCBkZWxpdmVyaW5nIGtub3dsZWRnZSBhbmQgdGhlIG1lYW5zIHRvIGZhY2lsaXRhdGUgZW50cmVwcmVuZXVyc2hpcCwgd2UgaW5zcGlyZSBwZW9wbGUgdG8gbGl2ZSB0aGVpciBkcmVhbS4gQXMgYSBnbG9iYWwgb3JnYW5pemF0aW9uLCB3ZSB2YWx1ZSBjdWx0dXJhbCBkaXZlcnNpdHkgYW5kIGhhdmUgYnVpbHQgYSBjb21wYW55IHRoYXQgaXMgaW5jbHVzaXZlIGZvciBhbGwuDQoNCjwvZGl2PmQCAg9kFgJmDxUBpQc8YSBocmVmPSJodHRwczovL3d3dy5sZWFybmVhcm5vd24uY29tL2xlby9BYm91dExFTy9WaXNpb25NaXNzaW9uIiB0YXJnZXQ9Il9ibGFuayIgY2xhc3M9InRwLWNhcHRpb24gbWVkaXVtX2RhcmsgY3VzdG9taW4gY3VzdG9tb3V0IHRwLXJlc2l6ZW1lIGJ0biBidG4tcHJpbWFyeSAgYmFubmVyX2J0biIgICBpZD0ic2xpZGUzLWxheWVyMyIgIHN0eWxlPSIgZGlzcGxheTppbmxpbmUtYmxvY2siICAgIGRhdGEteD0iMCIgZGF0YS1ob2Zmc2V0PSIiICAgZGF0YS15PSIiIGRhdGEtdm9mZnNldD0iIiAgIGRhdGEtZWxlbWVudGRlbGF5PSIiICAgZGF0YS1zdGFydD0iMTQwMCIgICBkYXRhLXNwZWVkPSI2MDAiICAgZGF0YS1lYXNpbmc9IkJhY2suZWFzZUluT3V0IiAgIGRhdGEtY3VzdG9taW49Ing6MDt5OjA7ejowO3JvdGF0aW9uWDo5MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MTtzY2FsZVk6MTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjIwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDAlOyIgICBkYXRhLWN1c3RvbW91dD0ieDowO3k6MDt6OjA7cm90YXRpb25YOjA7cm90YXRpb25ZOjA7cm90YXRpb25aOjA7c2NhbGVYOjAuNzU7c2NhbGVZOjAuNzU7c2tld1g6MDtza2V3WTowO29wYWNpdHk6MDt0cmFuc2Zvcm1QZXJzcGVjdGl2ZTo2MDA7dHJhbnNmb3JtT3JpZ2luOjUwJSA1MCU7IiAgIGRhdGEtY2FwdGlvbmhpZGRlbj0ib24iICAgZGF0YS13aWR0aD0iWydhdXRvJywnYXV0bycsJ2F1dG8nLCdhdXRvJ10iICAgZGF0YS1oZWlnaHQ9IlsnYXV0bycsJ2F1dG8nLCdhdXRvJywnYXV0byddIiAgIGRhdGEtc3BsaXRpbj0ibm9uZSIgICBkYXRhLXNwbGl0b3V0PSJub25lIiAgIGRhdGEtcmVzcG9uc2l2ZV9vZmZzZXQ9Im9uIiAgIGRhdGEtZGVsYXk9IjIwMCI+ICAgRklORCBPVVQgTU9SRTwvYT5kAgUPZBYEZg8VAgE1Ii9hc3NldHMvaW1hZ2VzL3NsaWRlcnMvSW1hZ2U3OC5qcGdkAgEPFgIfAQIDFgZmD2QWAmYPFQH8BzxkaXYgY2xhc3M9InRwLWNhcHRpb24gbWVkaXVtX2RhcmsgY3VzdG9taW4gY3VzdG9tb3V0IHRwLXJlc2l6ZW1lICBiYW5uZXJfaDEgIg0KaWQ9InNsaWRlNS1sYXllcjEiDQpkYXRhLXg9IjAiIGRhdGEtaG9mZnNldD0iIg0KZGF0YS15PSIiIGRhdGEtdm9mZnNldD0iIg0KZGF0YS1lbGVtZW50ZGVsYXk9IiINCmRhdGEtc3RhcnQ9IjEwMDAiDQpkYXRhLXNwZWVkPSI2MDAiDQpkYXRhLWVhc2luZz0iQmFjay5lYXNlSW5PdXQiDQpkYXRhLWN1c3RvbWluPSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6OTA7cm90YXRpb25ZOjA7cm90YXRpb25aOjA7c2NhbGVYOjE7c2NhbGVZOjE7c2tld1g6MDtza2V3WTowO29wYWNpdHk6MDt0cmFuc2Zvcm1QZXJzcGVjdGl2ZToyMDA7dHJhbnNmb3JtT3JpZ2luOjUwJSAwJTsiDQpkYXRhLWN1c3RvbW91dD0ieDowO3k6MDt6OjA7cm90YXRpb25YOjA7cm90YXRpb25ZOjA7cm90YXRpb25aOjA7c2NhbGVYOjAuNzU7c2NhbGVZOjAuNzU7c2tld1g6MDtza2V3WTowO29wYWNpdHk6MDt0cmFuc2Zvcm1QZXJzcGVjdGl2ZTo2MDA7dHJhbnNmb3JtT3JpZ2luOjUwJSA1MCU7Ig0KZGF0YS1jYXB0aW9uaGlkZGVuPSJvbiINCmRhdGEtd2lkdGg9IlsnNjAwcHgnLCc2MDBweCcsJzM1MHB4JywnMjAwcHgnXSINCmRhdGEtaGVpZ2h0PSJbJ2F1dG8nLCdhdXRvJywnYXV0bycsJ2F1dG8nXSINCmRhdGEtc3BsaXRpbj0ibm9uZSINCmRhdGEtc3BsaXRvdXQ9Im5vbmUiDQpkYXRhLXJlc3BvbnNpdmVfb2Zmc2V0PSJvbiINCmRhdGEtZGVsYXk9IjIwMCINCnN0eWxlPSJtYXJnaW4tdG9wOjE1MHB4OyAgbWFyZ2luLWJvdHRvbToyMHB4OyB0ZXh0LXRyYW5zZm9ybTogdXBwZXJjYXNlOyBjb2xvcjogI0ZGRjsgd29yZC13cmFwOiBub3JtYWw7IHdoaXRlLXNwYWNlOiBub3JtYWw7IGxldHRlci1zcGFjaW5nOiAwLjZweDsgZm9udC13ZWlnaHQ6IGJvbGQ7IGxpbmUtaGVpZ2h0OiA1MHB4OyI+DQp3ZSBiZWxpZXZlIHRoZXJlIGlzIGdyZWF0bmVzcyBpbnNpZGUgZXZlcnlvbmUNCjwvZGl2PmQCAQ9kFgJmDxUBmQk8ZGl2IGNsYXNzPSJ0cC1jYXB0aW9uIG1lZGl1bV9kYXJrIGN1c3RvbWluIGN1c3RvbW91dCB0cC1yZXNpemVtZSAgYmFubmVyX3AiIGlkPSJzbGlkZTUtbGF5ZXIyImRhdGEteD0iMCIgZGF0YS1ob2Zmc2V0PSIiZGF0YS15PSIiIGRhdGEtdm9mZnNldD0iImRhdGEtZWxlbWVudGRlbGF5PSIiZGF0YS1zdGFydD0iMTIwMCJkYXRhLXNwZWVkPSI2MDAiZGF0YS1lYXNpbmc9IkJhY2suZWFzZUluT3V0ImRhdGEtY3VzdG9taW49Ing6MDt5OjA7ejowO3JvdGF0aW9uWDo5MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MTtzY2FsZVk6MTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjIwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDAlOyJkYXRhLWN1c3RvbW91dD0ieDowO3k6MDt6OjA7cm90YXRpb25YOjA7cm90YXRpb25ZOjA7cm90YXRpb25aOjA7c2NhbGVYOjAuNzU7c2NhbGVZOjAuNzU7c2tld1g6MDtza2V3WTowO29wYWNpdHk6MDt0cmFuc2Zvcm1QZXJzcGVjdGl2ZTo2MDA7dHJhbnNmb3JtT3JpZ2luOjUwJSA1MCU7ImRhdGEtY2FwdGlvbmhpZGRlbj0ib24iZGF0YS13aWR0aD0iWyc2MDBweCcsJzYwMHB4JywzNTBweCcsJzIwMHB4J10iZGF0YS1oZWlnaHQ9IlsnYXV0bycsJ2F1dG8nLCdhdXRvJywnYXV0byddImRhdGEtc3BsaXRpbj0ibm9uZSJkYXRhLXNwbGl0b3V0PSJub25lImRhdGEtcmVzcG9uc2l2ZV9vZmZzZXQ9Im9uImRhdGEtZGVsYXk9IjIwMCIgc3R5bGU9Im1hcmdpbi1ib3R0b206MjBweDsgbGV0dGVyLXNwYWNpbmc6IG5vcm1hbDsgbGluZS1oZWlnaHQ6IDIwcHg7IHdoaXRlLXNwYWNlOiBub3JtYWw7IGNvbG9yOiAjRkZGOyI+V2UgYmVsaWV2ZSB0aGF0IGluIGVhY2ggb25lIG9mIHlvdSwgdGhlcmUgaXMgZ3JlYXRuZXNzIHdhaXRpbmcgdG8gbWFuaWZlc3QuIEl04oCZcyBwb3NzaWJsZSB0byBidWlsZCBhIGxvbmcgdGVybSBidXNpbmVzcyBiYXNlZCBvbiBkZXNpcmUgYW5kIHF1ZXN0IHRvIGZpbmQgdGhlICJ3aW4td2luIiBpbiBldmVyeSBzY2VuYXJpby4gV2UgcmVjb2duaXplIHRoZSB3b3JsZCBpcyBtb3ZpbmcgZmFzdGVyIGFuZCB0byBhY2hpZXZlIHN1Y2Nlc3MgaW4gdG9kYXnigJlzIHdvcmxkLCB3ZSBoYXZlIHRvIGJlIG1vcmUgYWdpbGUgYW5kIGJlIHF1aWNrZXIgb24gb3VyIGZlZXQuPC9kaXY+ZAICD2QWAmYPFQHzBjxhIGhyZWY9Imh0dHBzOi8vd3d3LmxlYXJuZWFybm93bi5jb20vbGVvL0Fib3V0TEVPL0NvbXBhbnlPdmVydmlldyIgdGFyZ2V0PSJfYmxhbmsiIGNsYXNzPSJ0cC1jYXB0aW9uIG1lZGl1bV9kYXJrIGN1c3RvbWluIGN1c3RvbW91dCB0cC1yZXNpemVtZSBidG4gYnRuLXByaW1hcnkgYmFubmVyX2J0biIgaWQ9InNsaWRlNS1sYXllcjMiZGF0YS14PSIwIiBkYXRhLWhvZmZzZXQ9IiJkYXRhLXk9IiIgZGF0YS12b2Zmc2V0PSIiZGF0YS1lbGVtZW50ZGVsYXk9IiJkYXRhLXN0YXJ0PSIxNDAwImRhdGEtc3BlZWQ9IjYwMCJkYXRhLWVhc2luZz0iQmFjay5lYXNlSW5PdXQiZGF0YS1jdXN0b21pbj0ieDowO3k6MDt6OjA7cm90YXRpb25YOjkwO3JvdGF0aW9uWTowO3JvdGF0aW9uWjowO3NjYWxlWDoxO3NjYWxlWToxO3NrZXdYOjA7c2tld1k6MDtvcGFjaXR5OjA7dHJhbnNmb3JtUGVyc3BlY3RpdmU6MjAwO3RyYW5zZm9ybU9yaWdpbjo1MCUgMCU7ImRhdGEtY3VzdG9tb3V0PSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MC43NTtzY2FsZVk6MC43NTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjYwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDUwJTsiZGF0YS1jYXB0aW9uaGlkZGVuPSJvbiJkYXRhLXdpZHRoPSJbJ2F1dG8nLCdhdXRvJywnYXV0bycsJ2F1dG8nXSJkYXRhLWhlaWdodD0iWydhdXRvJywnYXV0bycsJ2F1dG8nLCdhdXRvJ10iZGF0YS1zcGxpdGluPSJub25lImRhdGEtc3BsaXRvdXQ9Im5vbmUiZGF0YS1yZXNwb25zaXZlX29mZnNldD0ib24iZGF0YS1kZWxheT0iMjAwIiAgIHN0eWxlPSJkaXNwbGF5OmlubGluZS1ibG9jayI+RklORCBPVVQgTU9SRTwvYT5kAgsPFgIfAQIGFgxmD2QWCmYPDxYCHghJbWFnZVVybAVMaHR0cHM6Ly93d3cubGVhcm5lYXJub3duLmNvbS9hc3NldHMvSW1hZ2VzL1Byb2R1Y3RJbWFnZXMvMTAwM19tZWRpdW0uanBnP3Y9MmRkAgEPFgIfAAUUQ2hpbGQgRWR1Y2F0aW9uIFBhY2tkAgIPFgIfAAWNAlRoZSBDaGlsZCBFZHVjYXRpb24gUGFjayBpbnRyb2R1Y2VzIGEgbmV3IGFuZCBleGNsdXNpdmUgY2F0ZWdvcnkgdG8gdGhlIExFTyBlLWxlYXJuaW5nIHBsYXRmb3JtIGZvY3Vzc2luZyBvbiBTb2NpYWwgRW50cmVwcmVuZXVyc2hpcC4gVGhpcyBwYWNrIGFsc28gZ2l2ZXMgeW91IHRoZSBvcHBvcnR1bml0eSB0byBlbmdhZ2Ugd2l0aCBwcm9qZWN0cyBhaW1lZCBhdCBpbXByb3ZpbmcgdGhlIGVkdWNhdGlvbiBmb3IgY2hpbGRyZW4gaW4gZGV2ZWxvcGluZyBjb3VudHJpZXMuZAIDDxUCBDEwMDMUQ2hpbGQtRWR1Y2F0aW9uLVBhY2tkAgUPFgIfAAUGMTUwLjAwZAIBD2QWCmYPDxYCHwMFS2h0dHBzOi8vd3d3LmxlYXJuZWFybm93bi5jb20vYXNzZXRzL0ltYWdlcy9Qcm9kdWN0SW1hZ2VzLzk2OV9tZWRpdW0uanBnP3Y9MmRkAgEPFgIfAAUQTEVPIFN0YXJ0ZXIgUGFja2QCAg8WAh8ABZICVGhlIExFTyBTdGFydGVyIFBhY2sgYWxsb3dzIHlvdSB0byBjaG9vc2UgZnJvbSBvdmVyIDE1MCBMRU8gZW50cmVwcmVuZXVyc2hpcCB0cmFpbmluZyBwcm9kdWN0cyB3aXRoIHVubGltaXRlZCBhY2Nlc3MgZm9yIDEgbW9udGguIFlvdSBhbHNvIHJlY2VpdmUgMSBMaXZlIFNlbWluYXIgdGlja2V0IHdoaWNoIHByb3ZpZGVzIHlvdSB3aXRoIHRoZSBvcHBvcnR1bml0eSB0byBhdHRlbmQgYSBkeW5hbWljIExpdmUgU2VtaW5hciB0cmFpbmluZyB3aXRoIHRvcC10aWVyIHRyYWluZXJzLmQCAw8VAgM5NjkQTEVPLVN0YXJ0ZXItUGFja2QCBQ8WAh8ABQYxNTAuMDBkAgIPZBYKZg8PFgIfAwVLaHR0cHM6Ly93d3cubGVhcm5lYXJub3duLmNvbS9hc3NldHMvSW1hZ2VzL1Byb2R1Y3RJbWFnZXMvOTcwX21lZGl1bS5qcGc/dj0yZGQCAQ8WAh8ABRFMRU8gQnVzaW5lc3MgUGFja2QCAg8WAh8ABZYCVGhlIExFTyBCdXNpbmVzcyBQYWNrIGFsbG93cyB5b3UgdG8gY2hvb3NlIGZyb20gaHVuZHJlZHMgb2YgTEVPIGVudHJlcHJlbmV1cnNoaXAgdHJhaW5pbmcgcHJvZHVjdHMgd2l0aCB1bmxpbWl0ZWQgYWNjZXNzIGZvciA0IG1vbnRocy4gWW91IGFsc28gcmVjZWl2ZSA0IExpdmUgU2VtaW5hciB0aWNrZXRzIHdoaWNoIHByb3ZpZGUgeW91IHdpdGggdGhlIG9wcG9ydHVuaXR5IHRvIGF0dGVuZCBkeW5hbWljIExpdmUgU2VtaW5hciB0cmFpbmluZ3Mgd2l0aCB0b3AtdGllciB0cmFpbmVycy5kAgMPFQIDOTcwEUxFTy1CdXNpbmVzcy1QYWNrZAIFDxYCHwAFBjYwMC4wMGQCAw9kFgpmDw8WAh8DBUtodHRwczovL3d3dy5sZWFybmVhcm5vd24uY29tL2Fzc2V0cy9JbWFnZXMvUHJvZHVjdEltYWdlcy85NzFfbWVkaXVtLmpwZz92PTJkZAIBDxYCHwAFDExFTyBWSVAgUGFja2QCAg8WAh8ABfIDVGhlIExFTyBWSVAgUGFjayBhbGxvd3MgeW91IHRvIGNob29zZSBmcm9tIGh1bmRyZWRzIG9mIExFTyBlbnRyZXByZW5ldXJzaGlwIHRyYWluaW5nIHByb2R1Y3RzIHdpdGggdW5saW1pdGVkIGFjY2VzcyBmb3IgMTIgbW9udGhzLiBZb3UgYWxzbyByZWNlaXZlIDQgVklQIExpdmUgU2VtaW5hciB0aWNrZXRzIHdoaWNoIHByb3ZpZGUgeW91IHdpdGggdGhlIG9wcG9ydHVuaXR5IHRvIGF0dGVuZCBkeW5hbWljIExFTyBMaXZlIFNlbWluYXIgdHJhaW5pbmdzIHdpdGggdG9wLXRpZXIgdHJhaW5lcnMuICBWSVAgTGl2ZSBTZW1pbmFyIFRpY2tldHMgaW5jbHVkZSBwcmlvcml0eSBzZWF0aW5nIGF0IHRoZSBldmVudCBhbmQgYm9udXMgdHJhaW5pbmcgc2Vzc2lvbnMgIGFzIHdlbGwgYXMgbHVuY2ggb3IgZGlubmVyIHdpdGggdGhlIFNlbWluYXIgdHJhaW5lcnMuIDxiciAvPiA8YnIgLz4gPGI+Tm90ZTogVGhpcyBwcm9kdWN0IGlzIG5vdCBhdmFpbGFibGUgaW4gUGFraXN0YW48L2I+ZAIDDxUCAzk3MQxMRU8tVklQLVBhY2tkAgUPFgIfAAUIMSw1MDAuMDBkAgQPZBYKZg8PFgIfAwVLaHR0cHM6Ly93d3cubGVhcm5lYXJub3duLmNvbS9hc3NldHMvSW1hZ2VzL1Byb2R1Y3RJbWFnZXMvNzQ2X21lZGl1bS5qcGc/dj0yZGQCAQ8WAh8ABSVUaGUgUG93ZXIgb2YgU21hcnQgQ3VzdG9tZXIgUmVsYXRpb25zZAICDxYCHwAF8QU8cD5Db21tdW5pY2F0aW9uIGlzIGtleS4gV2hldGhlciB5b3UgYXJlIHNwZWFraW5nIHdpdGggeW91ciB0ZWFtLCB3aXRoIHByb3NwZWN0aXZlIGNsaWVudHMgb3Igd2l0aCBmYW1pbHkgYW5kIGZyaWVuZHMsIHlvdSBoYXZlIHRvIGVuc3VyZSB0aGF0IHdoYXQgeW91IGFyZSBzYXlpbmcgaXMgY2xlYXIgYW5kIGNvbmNpc2UuIE1hc3RlciB0aGUgc2NpZW5jZSBvZiBzbWFydCBjb21tdW5pY2F0aW9uIGJ5IGZvY3VzaW5nIHRoZSBmb3VyIHBvd2VyIHNraWxscyBpbiB0aGUgc2VyaWVzIFRoZSBQb3dlciBvZiBTbWFydCBDdXN0b21lciBSZWxhdGlvbnMgdG8gc3RhcnQgY29ubmVjdGluZyB3aXRoIG1vcmUgcGVvcGxlIGFuZCBidWlsZCBsb25nIHRlcm0gc3VjY2VzZnVsbCByZWxhdGlvbnMuPC9wPg0KPHA+wqDCoMKgwqDCoCBUaGlzIHRyYWluaW5nIHNlcmllcyB3aWxsIHByb3ZpZGU7PC9wPg0KPHVsPg0KPGxpPlRoZSBwb3dlciBvZiB1c2luZyBtaWNyby1tb21lbnRzIHRvIHlvdXIgYWR2YW50YWdlPC9saT4NCjxsaT5BIGRlZXAgdW5kZXJzdGFuZGluZyBvbiB0aGUgc2NpZW5jZSBhbmQgdGhlIGFydCBvZiBob3cgcGVvcGxlIHZpZXcgeW91PC9saT4NCjxsaT5UZWNobmlxdWVzIHRvIGVuaGFuY2UgeW91ciBsaXN0ZW5pbmcgc2tpbGxzPC9saT4NCjxsaT5UaGUgaW1wb3J0YW5jZSBvZiBhc2tpbmcgc21hcnQgcXVlc3Rpb25zIGxlYWRpbmcgdG8gZW5oYW5jZWQgZ3Jvd3RoIGluIHlvdXIgYnVzaW5lc3M8L2xpPg0KPC91bD5kAgMPFQIDNzQ2JVRoZS1Qb3dlci1vZi1TbWFydC1DdXN0b21lci1SZWxhdGlvbnNkAgUPFgIfAAUFNjAuMDBkAgUPZBYKZg8PFgIfAwVLaHR0cHM6Ly93d3cubGVhcm5lYXJub3duLmNvbS9hc3NldHMvSW1hZ2VzL1Byb2R1Y3RJbWFnZXMvODYxX21lZGl1bS5qcGc/dj0yZGQCAQ8WAh8ABQlHb2xkIFBhY2tkAgIPFgIfAAX9BVRoZSBMRU8gMTIgTW9udGggR29sZCBQYWNrIGFpbXMgdG8gaW50cm9kdWNlIHlvdSB0byB0aGUgYmVuZWZpdHMgb2YgYWNxdWlyaW5nIGdvbGQgYXNzZXRzIHRocm91Z2ggb3duaW5nIDEwZyBvZiA5OTkuOSBnb2xkLiAgRXhjaXRpbmcgYWRkaXRpb25zIHRvIHRoZSBMRU8gMTIgTW9udGggR29sZCBQYWNrIGlzIGEgTGltaXRlZC1FZGl0aW9uIENvbGxlY3RvcuKAmXMgSXRlbSBEaXNjb3VudCBDYXJkIGFzIHdlbGwgYXMgMTAgwqMxMDAgRGlzY291bnQgY2FyZHMgdG8gZW50aWNlIG90aGVyIG1lbWJlcnMgdG8gcHVyY2hhc2UgYSAxMiBNb250aCBMRU8gR29sZCBQYWNrLiAgPGJyIC8+IDxiciAvPkFzIHdlbGwgYXMgdGhlIGdvbGQgdGhlcmUgd2lsbCBiZSBhY2Nlc3MgdG8gTEVPIENvcmVMaW5lIGFuZCBMRU8gU2tpbGxzIENvdXJzZXMgZm9yIHlvdXIgY2hvc2VuIHN1YnNjcmlwdGlvbiBwZXJpb2QuIFlvdSB3aWxsIGFsc28gcmVjZWl2ZSA0IFZJUCBMaXZlIFNlbWluYXIgdGlja2V0cyB3aGljaCB3aWxsIHByb3ZpZGUgeW91IHdpdGggdGhlIG9wcG9ydHVuaXR5IHRvIGF0dGVuZCBkeW5hbWljIExpdmUgU2VtaW5hciB0cmFpbmluZ3Mgd2l0aCB0b3AtdGllciB0cmFpbmVycy4gPGI+VklQIExpdmUgU2VtaW5hciBUaWNrZXRzIGluY2x1ZGUgcHJpb3JpdHkgc2VhdGluZyBhdCB0aGUgZXZlbnQgYW5kIGJvbnVzIHRyYWluaW5nIHNlc3Npb25zIGFzIHdlbGwgYXMgbHVuY2ggb3IgZGlubmVyIHdpdGggdGhlIFNlbWluYXIgdHJhaW5lcnMuPC9iPmQCAw8VAgM4NjEJR29sZC1QYWNrZAIFDxYCHwAFCDIsMDAwLjAwZAITDxYCHwECCBYQZg9kFghmDxUCATkWMTUyMDIzNTgzMF90cmFpbmVyLnBuZ2QCAQ8WAh8ABQ1KYWNraWUgSmFydmlzZAIDDxYCHwAFkApKYWNraWUgSmFydmlzLCBhdXRob3Igb2YgUXVpY2sgV2lucyBpbiBTYWxlcyBhbmQgTWFya2V0aW5nLCBpcyBhIFVLIGJhc2VkIHNhbGVzIGFuZCBidXNpbmVzcyBkZXZlbG9wbWVudCBleHBlcnQuIFNoZSBpcyBhIGJ1c2luZXNzIG93bmVyLCBtZW50b3IgYW5kIGNvYWNoIHRvIEFtYml0aW91cyBTTUVzIGJ1c2luZXNzIG93bmVycyBoZWxwaW5nIHRoZW0gdG8gd2luIHRoZSBjbGllbnRzIHRoZXkgYXNwaXJlIHRvIGluIGFuICZsc3F1bzthdXRoZW50aWMmcnNxdW87IG1hbm5lci4gSGVyIHBhc3Npb24gaGFzIGFsd2F5cyBiZWVuIGluIGhlbHBpbmcgcGVvcGxlIHRvIGdyb3csIHRocm91Z2ggaW5zcGlyaW5nIGlkZWFzIGNvdXBsZWQgd2l0aCBwcmFjdGljYWwgd2F5cyB0byBhY2hpZXZlIHJlc3VsdHMgaW4gdGhlIHJlYWwgd29ybGQuIEphY2tpZSBoYXMgYSB3ZWFsdGggb2YgZXhwZXJpZW5jZSBnYWluZWQgYm90aCBpbiB0aGUgY29ycG9yYXRlIGFuZCBTTUUgZW52aXJvbm1lbnRzLiBIZXIgYmFjayBncm91bmQgaW5jbHVkZXMgYmVpbmcgYW4gYXdhcmQgd2lubmluZyBzYWxlcyBhY2hpZXZlciwgYSBtb3RpdmF0aW9uYWwgc2FsZXMgbWFuYWdlciBhbmQgYSB0cmFpbmluZyBtYW5hZ2VyIHJlc3BvbnNpYmxlIGZvciBzZXR0aW5nIHVwIGEgbmF0aW9uYWwgdHJhaW5pbmcgY2VudHJlIGZvciBvbmUgb2YgdGhlIFVLJnJzcXVvO3MgbGFyZ2VzdCBtZWRpYSBncm91cHMuIEhlciB0cmFpbmluZyBidXNpbmVzcyBhbHNvIHNlcnZlZCBzb21lIG9mIHRoZSBiZXN0IGtub3duIHJldGFpbGVycywgcHJvZmVzc2lvbmFsIHNlcnZpY2UgZmlybXMsIGJhbmtzLCBhbmQgdG9wIHRpZXIgb3JnYW5pc2F0aW9ucyBpbiB0aGUgVUsuIFNoZSBpcyBhIG1hc3RlciBwcmFjdGl0aW9uZXIgb2YgTkxQIGFuZCBhIG1lbWJlciBvZiB0aGUgcHJvZmVzc2lvbmFsIGluc3RpdHV0ZSBvZiBzYWxlcyBhbmQgbWFya2V0aW5nIG1hbmFnZW1lbnQuIFNoZSBpcyBjdXJyZW50bHkgZ3Jvd2luZyBoZXIgb3duIFNNRSBidXNpbmVzcyAmbHNxdW87SGVhcnQgb2YgYnVzaW5lc3MmcnNxdW87IGluIHRoZSBVSywgdGhhdCBicmluZ3MgdG9nZXRoZXIgYSB0ZWFtIG9mIGxpa2UtbWluZGVkIGJ1c2luZXNzIG1lbnRvcnMgYW5kIHByb2Zlc3Npb25hbCBzZXJ2aWNlIHByb3ZpZGVycyBhbGwgd2hvIHNoYXJlIHRoZSBkZXNpcmUgdG8gbWFrZSBhIGRpZmZlcmVuY2UgdGhyb3VnaCB0aGUgd29yayB0aGV5IGRvLiBKYWNraWUgd291bGQgbGlrZSB0byBoZWxwIHlvdSB0byB3aW4gdGhlIGNsaWVudHMgeW91IGFzcGlyZSB0by5kAgQPFQEBOWQCAQ9kFghmDxUCAjE1JDE0MzE2MTAwODVfSlVMSUFOX0JPTFNURVJfcGljMjAwLmpwZ2QCAQ8WAh8ABQ5KdWxpYW4gQm9sc3RlcmQCAw8WAh8ABdMJSnVsaWFuIEJvbHN0ZXIgaXMgYSBnbG9iYWxseSByZWNvZ25pemVkIE1hc3RlciBDb2FjaCBvbiBsZWFkZXJzaGlwIGFuZCBidXNpbmVzcyBzdWNjZXNzIGFuZCB3b3JrcyB3aXRoIGh1bmRyZWRzIG9mIGNvbXBhbmllcyBhbmQgaW5kaXZpZHVhbHMgYWNyb3NzIE5vcnRoIEFtZXJpY2EgdG8gZGV2ZWxvcCBsZWFkZXJzaGlwIGF0IGV2ZXJ5IGxldmVsIG9mIHRoZWlyIGNhcmVlciBhbmQgcGVyc29uYWwgc3VjY2Vzcy4gJm5ic3A7IEEgc3VjY2Vzc2Z1bCBzZXJpYWwgZW50cmVwcmVuZXVyIHdpdGggZml2ZSBidXNpbmVzc2VzIHRvIGRhdGUsIEp1bGlhbiBoYXMgbWFkZSBpdCBoaXMgbWlzc2lvbiB0byBzaGFyZSBoaXMga25vd2xlZGdlIGFuZCBtb3RpdmF0ZSBvdGhlcnMgdG8gYWNoaWV2ZSBtZWFzdXJhYmxlIGFuZCBtZWFuaW5nZnVsIHN1Y2Nlc3MgYXQgYm90aCB0aGUgcGVyc29uYWwgYW5kIHByb2Zlc3Npb25hbCBsZXZlbHMuIEEgcmVtYXJrYWJsZSBzcGVha2VyIGFuZCBhdXRob3IsIEp1bGlhbiBoYXMgYmVlbiBmZWF0dXJlZCBhcyBndWVzdCBleHBlcnQgb24gQkJDIFdvcmxkIE5ld3MsIFNsaWNlIFRWLCBhbmQgd29ya3Mgd2l0aCBsZWFkZXJzLCBwb2xpdGljaWFucyBhbmQgY2VsZWJyaXRpZXMgYXJvdW5kIHRoZSB3b3JsZC4gSW4gMjAxMiwgaGUgaGFkIHRoZSBvcHBvcnR1bml0eSB0byBjby1hdXRob3IgYWxvbmdzaWRlIERlZXBhayBDaG9wcmEgYW5kIERyLiBLZW4gQmxhbmNoYXJkIChUaGUgT25lLU1pbnV0ZSBNYW5hZ2VyKSBhbmQgaXMgY3VycmVudGx5IHdvcmtpbmcgb24gaGlzIHNlY29uZCBib29rLCB0ZW50YXRpdmVseSBlbnRpdGxlZCwgTWFzY3VsaW5pdHkgQ3Jpc2lzOiBCdWlsZGluZyBMZWFkZXJzaGlwIGludG8gQ29tbXVuaXR5IGFuZCBDb3Jwb3JhdGUgRmFicmljLiBBcyBhIHRob3VnaHQgbGVhZGVyLCBKdWxpYW4gaXMgYSBwaW9uZWVyIHdobyBwb3NzZXNzZXMgdGhlIGFiaWxpdHkgdG8gdGFrZSBoaXMgbWVzc2FnZSBvZiBsZWFkZXJzaGlwIGZyb20gdGhlIGV4ZWN1dGl2ZSBsZXZlbHMgb2YgY29ycG9yYXRlIGVudGVycHJpc2UgdG8gdGhlIG1hcmdpbmFsaXplZCBtZW1iZXJzIG9mIG91ciBzb2NpZXR5LiZuYnNwOyBIZSBiZWxpZXZlcyBsZWFkZXJzaGlwIGlzIGF0IHRoZSBjb3JuZXJzdG9uZSBvZiBlbXBvd2VybWVudCBhbmQgcGxheXMgYXMgYSB2aXRhbCByb2xlIGluIGhvdyB3ZSBkZWZpbmUgYW5kIHNoYXBlIG91ciBjb21tdW5pdGllcy5kAgQPFQECMTVkAgIPZBYIZg8VAgIzNCAxNDM2OTE5NDkzX1RheWxhXzE3Ni14LTIwMHB4LmpwZ2QCAQ8WAh8ABQ1UYXlsYSBHb29kbWFuZAIDDxYCHwAF5AMiSGF2aW5nIHNwZW50IG1hbnkgeWVhcnMgd29ya2luZyBpbiB0aGUgZmllbGQgb2YgcmVzZWFyY2gsIG1hbmFnZW1lbnQsIHJlY3J1aXRtZW50IGFuZCB0cmFpbmluZyBUYXlsYSBHb29kbWFuIGhhcyBnYXRoZXJlZCBleHRlbnNpdmUga25vd2xlZGdlIGFib3V0IHRoZSBtb3RpdmF0aW9uIG9mIHBlb3BsZSBhbmQgdGhlIHN0cmF0ZWdpZXMgdGhhdCB0aGV5IHVzZS4gVXNpbmcgaGVyIGJlaGF2aW91cmFsIGFjY3JlZGl0YXRpb25zIGFuZCBleHBlcmllbmNlIG9mIHF1YWxpZmljYXRpb25zLCBzaGUgaGFzIGNyZWF0ZWQgbmV3IHdheXMgZm9yIGVudHJlcHJlbmV1cnMgdG8gYWNoaWV2ZSBzdWNjZXNzLiBIZXIgbWFpbiBhaW0gaXMgdG8gaW1wcm92ZSB0aGUgY3VzdG9tZXIgZXhwZXJpZW5jZSwgcmFpc2UgdGhlIGJyYW5kIGlkZW50aXR5IG9mIHNraWxscyBhbmQgaGVscCBwZW9wbGUgdG8gcmVhbGl6ZSB0aGVpciBkZXZlbG9wbWVudCBwb3RlbnRpYWwuZAIEDxUBAjM0ZAIDD2QWCGYPFQICMzYhMTQzOTgzNjY1Nl9Eci1Ub20gcHJvZmlsZSBwaWMucG5nZAIBDxYCHwAFD0RyLiBUb20gQmFycmV0dGQCAw8WAh8ABdkDRHIuIEJhcnJldHQgaXMgYSBoaWdoLXByb2ZpbGUgbGVhZGVyc2hpcCBhbmQgY29tbXVuaWNhdGlvbnMgZXhwZXJ0LiBIZSBoYXMgdHdvIE1hc3RlcnMgZGVncmVlcyBhbmQgYSBQaEQgaW4gQ2xpbmljYWwgUHN5Y2hvbG9neSBhbmQgaGFzIHdvcmtlZCB3aXRoIEZvcnR1bmUgMjAwIGNvbXBhbmllcy4gSGUgc3BlY2lhbGl6ZXMgaW4gZW1vdGlvbmFsIGludGVsbGlnZW5jZSBhcyBpdCByZWxhdGVzIHRvIGxlYWRlcnNoaXAsIHNtYXJ0IGNvbW11bmljYXRpb24gYW5kIHRyYWluaW5nIGNvcnBvcmF0aW9ucyBpbiB1bmRlcnN0YW5kaW5nIHRoZSBwb3dlciBvZiBzbWFydCBjdXN0b21lciByZWxhdGlvbnNoaXBzLsKgIEhpcyBnb2FsIGluIGxpZmUgaXMgbm90IHRvIGZvY3VzIG9uIHdoYXQgaGUgaGFzIGRvbmUgaW4gdGhlIHBhc3QgYnV0IHRvIGhlbHAgb3RoZXJzIHNlZSB3aGF0IHRoZXkgY2FuIGFjaGlldmUgaW4gdGhlIGZ1dHVyZS5kAgQPFQECMzZkAgQPZBYIZg8VAgIzOSoxNDQyOTM4Mjc2X0Nvbm5pZSBDb3JlbGluZSBwcm9maWxlIHBpYy5qcGdkAgEPFgIfAAUOQ29ubmllIFBvZGVzdGFkAgMPFgIfAAW/A0Nvbm5pZSBpcyBhIGdhbWUtY2hhbmdpbmcsIHJldmVudWUtYnVpbGRpbmcsIGlkZWEtZ2VuZXJhdGluZywgcmVsYXRpb25zaGlwLWJ1aWxkaW5nIEJBTEwgT0YgRklSRS4mbmJzcDsgU2hlIGlzIGEgSGFsbCBvZiBGYW1lIGtleW5vdGUgc3BlYWtlciwgYXdhcmQgd2lubmluZyBhdXRob3Igb2Ygc2l4IGJvb2tzLCBjb21lZGllbm5lLCBmb3JtZXIgcmFkaW8gYW5kIFRWIHBlcnNvbmFsaXR5LCBhbmQgd2hhdCB3ZSBjb3VsZCBhbGwgdXNlIG5vdyBhbmQgdGhlbiAtLSBhIHRoZXJhcGlzdC4mbmJzcDsgRm9yIG1vcmUgdGhhbiAyNSB5ZWFycywgdHdvIG1pbGxpb24gcGVvcGxlIGFuZCAxLDAwMCBvcmdhbml6YXRpb25zLCBDb25uaWUgaGFzIGJlZW4gdGhlIG9uZSB0aGV5InZlIHR1cm5lZCB0byBmb3IgdGhlIGFuc3dlcnMgdGhleSBuZWVkIHRvIGxpdmUgdGhlIGxpZmUgdGhleSB3YW50LmQCBA8VAQIzOWQCBQ9kFghmDxUCAjQzFjE1MjAyMzg4ODJfdHJhaW5lci5wbmdkAgEPFgIfAAUOQnJhbmNvIEpldW5lc3NkAgMPFgIfAAWLBUJyYW5jbyBKZXVuZXNzLCBpbnRlcm5hdGlvbmFsIHRyYWluZXIgJmFtcDsgY29hY2gsIGlzIGZyb20gdGhlIGJlYXV0aWZ1bCBjb3VudHJ5IFNsb3ZlbmlhLCBseWluZyBpbiB0aGUgaGVhcnQgb2YgRXVyb3BlLiBIZSBzdGFydGVkIGhpcyBzYWxlcyBhbmQgcHJlc2VudGF0aW9uIGNhcmVlciBhdCBvbmx5IDE5IHllYXJzLCBhbmQgaGFzIHNpbmNlIHdvcmtlZCBpbiBhbmQgZm9yIG1vcmUgdGhhbiAyMDAgY29tcGFuaWVzLiZuYnNwOyBCcmFuY28gd2FzIGEgcHJvZmVzc29yIGZvciA3IHllYXJzIGF0IHRoZSBGYWN1bHR5IG9mIEJ1c2luZXNzIGFuZCBFY29ub21pY3MgaW4gU2xvdmVuaWEsIGJlY2FtZSBhbiZuYnNwOyBhY2NyZWRpdGVkIGludGVybmF0aW9uYWwgdHJhaW5lciB3aXRoIGV4Y2VsbGVuY2UgaW4gMjAwNSwgZW5hYmxpbmcgaGlzIGdsb2JhbCBjYXJlZXIuIEhlIHNwZW5kcyBtb3N0IGhpcyB0aW1lIGNvYWNoaW5nIGFuZCB0cmFpbmluZyBsZWFkZXJzLCBtYW5hZ2VycyBhbmQgc2FsZXMgcHJvZmVzc2lvbmFscyBpbiBjb21wYW5pZXMmbmJzcDsgcmFuZ2luZyBpbiBzaXplIGZyb20gNTAgdG8gMTAuMDAwIGVtcGxveWVlcy4gQnJhbmNvIGFsc28gbWFuYWdlcyBoaXMgb3duIGNvbXBhbnkgd2l0aCBhIHRlYW0gb2YgMTIgcGVvcGxlLmQCBA8VAQI0M2QCBg9kFghmDxUCAjQ1FjE1MjAzMTg0NTFfdHJhaW5lci5wbmdkAgEPFgIfAAUORXJpYyBNYXRoaWFzaW5kAgMPFgIfAAWcBkVyaWMgTWF0aGlhc2luIGlzIGEgY2VydGlmaWVkIE1hc3RlciBUcmFpbmVyIGluIE5ldXJvIExpbmd1aXN0aWMgUHJvZ3JhbW1pbmcgKE5MUCkuIEhlIGlzIGEgY29hY2gsIHRoZXJhcGlzdCBhbmQgZXhwZXJpZW5jZWQgZmFjaWxpdGF0b3Igd29ya2luZyB3aXRoIHZhcmlvdXMgYXVkaWVuY2VzLCBib3RoIGluIHRoZSBwcml2YXRlIGFuZCBwcm8tZmVzc2lvbmFsIGFyZW5hLCB3aG8gYXJlIGVuZ2FnZWQgaW4gYSBwZXJzb25hbCBkZXZlbG9wbWVudCBvciB0aGVyYXBldXRpYyBhcHByb2FjaC4gSGUgY3JlYXRlZCB0aGUgZmlyc3QgYXV0aG9yaXplZCB0cmFpbmluZyBpbnN0aXR1dGUgaW4gdGhlIEZyZW5jaCBXZXN0IEluZGllcywgZGVkaWNhdGVkIHRvIHRoZSB0cmFpbmluZyBvZiBwcm9mZXMtc2lvbmFscyB3b3JraW5nIGluIHRoZSBmaWVsZCBvZiBoZWxwaW5nIGFuZCB0aGVyYXBldXRpYyBhbGxpYW5jZXMgd2l0aCB0aGVpciBwYXRpZW50cy4gRXJpYyBNYXRoaWFzaW4gaGFzIHRyYWluZWQgbnVtZXJvdXMgdGhlcmFwaXN0cyBpbiB0aGUgdXNlIG9mIHRoZXNlIHNpbXBsZSB0b2xscyB0aGF0IGNhbiBlYXNpbHkgaW1wcm92ZSB0aGVpciBwYS10aWVudHMiIGRhaWx5IGxpdmVzOiBwc3ljaG9sb2dpc3RzLCBjb2FjaGVzLCBzb2NpYWwgd29ya2VycywgaGVhbHRoIHByb2Zlc3Npb25hbHMgaGF2ZSB1c2VkIHRoZXNlIHRvb2xzIHN1Y2Nlc3NmdWxseSBmb3IgZGVwcmVzc2lvbiwgcGhvYmlhcywgdHJhdW1hcywgYWRkaWN0aW9uLCBlYXRpbmcgZGlzb3JkZXJzLCBzdHJlc3MgYmVmb3JlIGFuIGV4YW1kAgQPFQECNDVkAgcPZBYIZg8VAgI0ORYxNTIwMzE4NDA1X3RyYWluZXIucG5nZAIBDxYCHwAFEEZyw6lkw6lyaWMgQXJyb25kAgMPFgIfAAXHAkZyJmVhY3V0ZTtkJmVhY3V0ZTtyaWMgQXJyb24gaXMgYSBwcm9mZXNzaW9uYWwgYW5kIHBlcnNvbmFsIGRldmVsb3BtZW50IGNvYWNoLiBIZSBpcyB0aGUgYXV0aG9yIG9mIHNldmVyYWwgYm9va3Mgb24gcGVyc29uYWwgZnVsZmlsbWVudCBhbmQgc3VjY2Vzcy4gSGUgaGVscHMgaGlzIGNsaWVudHMgdHJhbnNmb3JtIHRoZWlyIGxpdmVzIGFuZCBnZXQgd2hhdCB0aGV5IHJlYWxseSB3YW50LiBIaXMgdW5pcXVlIGFwcHJvYWNoIHdpbGwgYWxsb3cgeW91IHRvIGFjaGlldmUgZmFzdCByZXN1bHRzIHdpdGggbWluaW1hbCBlZmZvcnQuIFByZXBhcmUgdG8gYmUgc3VycHJpc2VkIWQCBA8VAQI0OWQCHQ8WAh8BZmQYAQUeX19Db250cm9sc1JlcXVpcmVQb3N0QmFja0tleV9fFgEFE2N0bDAwJGNoa1JlbWVtYmVyTWUZKlh0JQcmzfOCrhLbeIQ+yv3jdGssdETntoIOyn01eQ=="
-                +"&__VIEWSTATEGENERATOR=CA0B0334"
-                +"&__EVENTVALIDATION=/wEdAAoZ17CLT++hcf3DNFFAEeUNitw9a+kpC5hy6PX7DCLgIN3yEg90D4xD0VTL2nxlI2+3K7xQcomXsaDT+wnL40Y39aeGJ9E30o1ViXoitCUxzOlG9Wa5jWiDkRux04aSW4dQZpyJ3ZTHNWgnT455QiXCZ0Privzz4sS9+1cugEiz000/3tac5YeGLwbAe386+AKmms97+54vhfOrqLvDxmcRSE5DpQRcA8Y2wCwkTKdwKQMrY18I/kuuZdFToXOQOFI="
-                +"&ctl00$txtUsername_value="+userArr[0]
-                +"&ctl00$txtPassword_value="+userArr[1];
-        Map<String,String> map2 = new HashMap<>();
-        String s = sendPostRequest(reqURL,sendData,cookie,true,null,null,map2);
+            String cookie = map.get("cookie");
+            String reqURL = "https://www.learnearnown.com/";
+            String sendData =
+                    "ctl00$hdlid=1" +
+                            "&ctl00$hdlname=English" +
+                            "&ctl00$chkRememberMe=on" +
+                            "&ctl00$btnLoginHeader=Login" +
+                            "&ctl00$hdnContentType=0" +
+                            "&ctl00$hdFlagURL=/assets/images/flags/24/United_Kingdom.png" +
+                            "&ctl00$btnLoginHeader=Login" +
+                            "&__SCROLLPOSITIONY=210" +
+                            "&__SCROLLPOSITIONY=0"
+                            + "&__VIEWSTATE=/wEPDwUJMzExMDcwMzkyD2QWAmYPZBYCAgMPZBYOAgYPDxYCHgRUZXh0BQjCoyAtIEdCUGRkAgcPFgIeC18hSXRlbUNvdW50AgkWEgIBD2QWAmYPFQQDMTgzByQgLSBVU0QBMQckIC0gVVNEZAICD2QWAmYPFQQCMjkHJCAtIENBRAEzByQgLSBDQURkAgMPZBYCZg8VBAMxODEIwqMgLSBHQlABNAjCoyAtIEdCUGQCBA9kFgJmDxUEAAnigqwgLSBFVVIBNQnigqwgLSBFVVJkAgUPZBYCZg8VBAMxMzEJUnMuIC0gUEtSATYJUnMuIC0gUEtSZAIGD2QWAmYPFQQDMTc2CeKCuiAtIFRSWQE3CeKCuiAtIFRSWWQCBw9kFgJmDxUEAzEzNgrigrEgLSBQZXNvATkK4oKxIC0gUGVzb2QCCA9kFgJmDxUEAjc5CFJwIC0gSURSAjExCFJwIC0gSURSZAIJD2QWAmYPFQQCNzgJ4oK5IC0gSU5SAjEyCeKCuSAtIElOUmQCCQ8WAh8BAgcWDmYPZBYGZg8VAQM5NjlkAgEPFgIfAAUQTEVPIFN0YXJ0ZXIgUGFja2QCAg8VAgM5NjkQTEVPIFN0YXJ0ZXIgUGFja2QCAQ9kFgZmDxUBAzk3MGQCAQ8WAh8ABRFMRU8gQnVzaW5lc3MgUGFja2QCAg8VAgM5NzARTEVPIEJ1c2luZXNzIFBhY2tkAgIPZBYGZg8VAQM5NzFkAgEPFgIfAAUMTEVPIFZJUCBQYWNrZAICDxUCAzk3MQxMRU8gVklQIFBhY2tkAgMPZBYGZg8VAQQxMDAzZAIBDxYCHwAFFENoaWxkIEVkdWNhdGlvbiBQYWNrZAICDxUCBDEwMDMUQ2hpbGQgRWR1Y2F0aW9uIFBhY2tkAgQPZBYGZg8VAQM4NjFkAgEPFgIfAAUJR29sZCBQYWNrZAICDxUCAzg2MQlHb2xkIFBhY2tkAgUPZBYGZg8VAQM5MDdkAgEPFgIfAAUkUXVpY2sgV2lucyBTZXJpZXMgdG8gQnVpbGQgWW91ciBUZWFtZAICDxUCAzkwNyRRdWljayBXaW5zIFNlcmllcyB0byBCdWlsZCBZb3VyIFRlYW1kAgYPZBYGZg8VAQM0MjhkAgEPFgIfAAUcVGhlIFBvd2VyIG9mIFNtYXJ0IFF1ZXN0aW9uc2QCAg8VAgM0MjgcVGhlIFBvd2VyIG9mIFNtYXJ0IFF1ZXN0aW9uc2QCCg8PFgIeB1Zpc2libGVoZGQCDA8PFgIfAmhkZAIsD2QWCgIFD2QWAgIJDxBkZBYAZAIGD2QWBgIJDxBkZBYAZAILD2QWAgIDDxBkZBYBZmQCFQ9kFgICAw8QZGQWAWZkAgcPZBYGAgkPEGRkFgBkAg0PEGRkFgBkAhcPZBYCAgEPEGRkFgFmZAIID2QWBAIJDxBkZBYAZAINDxBkZBYAZAIJD2QWBAIJDxBkZBYAZAINDxBkZBYAZAItD2QWCAIDDxYCHwECBRYKAgEPZBYEZg8VAgExIi9hc3NldHMvaW1hZ2VzL3NsaWRlcnMvSW1hZ2U5MC5qcGdkAgEPFgIfAQICFgRmD2QWAmYPFQGxCDxkaXYgY2xhc3M9InRwLWNhcHRpb24gbWVkaXVtX2RhcmsgY3VzdG9taW4gY3VzdG9tb3V0IHRwLXJlc2l6ZW1lICAgYmFubmVyX3AiDQppZD0ic2xpZGUzLWxheWVyMiINCmRhdGEteD0iMCIgZGF0YS1ob2Zmc2V0PSIiDQpkYXRhLXk9IiAiIGRhdGEtdm9mZnNldD0iIg0KZGF0YS1lbGVtZW50ZGVsYXk9IiINCmRhdGEtc3RhcnQ9IjEyMDAiDQpkYXRhLXNwZWVkPSI2MDAiDQpkYXRhLWVhc2luZz0iQmFjay5lYXNlSW5PdXQiDQpkYXRhLWN1c3RvbWluPSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6OTA7cm90YXRpb25ZOjA7cm90YXRpb25aOjA7c2NhbGVYOjE7c2NhbGVZOjE7c2tld1g6MDtza2V3WTowO29wYWNpdHk6MDt0cmFuc2Zvcm1QZXJzcGVjdGl2ZToyMDA7dHJhbnNmb3JtT3JpZ2luOjUwJSAwJTsiDQpkYXRhLWN1c3RvbW91dD0ieDowO3k6MDt6OjA7cm90YXRpb25YOjA7cm90YXRpb25ZOjA7cm90YXRpb25aOjA7c2NhbGVYOjAuNzU7c2NhbGVZOjAuNzU7c2tld1g6MDtza2V3WTowO29wYWNpdHk6MDt0cmFuc2Zvcm1QZXJzcGVjdGl2ZTo2MDA7dHJhbnNmb3JtT3JpZ2luOjUwJSA1MCU7Ig0KZGF0YS1jYXB0aW9uaGlkZGVuPSJvbiINCmRhdGEtd2lkdGg9IlsnNDQwcHgnLCc0NDBweCcsJzQwMHB4JywnMTYwcHgnXSINCmRhdGEtaGVpZ2h0PSJbJ2F1dG8nLCdhdXRvJywnYXV0bycsJ2F1dG8nXSINCmRhdGEtc3BsaXRpbj0ibm9uZSINCmRhdGEtc3BsaXRvdXQ9Im5vbmUiDQpkYXRhLXJlc3BvbnNpdmVfb2Zmc2V0PSJvbiINCmRhdGEtZGVsYXk9IjIwMCINCnN0eWxlPSJtYXJnaW4tdG9wOjMxMHB4OyBtYXJnaW4tYm90dG9tOjIwcHg7IGZvbnQtc2l6ZTogMTZweDsgbGV0dGVyLXNwYWNpbmc6IG5vcm1hbDsgbGluZS1oZWlnaHQ6IDIwcHg7IHdoaXRlLXNwYWNlOiBub3JtYWw7IGNvbG9yOiAjRkZGOyI+DQpJZiB5b3UgYXR0ZW5lZGVkIHRoZSBMRU8gTW9tZW50dW0gVG91cnMgb2YgMjAxOCwgeW91IGtub3cganVzdCBob3cgcG93ZXJmdWwgdGhlc2UgZXZlbnRzIGNhbiBiZSEgWW91IG9ubHkgaGF2ZSB1bnRpbCAyOCBGZWJydWFyeSAyMDE5IHRvIHF1YWxpZnkhIA0KPC9kaXY+ZAIBD2QWAmYPFQGhBzxhIGhyZWY9Imh0dHA6Ly9tb21lbnR1bS5sZWFybmVhcm5vd24uY29tLw0KIiB0YXJnZXQ9Il9ibGFuayIgY2xhc3M9InRwLWNhcHRpb24gbWVkaXVtX2RhcmsgYmFubmVyX2J0biAgY3VzdG9taW4gY3VzdG9tb3V0IHRwLXJlc2l6ZW1lIGJ0biBidG4tcHJpbWFyeSINCmlkPSJzbGlkZTYtbGF5ZXIyIg0KZGF0YS14PSIwIiBkYXRhLWhvZmZzZXQ9IiINCmRhdGEteT0iIiBkYXRhLXZvZmZzZXQ9IiINCmRhdGEtZWxlbWVudGRlbGF5PSIiDQpkYXRhLXN0YXJ0PSIxNDAwIg0KZGF0YS1zcGVlZD0iNjAwIg0KZGF0YS1lYXNpbmc9IkJhY2suZWFzZUluT3V0Ig0KZGF0YS1jdXN0b21pbj0ieDowO3k6MDt6OjA7cm90YXRpb25YOjkwO3JvdGF0aW9uWTowO3JvdGF0aW9uWjowO3NjYWxlWDoxO3NjYWxlWToxO3NrZXdYOjA7c2tld1k6MDtvcGFjaXR5OjA7dHJhbnNmb3JtUGVyc3BlY3RpdmU6MjAwO3RyYW5zZm9ybU9yaWdpbjo1MCUgMCU7Ig0KZGF0YS1jdXN0b21vdXQ9Ing6MDt5OjA7ejowO3JvdGF0aW9uWDowO3JvdGF0aW9uWTowO3JvdGF0aW9uWjowO3NjYWxlWDowLjc1O3NjYWxlWTowLjc1O3NrZXdYOjA7c2tld1k6MDtvcGFjaXR5OjA7dHJhbnNmb3JtUGVyc3BlY3RpdmU6NjAwO3RyYW5zZm9ybU9yaWdpbjo1MCUgNTAlOyINCmRhdGEtY2FwdGlvbmhpZGRlbj0ib24iDQpkYXRhLXdpZHRoPSJbJ2F1dG8nLCdhdXRvJywnYXV0bycsJ2F1dG8nXSINCmRhdGEtaGVpZ2h0PSJbJ2F1dG8nLCdhdXRvJywnYXV0bycsJ2F1dG8nXSINCmRhdGEtc3BsaXRpbj0ibm9uZSINCmRhdGEtc3BsaXRvdXQ9Im5vbmUiDQpkYXRhLXJlc3BvbnNpdmVfb2Zmc2V0PSJvbiINCmRhdGEtZGVsYXk9IjIwMCIgc3R5bGU9ImJhY2tncm91bmQ6ICNmZjI1ZjI7IG1hcmdpbi1sZWZ0OiA1MHB4OyBkaXNwbGF5OmlubGluZS1ibG9jayI+bW9yZSBpbmZvDQo8L2E+ZAICD2QWBGYPFQIBMigvYXNzZXRzL2ltYWdlcy9zbGlkZXJzL3NsaWRlcmltYWdlZDMuanBnZAIBDxYCHwECBRYKZg9kFgJmDxUBjQo8ZGl2IGNsYXNzPSJ0cC1jYXB0aW9uIG1lZGl1bWxhcmdlX2xpZ2h0X3doaXRlX2NlbnRlciBjdXN0b21pbiBjdXN0b21vdXQgc3RhcnQiICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGlkPSJzbGlkZTEtbGF5ZXIxIiAgICAgICBkYXRhLXg9ImNlbnRlciIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZGF0YS1ob2Zmc2V0PSIwIiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBkYXRhLXk9IjAiICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRhdGEtY3VzdG9taW49Ing6MDt5OjA7ejowO3JvdGF0aW9uWDo5MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MTtzY2FsZVk6MTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjIwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDAlOyIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZGF0YS1jdXN0b21vdXQ9Ing6MDt5OjA7ejowO3JvdGF0aW9uWDowO3JvdGF0aW9uWTowO3JvdGF0aW9uWjowO3NjYWxlWDowLjc1O3NjYWxlWTowLjc1O3NrZXdYOjA7c2tld1k6MDtvcGFjaXR5OjA7dHJhbnNmb3JtUGVyc3BlY3RpdmU6NjAwO3RyYW5zZm9ybU9yaWdpbjo1MCUgNTAlOyIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZGF0YS1zcGVlZD0iMTAwMCIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZGF0YS1zdGFydD0iNjAwIiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBkYXRhLWVhc2luZz0iQmFjay5lYXNlSW5PdXQiICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRhdGEtZW5kc3BlZWQ9IjMwMCIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc3R5bGU9ImZvbnQtc2l6ZTogMjVweDsgbWFyZ2luLXRvcDoxNTBweDsgbWFyZ2luLWJvdHRvbToyMHB4OyB3aGl0ZS1zcGFjZTpub3JtYWwgIWltcG9ydGFudCI+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFRocm91Z2ggZGVsaXZlcmluZyBrbm93bGVkZ2Ugd2UgaW5zcGlyZSBwZW9wbGUgdG8gbGl2ZSB0aGVpciBkcmVhbS4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5kAgEPZBYCZg8VAaUGPGRpdiBjbGFzcz0ibGVvX2J0bnMgY2xlYXJmaXgiICA+DQogIDxkaXYgY2xhc3M9InRwLWNhcHRpb24gbWVkaXVtbGFyZ2VfbGlnaHRfd2hpdGVfY2VudGVyIGN1c3RvbWluIGN1c3RvbW91dCBzdGFydCBsYXllcjIgdHAtcmVzaXplbWUgbGVhcm5fZGl2IiBpZD0ic2xpZGUxLWxheWVyMiIgZGF0YS14PSIwIiAgZGF0YS1ob2Zmc2V0PSIiIGRhdGEteT0iIiBkYXRhLWN1c3RvbWluPSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6OTA7cm90YXRpb25ZOjA7cm90YXRpb25aOjA7c2NhbGVYOjE7c2NhbGVZOjE7c2tld1g6MDtza2V3WTowO29wYWNpdHk6MDt0cmFuc2Zvcm1QZXJzcGVjdGl2ZToyMDA7dHJhbnNmb3JtT3JpZ2luOjUwJSAwJTsiIGRhdGEtY3VzdG9tb3V0PSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MC43NTtzY2FsZVk6MC43NTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjYwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDUwJTsiIGRhdGEtc3BlZWQ9IjEwMDAiIGRhdGEtc3RhcnQ9IjgwMCIgZGF0YS1lYXNpbmc9IkJhY2suZWFzZUluT3V0IiBkYXRhLWVuZHNwZWVkPSIzMDAiIHN0eWxlPSJmb250LXdlaWdodDogNzAwOyBmb250LXNpemU6IDUwcHg7IGxldHRlci1zcGFjaW5nOiAxcHg7IGxpbmUtaGVpZ2h0OiA1MHB4OyBjb2xvcjogd2hpdGU7ICAgICBkaXNwbGF5OiBpbmxpbmUtYmxvY2s7Ij48YSBocmVmPSIvQWJvdXRMRU8vTGVhcm4iIHRhcmdldD0iX2JsYW5rIiBjbGFzcz0iYm94ZXMiPkxFQVJOPC9hPjwvZGl2PmQCAg9kFgJmDxUBhAY8ZGl2IGNsYXNzPSJ0cC1jYXB0aW9uIG1lZGl1bWxhcmdlX2xpZ2h0X3doaXRlX2NlbnRlciBjdXN0b21pbiBjdXN0b21vdXQgc3RhcnQgIGxheWVyMiB0cC1yZXNpemVtZSBlYXJuX2RpdiIgaWQ9InNsaWRlMS1sYXllcjMiIGRhdGEteD0iY2VudGVyIiAgZGF0YS1ob2Zmc2V0PSIiIGRhdGEteT0iIiBkYXRhLWN1c3RvbWluPSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6OTA7cm90YXRpb25ZOjA7cm90YXRpb25aOjA7c2NhbGVYOjE7c2NhbGVZOjE7c2tld1g6MDtza2V3WTowO29wYWNpdHk6MDt0cmFuc2Zvcm1QZXJzcGVjdGl2ZToyMDA7dHJhbnNmb3JtT3JpZ2luOjUwJSAwJTsiIGRhdGEtY3VzdG9tb3V0PSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MC43NTtzY2FsZVk6MC43NTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjYwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDUwJTsiIGRhdGEtc3BlZWQ9IjEwMDAiIGRhdGEtc3RhcnQ9IjEwMDAiIGRhdGEtZWFzaW5nPSJCYWNrLmVhc2VJbk91dCIgZGF0YS1lbmRzcGVlZD0iMzAwIiBzdHlsZT0iZm9udC13ZWlnaHQ6IDcwMDsgZm9udC1zaXplOiA1MHB4OyBsZXR0ZXItc3BhY2luZzogMXB4OyBsaW5lLWhlaWdodDogNTBweDsgY29sb3I6IHdoaXRlOyAgICAgZGlzcGxheTogaW5saW5lLWJsb2NrOyI+PGEgaHJlZj0iL0Fib3V0TEVPL0Vhcm4iIHRhcmdldD0iX2JsYW5rIiBjbGFzcz0iYm94ZXMiPkVBUk48L2E+PC9kaXY+ZAIDD2QWAmYPFQGvBjxkaXYgY2xhc3M9InRwLWNhcHRpb24gbWVkaXVtbGFyZ2VfbGlnaHRfd2hpdGVfY2VudGVyIGN1c3RvbWluIGN1c3RvbW91dCBzdGFydCBsYXllcjIgdHAtcmVzaXplbWUgb3duX2RpdiIgaWQ9InNsaWRlMS1sYXllcjQiICBkYXRhLXg9ImNlbnRlciIgZGF0YS1ob2Zmc2V0PSIiIGRhdGEteT0iIiBkYXRhLWN1c3RvbWluPSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6OTA7cm90YXRpb25ZOjA7cm90YXRpb25aOjA7c2NhbGVYOjE7c2NhbGVZOjE7c2tld1g6MDtza2V3WTowO29wYWNpdHk6MDt0cmFuc2Zvcm1QZXJzcGVjdGl2ZToyMDA7dHJhbnNmb3JtT3JpZ2luOjUwJSAwJTsiIGRhdGEtY3VzdG9tb3V0PSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MC43NTtzY2FsZVk6MC43NTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjYwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDUwJTsiIGRhdGEtc3BlZWQ9IjEwMDAiIGRhdGEtc3RhcnQ9IjEyMDAiIGRhdGEtZWFzaW5nPSJCYWNrLmVhc2VJbk91dCIgZGF0YS1lbmRzcGVlZD0iMzAwIiBzdHlsZT0iZm9udC13ZWlnaHQ6IDcwMDsgZm9udC1zaXplOiA1MHB4OyBsZXR0ZXItc3BhY2luZzogMXB4OyBsaW5lLWhlaWdodDogNTBweDsgY29sb3I6IHdoaXRlOyAgICBkaXNwbGF5OiBpbmxpbmUtYmxvY2s7Ij48YSBocmVmPSIvQWJvdXRMRU8vT3duIiB0YXJnZXQ9Il9ibGFuayIgY2xhc3M9ImJveGVzIj5PV048L2E+PC9kaXY+DQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPC9kaXY+ZAIED2QWAmYPFQGUDDxkaXYgY2xhc3M9InRwLWNhcHRpb24gbWVkaXVtX2RhcmsgY3VzdG9taW4gY3VzdG9tb3V0IHRwLXJlc2l6ZW1lIGNsZWFyZml4ICIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgaWQ9InNsaWRlMS1sYXllcjUiICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRhdGEteD0iY2VudGVyIiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBkYXRhLXk9IiIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZGF0YS1zcGxpdGluPSIiICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRhdGEtZWxlbWVudGRlbGF5PSIiICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRhdGEtc3RhcnQ9IjE0MDAiICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRhdGEtc3BlZWQ9IjYwMCIgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZGF0YS1lYXNpbmc9IkJhY2suZWFzZUluT3V0IiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBkYXRhLWN1c3RvbWluPSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6OTA7cm90YXRpb25ZOjA7cm90YXRpb25aOjA7c2NhbGVYOjE7c2NhbGVZOjE7c2tld1g6MDtza2V3WTowO29wYWNpdHk6MDt0cmFuc2Zvcm1QZXJzcGVjdGl2ZToyMDA7dHJhbnNmb3JtT3JpZ2luOjUwJSAwJTsiICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRhdGEtY3VzdG9tb3V0PSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MC43NTtzY2FsZVk6MC43NTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjYwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDUwJTsiICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRhdGEtY2FwdGlvbmhpZGRlbj0ib24iICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRhdGEtaG9mZnNldD0iMCIgZGF0YS13aWR0aD0nWyI3MDBweCIsIjYwMHB4IiwiNDAwcHgiLCIzMDBweCJdJyBzdHlsZT0iY29sb3I6IHdoaXRlOyBmb250LXNpemU6IDI1cHg7IGxpbmUtaGVpZ2h0OiA2MHB4OyBmb250LXdlaWdodDogMzAwOyBsZXR0ZXItc3BhY2luZzogMHB4OyB0ZXh0LWFsaWduOmNlbnRlcjsgd2hpdGUtc3BhY2U6IG5vcm1hbDsgbWFyZ2luLXRvcDoyMHB4OyBsaW5lLWhlaWdodDogMjVweCI+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFdlIG9mZmVyIGFuIGlubm92YXRpdmUgYW5kIGNyZWF0aXZlIGFwcHJvYWNoIHRvIGxlYXJuaW5nIHdpdGggbXVsdGlsaW5ndWFsIHByb2R1Y3RzIGZvciBmbGV4aWJsZSwgaGFuZHMtb24gbGVhcm5pbmcuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPC9kaXY+ZAIDD2QWBGYPFQIBMyIvYXNzZXRzL2ltYWdlcy9zbGlkZXJzL0ltYWdlNzYuanBnZAIBDxYCHwECAxYGZg9kFgJmDxUB1Qg8ZGl2IGNsYXNzPSJ0cC1jYXB0aW9uIG1lZGl1bV9kYXJrIGN1c3RvbWluIGN1c3RvbW91dCB0cC1yZXNpemVtZSAgIGJhbm5lcl9oMSINCiAgICAgaWQ9InNsaWRlMy1sYXllcjEiDQogICAgIGRhdGEteD0iMCIgZGF0YS1ob2Zmc2V0PSIiDQogICAgIGRhdGEteT0iIiBkYXRhLXZvZmZzZXQ9IiINCiAgICAgZGF0YS1lbGVtZW50ZGVsYXk9IiINCiAgICAgZGF0YS1zdGFydD0iMTAwMCINCiAgICAgZGF0YS1zcGVlZD0iNjAwIg0KICAgICBkYXRhLWVhc2luZz0iQmFjay5lYXNlSW5PdXQiDQogICAgIGRhdGEtY3VzdG9taW49Ing6MDt5OjA7ejowO3JvdGF0aW9uWDo5MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MTtzY2FsZVk6MTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjIwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDAlOyINCiAgICAgZGF0YS1jdXN0b21vdXQ9Ing6MDt5OjA7ejowO3JvdGF0aW9uWDowO3JvdGF0aW9uWTowO3JvdGF0aW9uWjowO3NjYWxlWDowLjc1O3NjYWxlWTowLjc1O3NrZXdYOjA7c2tld1k6MDtvcGFjaXR5OjA7dHJhbnNmb3JtUGVyc3BlY3RpdmU6NjAwO3RyYW5zZm9ybU9yaWdpbjo1MCUgNTAlOyINCiAgICAgZGF0YS1jYXB0aW9uaGlkZGVuPSJvbiINCiAgICAgZGF0YS13aWR0aD0iWyc2MDBweCcsJzYwMHB4JywnMzUwcHgnLCcyMDBweCddIg0KICAgICBkYXRhLWhlaWdodD0iWydhdXRvJywnYXV0bycsJ2F1dG8nLCdhdXRvJ10iDQogICAgIGRhdGEtc3BsaXRpbj0ibm9uZSINCiAgICAgZGF0YS1zcGxpdG91dD0ibm9uZSINCiAgICAgZGF0YS1yZXNwb25zaXZlX29mZnNldD0ib24iDQogICAgIGRhdGEtZGVsYXk9IjIwMCINCiAgICAgc3R5bGU9Im1hcmdpbi10b3A6MTUwcHg7IG1hcmdpbi1ib3R0b206MTNweDsgdGV4dC10cmFuc2Zvcm06IHVwcGVyY2FzZTsgY29sb3I6ICNGRkY7IHdvcmQtd3JhcDogbm9ybWFsOyB3aGl0ZS1zcGFjZTogbm9ybWFsOyBsZXR0ZXItc3BhY2luZzogMC42cHg7IGZvbnQtd2VpZ2h0OiBib2xkOyBsaW5lLWhlaWdodDogNTBweDsiPg0KICAgIEludHJvZHVjaW5nIHRoZSBuZXcgbGVhZGluZyBwbGF5ZXJzIGZyb20gTEVPDQoNCjwvZGl2PmQCAQ9kFgJmDxUB2Ag8ZGl2IGNsYXNzPSJ0cC1jYXB0aW9uIG1lZGl1bV9kYXJrIGN1c3RvbWluIGN1c3RvbW91dCB0cC1yZXNpemVtZSAgIGJhbm5lcl9wIg0KaWQ9InNsaWRlMy1sYXllcjIiDQpkYXRhLXg9IjAiIGRhdGEtaG9mZnNldD0iIg0KZGF0YS15PSIgIiBkYXRhLXZvZmZzZXQ9IiINCmRhdGEtZWxlbWVudGRlbGF5PSIiDQpkYXRhLXN0YXJ0PSIxMjAwIg0KZGF0YS1zcGVlZD0iNjAwIg0KZGF0YS1lYXNpbmc9IkJhY2suZWFzZUluT3V0Ig0KZGF0YS1jdXN0b21pbj0ieDowO3k6MDt6OjA7cm90YXRpb25YOjkwO3JvdGF0aW9uWTowO3JvdGF0aW9uWjowO3NjYWxlWDoxO3NjYWxlWToxO3NrZXdYOjA7c2tld1k6MDtvcGFjaXR5OjA7dHJhbnNmb3JtUGVyc3BlY3RpdmU6MjAwO3RyYW5zZm9ybU9yaWdpbjo1MCUgMCU7Ig0KZGF0YS1jdXN0b21vdXQ9Ing6MDt5OjA7ejowO3JvdGF0aW9uWDowO3JvdGF0aW9uWTowO3JvdGF0aW9uWjowO3NjYWxlWDowLjc1O3NjYWxlWTowLjc1O3NrZXdYOjA7c2tld1k6MDtvcGFjaXR5OjA7dHJhbnNmb3JtUGVyc3BlY3RpdmU6NjAwO3RyYW5zZm9ybU9yaWdpbjo1MCUgNTAlOyINCmRhdGEtY2FwdGlvbmhpZGRlbj0ib24iDQpkYXRhLXdpZHRoPSJbJzU1MHB4JywnNDAwcHgnLCczMDBweCcsJzEzMHB4J10iDQpkYXRhLWhlaWdodD0iWydhdXRvJywnYXV0bycsJ2F1dG8nLCdhdXRvJ10iDQpkYXRhLXNwbGl0aW49Im5vbmUiDQpkYXRhLXNwbGl0b3V0PSJub25lIg0KZGF0YS1yZXNwb25zaXZlX29mZnNldD0ib24iDQpkYXRhLWRlbGF5PSIyMDAiDQpzdHlsZT0ibWFyZ2luLWJvdHRvbToyMHB4OyBmb250LXNpemU6IDE2cHg7IGxldHRlci1zcGFjaW5nOiBub3JtYWw7IGxpbmUtaGVpZ2h0OiAyMHB4OyB3aGl0ZS1zcGFjZTogbm9ybWFsOyBjb2xvcjogI0ZGRjsiPg0KTEVPIGlzIHByb3VkIHRvIGFubm91bmNlIHRoZSBsYXVuY2ggb2YgMyBuZXcgUHJvZHVjdCBQYWNrcywgd2hpY2ggaXMgZ3JlYXQgbmV3cyBmb3IgeW91IGFuZCB5b3VyIHRlYW0sIHlvdXIgcHJvc3BlY3RzIGFuZCwgYmVjYXVzZSBpdCB3aWxsIHNwZWVkIHlvdSB0b3dhcmRzIHlvdXIgTGVhcm4sIEVhcm4gYW5kIE93biBnb2FscywgZm9yIExFTyB0b28uDQo8L2Rpdj4NCmQCAg9kFgJmDxUBywc8YSBocmVmPSJodHRwczovL3d3dy5sZWFybmVhcm5vd24uY29tL2xlby9TaG9wL0NhdGVnb3J5L1Byb2R1Y3QtUGFja3MiIHRhcmdldD0iX2JsYW5rIiBjbGFzcz0idHAtY2FwdGlvbiBtZWRpdW1fZGFyayBjdXN0b21pbiBjdXN0b21vdXQgdHAtcmVzaXplbWUgYnRuIGJ0bi1wcmltYXJ5IGJhbm5lcl9idG4iICBzdHlsZT0iYmFja2dyb3VuZC1jb2xvcjojZDUzYjU4ICFpbXBvcnRhbnQ7IGRpc3BsYXk6aW5saW5lLWJsb2NrIiAgaWQ9InNsaWRlMy1sYXllcjMiICAgZGF0YS14PSIwIiBkYXRhLWhvZmZzZXQ9IiIgICBkYXRhLXk9IiIgZGF0YS12b2Zmc2V0PSIiICAgZGF0YS1lbGVtZW50ZGVsYXk9IiIgICBkYXRhLXN0YXJ0PSIxNDAwIiAgIGRhdGEtc3BlZWQ9IjYwMCIgICBkYXRhLWVhc2luZz0iQmFjay5lYXNlSW5PdXQiICAgZGF0YS1jdXN0b21pbj0ieDowO3k6MDt6OjA7cm90YXRpb25YOjkwO3JvdGF0aW9uWTowO3JvdGF0aW9uWjowO3NjYWxlWDoxO3NjYWxlWToxO3NrZXdYOjA7c2tld1k6MDtvcGFjaXR5OjA7dHJhbnNmb3JtUGVyc3BlY3RpdmU6MjAwO3RyYW5zZm9ybU9yaWdpbjo1MCUgMCU7IiAgIGRhdGEtY3VzdG9tb3V0PSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MC43NTtzY2FsZVk6MC43NTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjYwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDUwJTsiICAgZGF0YS1jYXB0aW9uaGlkZGVuPSJvbiIgICBkYXRhLXdpZHRoPSJbJ2F1dG8nLCdhdXRvJywnYXV0bycsJ2F1dG8nXSIgICBkYXRhLWhlaWdodD0iWydhdXRvJywnYXV0bycsJ2F1dG8nLCdhdXRvJ10iICAgZGF0YS1zcGxpdGluPSJub25lIiAgIGRhdGEtc3BsaXRvdXQ9Im5vbmUiICAgZGF0YS1yZXNwb25zaXZlX29mZnNldD0ib24iICAgZGF0YS1kZWxheT0iMjAwIj4gICBGSU5EIE9VVCBNT1JFPC9hPmQCBA9kFgRmDxUCATQiL2Fzc2V0cy9pbWFnZXMvc2xpZGVycy9JbWFnZTY4LmpwZ2QCAQ8WAh8BAgMWBmYPZBYCZg8VAecIPGRpdiBjbGFzcz0idHAtY2FwdGlvbiBtZWRpdW1fZGFyayBjdXN0b21pbiBjdXN0b21vdXQgdHAtcmVzaXplbWUgYmFubmVyX2gxICINCiAgICAgaWQ9InNsaWRlMy1sYXllcjEiDQogICAgIGRhdGEteD0iMCIgZGF0YS1ob2Zmc2V0PSIiDQogICAgIGRhdGEteT0iIiBkYXRhLXZvZmZzZXQ9IiINCiAgICAgZGF0YS1lbGVtZW50ZGVsYXk9IiINCiAgICAgZGF0YS1zdGFydD0iMTAwMCINCiAgICAgZGF0YS1zcGVlZD0iNjAwIg0KICAgICBkYXRhLWVhc2luZz0iQmFjay5lYXNlSW5PdXQiDQogICAgIGRhdGEtY3VzdG9taW49Ing6MDt5OjA7ejowO3JvdGF0aW9uWDo5MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MTtzY2FsZVk6MTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjIwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDAlOyINCiAgICAgZGF0YS1jdXN0b21vdXQ9Ing6MDt5OjA7ejowO3JvdGF0aW9uWDowO3JvdGF0aW9uWTowO3JvdGF0aW9uWjowO3NjYWxlWDowLjc1O3NjYWxlWTowLjc1O3NrZXdYOjA7c2tld1k6MDtvcGFjaXR5OjA7dHJhbnNmb3JtUGVyc3BlY3RpdmU6NjAwO3RyYW5zZm9ybU9yaWdpbjo1MCUgNTAlOyINCiAgICAgZGF0YS1jYXB0aW9uaGlkZGVuPSJvbiINCiAgICAgZGF0YS13aWR0aD0iWyc2MDBweCcsJzYwMHB4JywnMzUwcHgnLCcyMDBweCddIg0KICAgICBkYXRhLWhlaWdodD0iWydhdXRvJywnYXV0bycsJ2F1dG8nLCdhdXRvJ10iDQogICAgIGRhdGEtc3BsaXRpbj0ibm9uZSINCiAgICAgZGF0YS1zcGxpdG91dD0ibm9uZSINCiAgICAgZGF0YS1yZXNwb25zaXZlX29mZnNldD0ib24iDQogICAgIGRhdGEtZGVsYXk9IjIwMCINCiAgICAgc3R5bGU9Im1hcmdpbi10b3A6MTUwcHg7IG1hcmdpbi1ib3R0b206MjBweDsgdGV4dC10cmFuc2Zvcm06IHVwcGVyY2FzZTsgY29sb3I6ICNGRkY7IHdvcmQtd3JhcDogbm9ybWFsOyB3aGl0ZS1zcGFjZTogbm9ybWFsOyBsZXR0ZXItc3BhY2luZzogMC42cHg7IGZvbnQtd2VpZ2h0OiBib2xkOyBsaW5lLWhlaWdodDogNTBweDsiPg0KICAgIE91ciBtaXNzaW9uIGlzIHNlcnZpY2UgdG8gbWFua2luZCBieSB1bmxlYXNoaW5nIGh1bWFuIHBvdGVudGlhbA0KDQo8L2Rpdj5kAgEPZBYCZg8VAeYIPGRpdiBjbGFzcz0idHAtY2FwdGlvbiBtZWRpdW1fZGFyayBjdXN0b21pbiBjdXN0b21vdXQgdHAtcmVzaXplbWUgYmFubmVyX3AiDQppZD0ic2xpZGUzLWxheWVyMiINCmRhdGEteD0iMCIgZGF0YS1ob2Zmc2V0PSIiDQpkYXRhLXk9IiIgZGF0YS12b2Zmc2V0PSIiDQpkYXRhLWVsZW1lbnRkZWxheT0iIg0KZGF0YS1zdGFydD0iMTIwMCINCmRhdGEtc3BlZWQ9IjYwMCINCmRhdGEtZWFzaW5nPSJCYWNrLmVhc2VJbk91dCINCmRhdGEtY3VzdG9taW49Ing6MDt5OjA7ejowO3JvdGF0aW9uWDo5MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MTtzY2FsZVk6MTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjIwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDAlOyINCmRhdGEtY3VzdG9tb3V0PSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MC43NTtzY2FsZVk6MC43NTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjYwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDUwJTsiDQpkYXRhLWNhcHRpb25oaWRkZW49Im9uIg0KZGF0YS13aWR0aD0iWyc2MDBweCcsJzYwMHB4JywnMzUwcHgnLCcyMDBweCddIg0KZGF0YS1oZWlnaHQ9IlsnYXV0bycsJ2F1dG8nLCdhdXRvJywnYXV0byddIg0KZGF0YS1zcGxpdGluPSJub25lIg0KZGF0YS1zcGxpdG91dD0ibm9uZSINCmRhdGEtcmVzcG9uc2l2ZV9vZmZzZXQ9Im9uIg0KZGF0YS1kZWxheT0iMjAwIg0Kc3R5bGU9Im1hcmdpbi1ib3R0b206MjBweDtmb250LXNpemU6IDE2cHg7IGxldHRlci1zcGFjaW5nOiBub3JtYWw7IGxpbmUtaGVpZ2h0OiAyMHB4OyB3aGl0ZS1zcGFjZTogbm9ybWFsOyBjb2xvcjogI0ZGRjsiPg0KVGhyb3VnaCBkZWxpdmVyaW5nIGtub3dsZWRnZSBhbmQgdGhlIG1lYW5zIHRvIGZhY2lsaXRhdGUgZW50cmVwcmVuZXVyc2hpcCwgd2UgaW5zcGlyZSBwZW9wbGUgdG8gbGl2ZSB0aGVpciBkcmVhbS4gQXMgYSBnbG9iYWwgb3JnYW5pemF0aW9uLCB3ZSB2YWx1ZSBjdWx0dXJhbCBkaXZlcnNpdHkgYW5kIGhhdmUgYnVpbHQgYSBjb21wYW55IHRoYXQgaXMgaW5jbHVzaXZlIGZvciBhbGwuDQoNCjwvZGl2PmQCAg9kFgJmDxUBpQc8YSBocmVmPSJodHRwczovL3d3dy5sZWFybmVhcm5vd24uY29tL2xlby9BYm91dExFTy9WaXNpb25NaXNzaW9uIiB0YXJnZXQ9Il9ibGFuayIgY2xhc3M9InRwLWNhcHRpb24gbWVkaXVtX2RhcmsgY3VzdG9taW4gY3VzdG9tb3V0IHRwLXJlc2l6ZW1lIGJ0biBidG4tcHJpbWFyeSAgYmFubmVyX2J0biIgICBpZD0ic2xpZGUzLWxheWVyMyIgIHN0eWxlPSIgZGlzcGxheTppbmxpbmUtYmxvY2siICAgIGRhdGEteD0iMCIgZGF0YS1ob2Zmc2V0PSIiICAgZGF0YS15PSIiIGRhdGEtdm9mZnNldD0iIiAgIGRhdGEtZWxlbWVudGRlbGF5PSIiICAgZGF0YS1zdGFydD0iMTQwMCIgICBkYXRhLXNwZWVkPSI2MDAiICAgZGF0YS1lYXNpbmc9IkJhY2suZWFzZUluT3V0IiAgIGRhdGEtY3VzdG9taW49Ing6MDt5OjA7ejowO3JvdGF0aW9uWDo5MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MTtzY2FsZVk6MTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjIwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDAlOyIgICBkYXRhLWN1c3RvbW91dD0ieDowO3k6MDt6OjA7cm90YXRpb25YOjA7cm90YXRpb25ZOjA7cm90YXRpb25aOjA7c2NhbGVYOjAuNzU7c2NhbGVZOjAuNzU7c2tld1g6MDtza2V3WTowO29wYWNpdHk6MDt0cmFuc2Zvcm1QZXJzcGVjdGl2ZTo2MDA7dHJhbnNmb3JtT3JpZ2luOjUwJSA1MCU7IiAgIGRhdGEtY2FwdGlvbmhpZGRlbj0ib24iICAgZGF0YS13aWR0aD0iWydhdXRvJywnYXV0bycsJ2F1dG8nLCdhdXRvJ10iICAgZGF0YS1oZWlnaHQ9IlsnYXV0bycsJ2F1dG8nLCdhdXRvJywnYXV0byddIiAgIGRhdGEtc3BsaXRpbj0ibm9uZSIgICBkYXRhLXNwbGl0b3V0PSJub25lIiAgIGRhdGEtcmVzcG9uc2l2ZV9vZmZzZXQ9Im9uIiAgIGRhdGEtZGVsYXk9IjIwMCI+ICAgRklORCBPVVQgTU9SRTwvYT5kAgUPZBYEZg8VAgE1Ii9hc3NldHMvaW1hZ2VzL3NsaWRlcnMvSW1hZ2U3OC5qcGdkAgEPFgIfAQIDFgZmD2QWAmYPFQH8BzxkaXYgY2xhc3M9InRwLWNhcHRpb24gbWVkaXVtX2RhcmsgY3VzdG9taW4gY3VzdG9tb3V0IHRwLXJlc2l6ZW1lICBiYW5uZXJfaDEgIg0KaWQ9InNsaWRlNS1sYXllcjEiDQpkYXRhLXg9IjAiIGRhdGEtaG9mZnNldD0iIg0KZGF0YS15PSIiIGRhdGEtdm9mZnNldD0iIg0KZGF0YS1lbGVtZW50ZGVsYXk9IiINCmRhdGEtc3RhcnQ9IjEwMDAiDQpkYXRhLXNwZWVkPSI2MDAiDQpkYXRhLWVhc2luZz0iQmFjay5lYXNlSW5PdXQiDQpkYXRhLWN1c3RvbWluPSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6OTA7cm90YXRpb25ZOjA7cm90YXRpb25aOjA7c2NhbGVYOjE7c2NhbGVZOjE7c2tld1g6MDtza2V3WTowO29wYWNpdHk6MDt0cmFuc2Zvcm1QZXJzcGVjdGl2ZToyMDA7dHJhbnNmb3JtT3JpZ2luOjUwJSAwJTsiDQpkYXRhLWN1c3RvbW91dD0ieDowO3k6MDt6OjA7cm90YXRpb25YOjA7cm90YXRpb25ZOjA7cm90YXRpb25aOjA7c2NhbGVYOjAuNzU7c2NhbGVZOjAuNzU7c2tld1g6MDtza2V3WTowO29wYWNpdHk6MDt0cmFuc2Zvcm1QZXJzcGVjdGl2ZTo2MDA7dHJhbnNmb3JtT3JpZ2luOjUwJSA1MCU7Ig0KZGF0YS1jYXB0aW9uaGlkZGVuPSJvbiINCmRhdGEtd2lkdGg9IlsnNjAwcHgnLCc2MDBweCcsJzM1MHB4JywnMjAwcHgnXSINCmRhdGEtaGVpZ2h0PSJbJ2F1dG8nLCdhdXRvJywnYXV0bycsJ2F1dG8nXSINCmRhdGEtc3BsaXRpbj0ibm9uZSINCmRhdGEtc3BsaXRvdXQ9Im5vbmUiDQpkYXRhLXJlc3BvbnNpdmVfb2Zmc2V0PSJvbiINCmRhdGEtZGVsYXk9IjIwMCINCnN0eWxlPSJtYXJnaW4tdG9wOjE1MHB4OyAgbWFyZ2luLWJvdHRvbToyMHB4OyB0ZXh0LXRyYW5zZm9ybTogdXBwZXJjYXNlOyBjb2xvcjogI0ZGRjsgd29yZC13cmFwOiBub3JtYWw7IHdoaXRlLXNwYWNlOiBub3JtYWw7IGxldHRlci1zcGFjaW5nOiAwLjZweDsgZm9udC13ZWlnaHQ6IGJvbGQ7IGxpbmUtaGVpZ2h0OiA1MHB4OyI+DQp3ZSBiZWxpZXZlIHRoZXJlIGlzIGdyZWF0bmVzcyBpbnNpZGUgZXZlcnlvbmUNCjwvZGl2PmQCAQ9kFgJmDxUBmQk8ZGl2IGNsYXNzPSJ0cC1jYXB0aW9uIG1lZGl1bV9kYXJrIGN1c3RvbWluIGN1c3RvbW91dCB0cC1yZXNpemVtZSAgYmFubmVyX3AiIGlkPSJzbGlkZTUtbGF5ZXIyImRhdGEteD0iMCIgZGF0YS1ob2Zmc2V0PSIiZGF0YS15PSIiIGRhdGEtdm9mZnNldD0iImRhdGEtZWxlbWVudGRlbGF5PSIiZGF0YS1zdGFydD0iMTIwMCJkYXRhLXNwZWVkPSI2MDAiZGF0YS1lYXNpbmc9IkJhY2suZWFzZUluT3V0ImRhdGEtY3VzdG9taW49Ing6MDt5OjA7ejowO3JvdGF0aW9uWDo5MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MTtzY2FsZVk6MTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjIwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDAlOyJkYXRhLWN1c3RvbW91dD0ieDowO3k6MDt6OjA7cm90YXRpb25YOjA7cm90YXRpb25ZOjA7cm90YXRpb25aOjA7c2NhbGVYOjAuNzU7c2NhbGVZOjAuNzU7c2tld1g6MDtza2V3WTowO29wYWNpdHk6MDt0cmFuc2Zvcm1QZXJzcGVjdGl2ZTo2MDA7dHJhbnNmb3JtT3JpZ2luOjUwJSA1MCU7ImRhdGEtY2FwdGlvbmhpZGRlbj0ib24iZGF0YS13aWR0aD0iWyc2MDBweCcsJzYwMHB4JywzNTBweCcsJzIwMHB4J10iZGF0YS1oZWlnaHQ9IlsnYXV0bycsJ2F1dG8nLCdhdXRvJywnYXV0byddImRhdGEtc3BsaXRpbj0ibm9uZSJkYXRhLXNwbGl0b3V0PSJub25lImRhdGEtcmVzcG9uc2l2ZV9vZmZzZXQ9Im9uImRhdGEtZGVsYXk9IjIwMCIgc3R5bGU9Im1hcmdpbi1ib3R0b206MjBweDsgbGV0dGVyLXNwYWNpbmc6IG5vcm1hbDsgbGluZS1oZWlnaHQ6IDIwcHg7IHdoaXRlLXNwYWNlOiBub3JtYWw7IGNvbG9yOiAjRkZGOyI+V2UgYmVsaWV2ZSB0aGF0IGluIGVhY2ggb25lIG9mIHlvdSwgdGhlcmUgaXMgZ3JlYXRuZXNzIHdhaXRpbmcgdG8gbWFuaWZlc3QuIEl04oCZcyBwb3NzaWJsZSB0byBidWlsZCBhIGxvbmcgdGVybSBidXNpbmVzcyBiYXNlZCBvbiBkZXNpcmUgYW5kIHF1ZXN0IHRvIGZpbmQgdGhlICJ3aW4td2luIiBpbiBldmVyeSBzY2VuYXJpby4gV2UgcmVjb2duaXplIHRoZSB3b3JsZCBpcyBtb3ZpbmcgZmFzdGVyIGFuZCB0byBhY2hpZXZlIHN1Y2Nlc3MgaW4gdG9kYXnigJlzIHdvcmxkLCB3ZSBoYXZlIHRvIGJlIG1vcmUgYWdpbGUgYW5kIGJlIHF1aWNrZXIgb24gb3VyIGZlZXQuPC9kaXY+ZAICD2QWAmYPFQHzBjxhIGhyZWY9Imh0dHBzOi8vd3d3LmxlYXJuZWFybm93bi5jb20vbGVvL0Fib3V0TEVPL0NvbXBhbnlPdmVydmlldyIgdGFyZ2V0PSJfYmxhbmsiIGNsYXNzPSJ0cC1jYXB0aW9uIG1lZGl1bV9kYXJrIGN1c3RvbWluIGN1c3RvbW91dCB0cC1yZXNpemVtZSBidG4gYnRuLXByaW1hcnkgYmFubmVyX2J0biIgaWQ9InNsaWRlNS1sYXllcjMiZGF0YS14PSIwIiBkYXRhLWhvZmZzZXQ9IiJkYXRhLXk9IiIgZGF0YS12b2Zmc2V0PSIiZGF0YS1lbGVtZW50ZGVsYXk9IiJkYXRhLXN0YXJ0PSIxNDAwImRhdGEtc3BlZWQ9IjYwMCJkYXRhLWVhc2luZz0iQmFjay5lYXNlSW5PdXQiZGF0YS1jdXN0b21pbj0ieDowO3k6MDt6OjA7cm90YXRpb25YOjkwO3JvdGF0aW9uWTowO3JvdGF0aW9uWjowO3NjYWxlWDoxO3NjYWxlWToxO3NrZXdYOjA7c2tld1k6MDtvcGFjaXR5OjA7dHJhbnNmb3JtUGVyc3BlY3RpdmU6MjAwO3RyYW5zZm9ybU9yaWdpbjo1MCUgMCU7ImRhdGEtY3VzdG9tb3V0PSJ4OjA7eTowO3o6MDtyb3RhdGlvblg6MDtyb3RhdGlvblk6MDtyb3RhdGlvblo6MDtzY2FsZVg6MC43NTtzY2FsZVk6MC43NTtza2V3WDowO3NrZXdZOjA7b3BhY2l0eTowO3RyYW5zZm9ybVBlcnNwZWN0aXZlOjYwMDt0cmFuc2Zvcm1PcmlnaW46NTAlIDUwJTsiZGF0YS1jYXB0aW9uaGlkZGVuPSJvbiJkYXRhLXdpZHRoPSJbJ2F1dG8nLCdhdXRvJywnYXV0bycsJ2F1dG8nXSJkYXRhLWhlaWdodD0iWydhdXRvJywnYXV0bycsJ2F1dG8nLCdhdXRvJ10iZGF0YS1zcGxpdGluPSJub25lImRhdGEtc3BsaXRvdXQ9Im5vbmUiZGF0YS1yZXNwb25zaXZlX29mZnNldD0ib24iZGF0YS1kZWxheT0iMjAwIiAgIHN0eWxlPSJkaXNwbGF5OmlubGluZS1ibG9jayI+RklORCBPVVQgTU9SRTwvYT5kAgsPFgIfAQIGFgxmD2QWCmYPDxYCHghJbWFnZVVybAVMaHR0cHM6Ly93d3cubGVhcm5lYXJub3duLmNvbS9hc3NldHMvSW1hZ2VzL1Byb2R1Y3RJbWFnZXMvMTAwM19tZWRpdW0uanBnP3Y9MmRkAgEPFgIfAAUUQ2hpbGQgRWR1Y2F0aW9uIFBhY2tkAgIPFgIfAAWNAlRoZSBDaGlsZCBFZHVjYXRpb24gUGFjayBpbnRyb2R1Y2VzIGEgbmV3IGFuZCBleGNsdXNpdmUgY2F0ZWdvcnkgdG8gdGhlIExFTyBlLWxlYXJuaW5nIHBsYXRmb3JtIGZvY3Vzc2luZyBvbiBTb2NpYWwgRW50cmVwcmVuZXVyc2hpcC4gVGhpcyBwYWNrIGFsc28gZ2l2ZXMgeW91IHRoZSBvcHBvcnR1bml0eSB0byBlbmdhZ2Ugd2l0aCBwcm9qZWN0cyBhaW1lZCBhdCBpbXByb3ZpbmcgdGhlIGVkdWNhdGlvbiBmb3IgY2hpbGRyZW4gaW4gZGV2ZWxvcGluZyBjb3VudHJpZXMuZAIDDxUCBDEwMDMUQ2hpbGQtRWR1Y2F0aW9uLVBhY2tkAgUPFgIfAAUGMTUwLjAwZAIBD2QWCmYPDxYCHwMFS2h0dHBzOi8vd3d3LmxlYXJuZWFybm93bi5jb20vYXNzZXRzL0ltYWdlcy9Qcm9kdWN0SW1hZ2VzLzk2OV9tZWRpdW0uanBnP3Y9MmRkAgEPFgIfAAUQTEVPIFN0YXJ0ZXIgUGFja2QCAg8WAh8ABZICVGhlIExFTyBTdGFydGVyIFBhY2sgYWxsb3dzIHlvdSB0byBjaG9vc2UgZnJvbSBvdmVyIDE1MCBMRU8gZW50cmVwcmVuZXVyc2hpcCB0cmFpbmluZyBwcm9kdWN0cyB3aXRoIHVubGltaXRlZCBhY2Nlc3MgZm9yIDEgbW9udGguIFlvdSBhbHNvIHJlY2VpdmUgMSBMaXZlIFNlbWluYXIgdGlja2V0IHdoaWNoIHByb3ZpZGVzIHlvdSB3aXRoIHRoZSBvcHBvcnR1bml0eSB0byBhdHRlbmQgYSBkeW5hbWljIExpdmUgU2VtaW5hciB0cmFpbmluZyB3aXRoIHRvcC10aWVyIHRyYWluZXJzLmQCAw8VAgM5NjkQTEVPLVN0YXJ0ZXItUGFja2QCBQ8WAh8ABQYxNTAuMDBkAgIPZBYKZg8PFgIfAwVLaHR0cHM6Ly93d3cubGVhcm5lYXJub3duLmNvbS9hc3NldHMvSW1hZ2VzL1Byb2R1Y3RJbWFnZXMvOTcwX21lZGl1bS5qcGc/dj0yZGQCAQ8WAh8ABRFMRU8gQnVzaW5lc3MgUGFja2QCAg8WAh8ABZYCVGhlIExFTyBCdXNpbmVzcyBQYWNrIGFsbG93cyB5b3UgdG8gY2hvb3NlIGZyb20gaHVuZHJlZHMgb2YgTEVPIGVudHJlcHJlbmV1cnNoaXAgdHJhaW5pbmcgcHJvZHVjdHMgd2l0aCB1bmxpbWl0ZWQgYWNjZXNzIGZvciA0IG1vbnRocy4gWW91IGFsc28gcmVjZWl2ZSA0IExpdmUgU2VtaW5hciB0aWNrZXRzIHdoaWNoIHByb3ZpZGUgeW91IHdpdGggdGhlIG9wcG9ydHVuaXR5IHRvIGF0dGVuZCBkeW5hbWljIExpdmUgU2VtaW5hciB0cmFpbmluZ3Mgd2l0aCB0b3AtdGllciB0cmFpbmVycy5kAgMPFQIDOTcwEUxFTy1CdXNpbmVzcy1QYWNrZAIFDxYCHwAFBjYwMC4wMGQCAw9kFgpmDw8WAh8DBUtodHRwczovL3d3dy5sZWFybmVhcm5vd24uY29tL2Fzc2V0cy9JbWFnZXMvUHJvZHVjdEltYWdlcy85NzFfbWVkaXVtLmpwZz92PTJkZAIBDxYCHwAFDExFTyBWSVAgUGFja2QCAg8WAh8ABfIDVGhlIExFTyBWSVAgUGFjayBhbGxvd3MgeW91IHRvIGNob29zZSBmcm9tIGh1bmRyZWRzIG9mIExFTyBlbnRyZXByZW5ldXJzaGlwIHRyYWluaW5nIHByb2R1Y3RzIHdpdGggdW5saW1pdGVkIGFjY2VzcyBmb3IgMTIgbW9udGhzLiBZb3UgYWxzbyByZWNlaXZlIDQgVklQIExpdmUgU2VtaW5hciB0aWNrZXRzIHdoaWNoIHByb3ZpZGUgeW91IHdpdGggdGhlIG9wcG9ydHVuaXR5IHRvIGF0dGVuZCBkeW5hbWljIExFTyBMaXZlIFNlbWluYXIgdHJhaW5pbmdzIHdpdGggdG9wLXRpZXIgdHJhaW5lcnMuICBWSVAgTGl2ZSBTZW1pbmFyIFRpY2tldHMgaW5jbHVkZSBwcmlvcml0eSBzZWF0aW5nIGF0IHRoZSBldmVudCBhbmQgYm9udXMgdHJhaW5pbmcgc2Vzc2lvbnMgIGFzIHdlbGwgYXMgbHVuY2ggb3IgZGlubmVyIHdpdGggdGhlIFNlbWluYXIgdHJhaW5lcnMuIDxiciAvPiA8YnIgLz4gPGI+Tm90ZTogVGhpcyBwcm9kdWN0IGlzIG5vdCBhdmFpbGFibGUgaW4gUGFraXN0YW48L2I+ZAIDDxUCAzk3MQxMRU8tVklQLVBhY2tkAgUPFgIfAAUIMSw1MDAuMDBkAgQPZBYKZg8PFgIfAwVLaHR0cHM6Ly93d3cubGVhcm5lYXJub3duLmNvbS9hc3NldHMvSW1hZ2VzL1Byb2R1Y3RJbWFnZXMvNzQ2X21lZGl1bS5qcGc/dj0yZGQCAQ8WAh8ABSVUaGUgUG93ZXIgb2YgU21hcnQgQ3VzdG9tZXIgUmVsYXRpb25zZAICDxYCHwAF8QU8cD5Db21tdW5pY2F0aW9uIGlzIGtleS4gV2hldGhlciB5b3UgYXJlIHNwZWFraW5nIHdpdGggeW91ciB0ZWFtLCB3aXRoIHByb3NwZWN0aXZlIGNsaWVudHMgb3Igd2l0aCBmYW1pbHkgYW5kIGZyaWVuZHMsIHlvdSBoYXZlIHRvIGVuc3VyZSB0aGF0IHdoYXQgeW91IGFyZSBzYXlpbmcgaXMgY2xlYXIgYW5kIGNvbmNpc2UuIE1hc3RlciB0aGUgc2NpZW5jZSBvZiBzbWFydCBjb21tdW5pY2F0aW9uIGJ5IGZvY3VzaW5nIHRoZSBmb3VyIHBvd2VyIHNraWxscyBpbiB0aGUgc2VyaWVzIFRoZSBQb3dlciBvZiBTbWFydCBDdXN0b21lciBSZWxhdGlvbnMgdG8gc3RhcnQgY29ubmVjdGluZyB3aXRoIG1vcmUgcGVvcGxlIGFuZCBidWlsZCBsb25nIHRlcm0gc3VjY2VzZnVsbCByZWxhdGlvbnMuPC9wPg0KPHA+wqDCoMKgwqDCoCBUaGlzIHRyYWluaW5nIHNlcmllcyB3aWxsIHByb3ZpZGU7PC9wPg0KPHVsPg0KPGxpPlRoZSBwb3dlciBvZiB1c2luZyBtaWNyby1tb21lbnRzIHRvIHlvdXIgYWR2YW50YWdlPC9saT4NCjxsaT5BIGRlZXAgdW5kZXJzdGFuZGluZyBvbiB0aGUgc2NpZW5jZSBhbmQgdGhlIGFydCBvZiBob3cgcGVvcGxlIHZpZXcgeW91PC9saT4NCjxsaT5UZWNobmlxdWVzIHRvIGVuaGFuY2UgeW91ciBsaXN0ZW5pbmcgc2tpbGxzPC9saT4NCjxsaT5UaGUgaW1wb3J0YW5jZSBvZiBhc2tpbmcgc21hcnQgcXVlc3Rpb25zIGxlYWRpbmcgdG8gZW5oYW5jZWQgZ3Jvd3RoIGluIHlvdXIgYnVzaW5lc3M8L2xpPg0KPC91bD5kAgMPFQIDNzQ2JVRoZS1Qb3dlci1vZi1TbWFydC1DdXN0b21lci1SZWxhdGlvbnNkAgUPFgIfAAUFNjAuMDBkAgUPZBYKZg8PFgIfAwVLaHR0cHM6Ly93d3cubGVhcm5lYXJub3duLmNvbS9hc3NldHMvSW1hZ2VzL1Byb2R1Y3RJbWFnZXMvODYxX21lZGl1bS5qcGc/dj0yZGQCAQ8WAh8ABQlHb2xkIFBhY2tkAgIPFgIfAAX9BVRoZSBMRU8gMTIgTW9udGggR29sZCBQYWNrIGFpbXMgdG8gaW50cm9kdWNlIHlvdSB0byB0aGUgYmVuZWZpdHMgb2YgYWNxdWlyaW5nIGdvbGQgYXNzZXRzIHRocm91Z2ggb3duaW5nIDEwZyBvZiA5OTkuOSBnb2xkLiAgRXhjaXRpbmcgYWRkaXRpb25zIHRvIHRoZSBMRU8gMTIgTW9udGggR29sZCBQYWNrIGlzIGEgTGltaXRlZC1FZGl0aW9uIENvbGxlY3RvcuKAmXMgSXRlbSBEaXNjb3VudCBDYXJkIGFzIHdlbGwgYXMgMTAgwqMxMDAgRGlzY291bnQgY2FyZHMgdG8gZW50aWNlIG90aGVyIG1lbWJlcnMgdG8gcHVyY2hhc2UgYSAxMiBNb250aCBMRU8gR29sZCBQYWNrLiAgPGJyIC8+IDxiciAvPkFzIHdlbGwgYXMgdGhlIGdvbGQgdGhlcmUgd2lsbCBiZSBhY2Nlc3MgdG8gTEVPIENvcmVMaW5lIGFuZCBMRU8gU2tpbGxzIENvdXJzZXMgZm9yIHlvdXIgY2hvc2VuIHN1YnNjcmlwdGlvbiBwZXJpb2QuIFlvdSB3aWxsIGFsc28gcmVjZWl2ZSA0IFZJUCBMaXZlIFNlbWluYXIgdGlja2V0cyB3aGljaCB3aWxsIHByb3ZpZGUgeW91IHdpdGggdGhlIG9wcG9ydHVuaXR5IHRvIGF0dGVuZCBkeW5hbWljIExpdmUgU2VtaW5hciB0cmFpbmluZ3Mgd2l0aCB0b3AtdGllciB0cmFpbmVycy4gPGI+VklQIExpdmUgU2VtaW5hciBUaWNrZXRzIGluY2x1ZGUgcHJpb3JpdHkgc2VhdGluZyBhdCB0aGUgZXZlbnQgYW5kIGJvbnVzIHRyYWluaW5nIHNlc3Npb25zIGFzIHdlbGwgYXMgbHVuY2ggb3IgZGlubmVyIHdpdGggdGhlIFNlbWluYXIgdHJhaW5lcnMuPC9iPmQCAw8VAgM4NjEJR29sZC1QYWNrZAIFDxYCHwAFCDIsMDAwLjAwZAITDxYCHwECCBYQZg9kFghmDxUCATkWMTUyMDIzNTgzMF90cmFpbmVyLnBuZ2QCAQ8WAh8ABQ1KYWNraWUgSmFydmlzZAIDDxYCHwAFkApKYWNraWUgSmFydmlzLCBhdXRob3Igb2YgUXVpY2sgV2lucyBpbiBTYWxlcyBhbmQgTWFya2V0aW5nLCBpcyBhIFVLIGJhc2VkIHNhbGVzIGFuZCBidXNpbmVzcyBkZXZlbG9wbWVudCBleHBlcnQuIFNoZSBpcyBhIGJ1c2luZXNzIG93bmVyLCBtZW50b3IgYW5kIGNvYWNoIHRvIEFtYml0aW91cyBTTUVzIGJ1c2luZXNzIG93bmVycyBoZWxwaW5nIHRoZW0gdG8gd2luIHRoZSBjbGllbnRzIHRoZXkgYXNwaXJlIHRvIGluIGFuICZsc3F1bzthdXRoZW50aWMmcnNxdW87IG1hbm5lci4gSGVyIHBhc3Npb24gaGFzIGFsd2F5cyBiZWVuIGluIGhlbHBpbmcgcGVvcGxlIHRvIGdyb3csIHRocm91Z2ggaW5zcGlyaW5nIGlkZWFzIGNvdXBsZWQgd2l0aCBwcmFjdGljYWwgd2F5cyB0byBhY2hpZXZlIHJlc3VsdHMgaW4gdGhlIHJlYWwgd29ybGQuIEphY2tpZSBoYXMgYSB3ZWFsdGggb2YgZXhwZXJpZW5jZSBnYWluZWQgYm90aCBpbiB0aGUgY29ycG9yYXRlIGFuZCBTTUUgZW52aXJvbm1lbnRzLiBIZXIgYmFjayBncm91bmQgaW5jbHVkZXMgYmVpbmcgYW4gYXdhcmQgd2lubmluZyBzYWxlcyBhY2hpZXZlciwgYSBtb3RpdmF0aW9uYWwgc2FsZXMgbWFuYWdlciBhbmQgYSB0cmFpbmluZyBtYW5hZ2VyIHJlc3BvbnNpYmxlIGZvciBzZXR0aW5nIHVwIGEgbmF0aW9uYWwgdHJhaW5pbmcgY2VudHJlIGZvciBvbmUgb2YgdGhlIFVLJnJzcXVvO3MgbGFyZ2VzdCBtZWRpYSBncm91cHMuIEhlciB0cmFpbmluZyBidXNpbmVzcyBhbHNvIHNlcnZlZCBzb21lIG9mIHRoZSBiZXN0IGtub3duIHJldGFpbGVycywgcHJvZmVzc2lvbmFsIHNlcnZpY2UgZmlybXMsIGJhbmtzLCBhbmQgdG9wIHRpZXIgb3JnYW5pc2F0aW9ucyBpbiB0aGUgVUsuIFNoZSBpcyBhIG1hc3RlciBwcmFjdGl0aW9uZXIgb2YgTkxQIGFuZCBhIG1lbWJlciBvZiB0aGUgcHJvZmVzc2lvbmFsIGluc3RpdHV0ZSBvZiBzYWxlcyBhbmQgbWFya2V0aW5nIG1hbmFnZW1lbnQuIFNoZSBpcyBjdXJyZW50bHkgZ3Jvd2luZyBoZXIgb3duIFNNRSBidXNpbmVzcyAmbHNxdW87SGVhcnQgb2YgYnVzaW5lc3MmcnNxdW87IGluIHRoZSBVSywgdGhhdCBicmluZ3MgdG9nZXRoZXIgYSB0ZWFtIG9mIGxpa2UtbWluZGVkIGJ1c2luZXNzIG1lbnRvcnMgYW5kIHByb2Zlc3Npb25hbCBzZXJ2aWNlIHByb3ZpZGVycyBhbGwgd2hvIHNoYXJlIHRoZSBkZXNpcmUgdG8gbWFrZSBhIGRpZmZlcmVuY2UgdGhyb3VnaCB0aGUgd29yayB0aGV5IGRvLiBKYWNraWUgd291bGQgbGlrZSB0byBoZWxwIHlvdSB0byB3aW4gdGhlIGNsaWVudHMgeW91IGFzcGlyZSB0by5kAgQPFQEBOWQCAQ9kFghmDxUCAjE1JDE0MzE2MTAwODVfSlVMSUFOX0JPTFNURVJfcGljMjAwLmpwZ2QCAQ8WAh8ABQ5KdWxpYW4gQm9sc3RlcmQCAw8WAh8ABdMJSnVsaWFuIEJvbHN0ZXIgaXMgYSBnbG9iYWxseSByZWNvZ25pemVkIE1hc3RlciBDb2FjaCBvbiBsZWFkZXJzaGlwIGFuZCBidXNpbmVzcyBzdWNjZXNzIGFuZCB3b3JrcyB3aXRoIGh1bmRyZWRzIG9mIGNvbXBhbmllcyBhbmQgaW5kaXZpZHVhbHMgYWNyb3NzIE5vcnRoIEFtZXJpY2EgdG8gZGV2ZWxvcCBsZWFkZXJzaGlwIGF0IGV2ZXJ5IGxldmVsIG9mIHRoZWlyIGNhcmVlciBhbmQgcGVyc29uYWwgc3VjY2Vzcy4gJm5ic3A7IEEgc3VjY2Vzc2Z1bCBzZXJpYWwgZW50cmVwcmVuZXVyIHdpdGggZml2ZSBidXNpbmVzc2VzIHRvIGRhdGUsIEp1bGlhbiBoYXMgbWFkZSBpdCBoaXMgbWlzc2lvbiB0byBzaGFyZSBoaXMga25vd2xlZGdlIGFuZCBtb3RpdmF0ZSBvdGhlcnMgdG8gYWNoaWV2ZSBtZWFzdXJhYmxlIGFuZCBtZWFuaW5nZnVsIHN1Y2Nlc3MgYXQgYm90aCB0aGUgcGVyc29uYWwgYW5kIHByb2Zlc3Npb25hbCBsZXZlbHMuIEEgcmVtYXJrYWJsZSBzcGVha2VyIGFuZCBhdXRob3IsIEp1bGlhbiBoYXMgYmVlbiBmZWF0dXJlZCBhcyBndWVzdCBleHBlcnQgb24gQkJDIFdvcmxkIE5ld3MsIFNsaWNlIFRWLCBhbmQgd29ya3Mgd2l0aCBsZWFkZXJzLCBwb2xpdGljaWFucyBhbmQgY2VsZWJyaXRpZXMgYXJvdW5kIHRoZSB3b3JsZC4gSW4gMjAxMiwgaGUgaGFkIHRoZSBvcHBvcnR1bml0eSB0byBjby1hdXRob3IgYWxvbmdzaWRlIERlZXBhayBDaG9wcmEgYW5kIERyLiBLZW4gQmxhbmNoYXJkIChUaGUgT25lLU1pbnV0ZSBNYW5hZ2VyKSBhbmQgaXMgY3VycmVudGx5IHdvcmtpbmcgb24gaGlzIHNlY29uZCBib29rLCB0ZW50YXRpdmVseSBlbnRpdGxlZCwgTWFzY3VsaW5pdHkgQ3Jpc2lzOiBCdWlsZGluZyBMZWFkZXJzaGlwIGludG8gQ29tbXVuaXR5IGFuZCBDb3Jwb3JhdGUgRmFicmljLiBBcyBhIHRob3VnaHQgbGVhZGVyLCBKdWxpYW4gaXMgYSBwaW9uZWVyIHdobyBwb3NzZXNzZXMgdGhlIGFiaWxpdHkgdG8gdGFrZSBoaXMgbWVzc2FnZSBvZiBsZWFkZXJzaGlwIGZyb20gdGhlIGV4ZWN1dGl2ZSBsZXZlbHMgb2YgY29ycG9yYXRlIGVudGVycHJpc2UgdG8gdGhlIG1hcmdpbmFsaXplZCBtZW1iZXJzIG9mIG91ciBzb2NpZXR5LiZuYnNwOyBIZSBiZWxpZXZlcyBsZWFkZXJzaGlwIGlzIGF0IHRoZSBjb3JuZXJzdG9uZSBvZiBlbXBvd2VybWVudCBhbmQgcGxheXMgYXMgYSB2aXRhbCByb2xlIGluIGhvdyB3ZSBkZWZpbmUgYW5kIHNoYXBlIG91ciBjb21tdW5pdGllcy5kAgQPFQECMTVkAgIPZBYIZg8VAgIzNCAxNDM2OTE5NDkzX1RheWxhXzE3Ni14LTIwMHB4LmpwZ2QCAQ8WAh8ABQ1UYXlsYSBHb29kbWFuZAIDDxYCHwAF5AMiSGF2aW5nIHNwZW50IG1hbnkgeWVhcnMgd29ya2luZyBpbiB0aGUgZmllbGQgb2YgcmVzZWFyY2gsIG1hbmFnZW1lbnQsIHJlY3J1aXRtZW50IGFuZCB0cmFpbmluZyBUYXlsYSBHb29kbWFuIGhhcyBnYXRoZXJlZCBleHRlbnNpdmUga25vd2xlZGdlIGFib3V0IHRoZSBtb3RpdmF0aW9uIG9mIHBlb3BsZSBhbmQgdGhlIHN0cmF0ZWdpZXMgdGhhdCB0aGV5IHVzZS4gVXNpbmcgaGVyIGJlaGF2aW91cmFsIGFjY3JlZGl0YXRpb25zIGFuZCBleHBlcmllbmNlIG9mIHF1YWxpZmljYXRpb25zLCBzaGUgaGFzIGNyZWF0ZWQgbmV3IHdheXMgZm9yIGVudHJlcHJlbmV1cnMgdG8gYWNoaWV2ZSBzdWNjZXNzLiBIZXIgbWFpbiBhaW0gaXMgdG8gaW1wcm92ZSB0aGUgY3VzdG9tZXIgZXhwZXJpZW5jZSwgcmFpc2UgdGhlIGJyYW5kIGlkZW50aXR5IG9mIHNraWxscyBhbmQgaGVscCBwZW9wbGUgdG8gcmVhbGl6ZSB0aGVpciBkZXZlbG9wbWVudCBwb3RlbnRpYWwuZAIEDxUBAjM0ZAIDD2QWCGYPFQICMzYhMTQzOTgzNjY1Nl9Eci1Ub20gcHJvZmlsZSBwaWMucG5nZAIBDxYCHwAFD0RyLiBUb20gQmFycmV0dGQCAw8WAh8ABdkDRHIuIEJhcnJldHQgaXMgYSBoaWdoLXByb2ZpbGUgbGVhZGVyc2hpcCBhbmQgY29tbXVuaWNhdGlvbnMgZXhwZXJ0LiBIZSBoYXMgdHdvIE1hc3RlcnMgZGVncmVlcyBhbmQgYSBQaEQgaW4gQ2xpbmljYWwgUHN5Y2hvbG9neSBhbmQgaGFzIHdvcmtlZCB3aXRoIEZvcnR1bmUgMjAwIGNvbXBhbmllcy4gSGUgc3BlY2lhbGl6ZXMgaW4gZW1vdGlvbmFsIGludGVsbGlnZW5jZSBhcyBpdCByZWxhdGVzIHRvIGxlYWRlcnNoaXAsIHNtYXJ0IGNvbW11bmljYXRpb24gYW5kIHRyYWluaW5nIGNvcnBvcmF0aW9ucyBpbiB1bmRlcnN0YW5kaW5nIHRoZSBwb3dlciBvZiBzbWFydCBjdXN0b21lciByZWxhdGlvbnNoaXBzLsKgIEhpcyBnb2FsIGluIGxpZmUgaXMgbm90IHRvIGZvY3VzIG9uIHdoYXQgaGUgaGFzIGRvbmUgaW4gdGhlIHBhc3QgYnV0IHRvIGhlbHAgb3RoZXJzIHNlZSB3aGF0IHRoZXkgY2FuIGFjaGlldmUgaW4gdGhlIGZ1dHVyZS5kAgQPFQECMzZkAgQPZBYIZg8VAgIzOSoxNDQyOTM4Mjc2X0Nvbm5pZSBDb3JlbGluZSBwcm9maWxlIHBpYy5qcGdkAgEPFgIfAAUOQ29ubmllIFBvZGVzdGFkAgMPFgIfAAW/A0Nvbm5pZSBpcyBhIGdhbWUtY2hhbmdpbmcsIHJldmVudWUtYnVpbGRpbmcsIGlkZWEtZ2VuZXJhdGluZywgcmVsYXRpb25zaGlwLWJ1aWxkaW5nIEJBTEwgT0YgRklSRS4mbmJzcDsgU2hlIGlzIGEgSGFsbCBvZiBGYW1lIGtleW5vdGUgc3BlYWtlciwgYXdhcmQgd2lubmluZyBhdXRob3Igb2Ygc2l4IGJvb2tzLCBjb21lZGllbm5lLCBmb3JtZXIgcmFkaW8gYW5kIFRWIHBlcnNvbmFsaXR5LCBhbmQgd2hhdCB3ZSBjb3VsZCBhbGwgdXNlIG5vdyBhbmQgdGhlbiAtLSBhIHRoZXJhcGlzdC4mbmJzcDsgRm9yIG1vcmUgdGhhbiAyNSB5ZWFycywgdHdvIG1pbGxpb24gcGVvcGxlIGFuZCAxLDAwMCBvcmdhbml6YXRpb25zLCBDb25uaWUgaGFzIGJlZW4gdGhlIG9uZSB0aGV5InZlIHR1cm5lZCB0byBmb3IgdGhlIGFuc3dlcnMgdGhleSBuZWVkIHRvIGxpdmUgdGhlIGxpZmUgdGhleSB3YW50LmQCBA8VAQIzOWQCBQ9kFghmDxUCAjQzFjE1MjAyMzg4ODJfdHJhaW5lci5wbmdkAgEPFgIfAAUOQnJhbmNvIEpldW5lc3NkAgMPFgIfAAWLBUJyYW5jbyBKZXVuZXNzLCBpbnRlcm5hdGlvbmFsIHRyYWluZXIgJmFtcDsgY29hY2gsIGlzIGZyb20gdGhlIGJlYXV0aWZ1bCBjb3VudHJ5IFNsb3ZlbmlhLCBseWluZyBpbiB0aGUgaGVhcnQgb2YgRXVyb3BlLiBIZSBzdGFydGVkIGhpcyBzYWxlcyBhbmQgcHJlc2VudGF0aW9uIGNhcmVlciBhdCBvbmx5IDE5IHllYXJzLCBhbmQgaGFzIHNpbmNlIHdvcmtlZCBpbiBhbmQgZm9yIG1vcmUgdGhhbiAyMDAgY29tcGFuaWVzLiZuYnNwOyBCcmFuY28gd2FzIGEgcHJvZmVzc29yIGZvciA3IHllYXJzIGF0IHRoZSBGYWN1bHR5IG9mIEJ1c2luZXNzIGFuZCBFY29ub21pY3MgaW4gU2xvdmVuaWEsIGJlY2FtZSBhbiZuYnNwOyBhY2NyZWRpdGVkIGludGVybmF0aW9uYWwgdHJhaW5lciB3aXRoIGV4Y2VsbGVuY2UgaW4gMjAwNSwgZW5hYmxpbmcgaGlzIGdsb2JhbCBjYXJlZXIuIEhlIHNwZW5kcyBtb3N0IGhpcyB0aW1lIGNvYWNoaW5nIGFuZCB0cmFpbmluZyBsZWFkZXJzLCBtYW5hZ2VycyBhbmQgc2FsZXMgcHJvZmVzc2lvbmFscyBpbiBjb21wYW5pZXMmbmJzcDsgcmFuZ2luZyBpbiBzaXplIGZyb20gNTAgdG8gMTAuMDAwIGVtcGxveWVlcy4gQnJhbmNvIGFsc28gbWFuYWdlcyBoaXMgb3duIGNvbXBhbnkgd2l0aCBhIHRlYW0gb2YgMTIgcGVvcGxlLmQCBA8VAQI0M2QCBg9kFghmDxUCAjQ1FjE1MjAzMTg0NTFfdHJhaW5lci5wbmdkAgEPFgIfAAUORXJpYyBNYXRoaWFzaW5kAgMPFgIfAAWcBkVyaWMgTWF0aGlhc2luIGlzIGEgY2VydGlmaWVkIE1hc3RlciBUcmFpbmVyIGluIE5ldXJvIExpbmd1aXN0aWMgUHJvZ3JhbW1pbmcgKE5MUCkuIEhlIGlzIGEgY29hY2gsIHRoZXJhcGlzdCBhbmQgZXhwZXJpZW5jZWQgZmFjaWxpdGF0b3Igd29ya2luZyB3aXRoIHZhcmlvdXMgYXVkaWVuY2VzLCBib3RoIGluIHRoZSBwcml2YXRlIGFuZCBwcm8tZmVzc2lvbmFsIGFyZW5hLCB3aG8gYXJlIGVuZ2FnZWQgaW4gYSBwZXJzb25hbCBkZXZlbG9wbWVudCBvciB0aGVyYXBldXRpYyBhcHByb2FjaC4gSGUgY3JlYXRlZCB0aGUgZmlyc3QgYXV0aG9yaXplZCB0cmFpbmluZyBpbnN0aXR1dGUgaW4gdGhlIEZyZW5jaCBXZXN0IEluZGllcywgZGVkaWNhdGVkIHRvIHRoZSB0cmFpbmluZyBvZiBwcm9mZXMtc2lvbmFscyB3b3JraW5nIGluIHRoZSBmaWVsZCBvZiBoZWxwaW5nIGFuZCB0aGVyYXBldXRpYyBhbGxpYW5jZXMgd2l0aCB0aGVpciBwYXRpZW50cy4gRXJpYyBNYXRoaWFzaW4gaGFzIHRyYWluZWQgbnVtZXJvdXMgdGhlcmFwaXN0cyBpbiB0aGUgdXNlIG9mIHRoZXNlIHNpbXBsZSB0b2xscyB0aGF0IGNhbiBlYXNpbHkgaW1wcm92ZSB0aGVpciBwYS10aWVudHMiIGRhaWx5IGxpdmVzOiBwc3ljaG9sb2dpc3RzLCBjb2FjaGVzLCBzb2NpYWwgd29ya2VycywgaGVhbHRoIHByb2Zlc3Npb25hbHMgaGF2ZSB1c2VkIHRoZXNlIHRvb2xzIHN1Y2Nlc3NmdWxseSBmb3IgZGVwcmVzc2lvbiwgcGhvYmlhcywgdHJhdW1hcywgYWRkaWN0aW9uLCBlYXRpbmcgZGlzb3JkZXJzLCBzdHJlc3MgYmVmb3JlIGFuIGV4YW1kAgQPFQECNDVkAgcPZBYIZg8VAgI0ORYxNTIwMzE4NDA1X3RyYWluZXIucG5nZAIBDxYCHwAFEEZyw6lkw6lyaWMgQXJyb25kAgMPFgIfAAXHAkZyJmVhY3V0ZTtkJmVhY3V0ZTtyaWMgQXJyb24gaXMgYSBwcm9mZXNzaW9uYWwgYW5kIHBlcnNvbmFsIGRldmVsb3BtZW50IGNvYWNoLiBIZSBpcyB0aGUgYXV0aG9yIG9mIHNldmVyYWwgYm9va3Mgb24gcGVyc29uYWwgZnVsZmlsbWVudCBhbmQgc3VjY2Vzcy4gSGUgaGVscHMgaGlzIGNsaWVudHMgdHJhbnNmb3JtIHRoZWlyIGxpdmVzIGFuZCBnZXQgd2hhdCB0aGV5IHJlYWxseSB3YW50LiBIaXMgdW5pcXVlIGFwcHJvYWNoIHdpbGwgYWxsb3cgeW91IHRvIGFjaGlldmUgZmFzdCByZXN1bHRzIHdpdGggbWluaW1hbCBlZmZvcnQuIFByZXBhcmUgdG8gYmUgc3VycHJpc2VkIWQCBA8VAQI0OWQCHQ8WAh8BZmQYAQUeX19Db250cm9sc1JlcXVpcmVQb3N0QmFja0tleV9fFgEFE2N0bDAwJGNoa1JlbWVtYmVyTWUZKlh0JQcmzfOCrhLbeIQ+yv3jdGssdETntoIOyn01eQ=="
+                            + "&__VIEWSTATEGENERATOR=CA0B0334"
+                            + "&__EVENTVALIDATION=/wEdAAoZ17CLT++hcf3DNFFAEeUNitw9a+kpC5hy6PX7DCLgIN3yEg90D4xD0VTL2nxlI2+3K7xQcomXsaDT+wnL40Y39aeGJ9E30o1ViXoitCUxzOlG9Wa5jWiDkRux04aSW4dQZpyJ3ZTHNWgnT455QiXCZ0Privzz4sS9+1cugEiz000/3tac5YeGLwbAe386+AKmms97+54vhfOrqLvDxmcRSE5DpQRcA8Y2wCwkTKdwKQMrY18I/kuuZdFToXOQOFI="
+                            + "&ctl00$txtUsername_value=" + userArr[0]
+                            + "&ctl00$txtPassword_value=" + userArr[1];
+            Map<String, String> map2 = new HashMap<>();
+            String s = sendPostRequest(reqURL, sendData, cookie, true, null, null, map2);
 //        logger.error("step-2:返回值，"+s.substring(0,100));
-        if(s.indexOf("Object moved to")<0){
-            LeoMessage leoMessage = new LeoMessage();
-            leoMessage.setMsg("密码错误");
-            leoMessage.setLoginError(true);
-            return leoMessage;
-        }
+            if (s.indexOf("Object moved to") < 0) {
+                LeoMessage leoMessage = new LeoMessage();
+                leoMessage.setMsg("密码错误");
+                leoMessage.setLoginError(true);
+                return leoMessage;
+            }
 
-        logger.error("step-3,访问Leo平台，获取Etoken");
-        String urlForStep3_1 = "https://www.learnearnown.com/Backoffice/LEOcoinPlatform.aspx";
-        Map<String,String> map3_1 = new HashMap<>();
-        String htmlForStep3_1 = getReponseStringForStep3(urlForStep3_1,cookie,map3_1);
+            logger.error("step-3,访问Leo平台，获取Etoken");
+            String urlForStep3_1 = "https://www.learnearnown.com/Backoffice/LEOcoinPlatform.aspx";
+            Map<String, String> map3_1 = new HashMap<>();
+            String htmlForStep3_1 = getReponseStringForStep3(urlForStep3_1, cookie, map3_1);
 
-        String EToken = "";
-        Pattern pattern = Pattern.compile("name=\"EToken\" value=\"([\\S]*)\"");
-        Matcher matcher = pattern.matcher(htmlForStep3_1);
-        if (matcher.find()) {
-            EToken= matcher.group(1);
-        }
-        logger.error("step-3,返回值："+EToken);
+            String EToken = "";
+            Pattern pattern = Pattern.compile("name=\"EToken\" value=\"([\\S]*)\"");
+            Matcher matcher = pattern.matcher(htmlForStep3_1);
+            if (matcher.find()) {
+                EToken = matcher.group(1);
+            }
+            logger.error("step-3,返回值：" + EToken);
 
-        logger.error("step-4,用Etoken使cookie在leo平台生效");
-        String urlForStep4 = "https://www.platform.leocoin.org/Authentication.aspx";
-        String sendDataForStep4 = "EToken="+EToken;
-        Map<String,String> map4 = new HashMap<>();
-        String s4 = sendPostRequest(urlForStep4,sendDataForStep4,cookie,true,null,null,map4);
+            logger.error("step-4,用Etoken使cookie在leo平台生效");
+            String urlForStep4 = "https://www.platform.leocoin.org/Authentication.aspx";
+            String sendDataForStep4 = "EToken=" + EToken;
+            Map<String, String> map4 = new HashMap<>();
+            String s4 = sendPostRequest(urlForStep4, sendDataForStep4, cookie, true, null, null, map4);
 //        logger.error("step-4:返回值："+s4);
 
-        logger.error("step-5,leo平台输入验证码");
-        String sendDataForStep6 = "__VIEWSTATE=/wEPDwUKMTIyNjE2NTc0NWRkq0vAtrZufxJRxDI0GAMwS+ShEt4="
-                                    +"&__VIEWSTATEGENERATOR=19A82BBE"
-                                    +"&__EVENTVALIDATION=/wEWBALZh5GQDQKy88z7BwKOxfX2BQKV5d6EAzyRY4b92Dh/JgORfk5gIr3Cf2Op" +
-                                    "&ctl00$ContentPlaceHolder1$txtVerificationCode_value=" +userArr[2]+
-                                    "&ctl00$ContentPlaceHolder1$btnVerify=Verify";
-        String urlForStep6 = "https://www.platform.leocoin.org/VerificationCode.aspx";
-        Map<String,String> map6 = new HashMap<>();
-        String s5 = sendPostRequest(urlForStep6,sendDataForStep6,cookie,true,null,null,map6);
-        if(s5.indexOf("Invalid Verification Code")>0){
-            LeoMessage leoMessage = new LeoMessage();
-            leoMessage.setMsg("验证码错误！");
-            leoMessage.setLoginError(true);
-            return leoMessage;
-        }
+            logger.error("step-5,leo平台输入验证码");
+            String sendDataForStep6 = "__VIEWSTATE=/wEPDwUKMTIyNjE2NTc0NWRkq0vAtrZufxJRxDI0GAMwS+ShEt4="
+                    + "&__VIEWSTATEGENERATOR=19A82BBE"
+                    + "&__EVENTVALIDATION=/wEWBALZh5GQDQKy88z7BwKOxfX2BQKV5d6EAzyRY4b92Dh/JgORfk5gIr3Cf2Op" +
+                    "&ctl00$ContentPlaceHolder1$txtVerificationCode_value=" + userArr[2] +
+                    "&ctl00$ContentPlaceHolder1$btnVerify=Verify";
+            String urlForStep6 = "https://www.platform.leocoin.org/VerificationCode.aspx";
+            Map<String, String> map6 = new HashMap<>();
+            String s5 = sendPostRequest(urlForStep6, sendDataForStep6, cookie, true, null, null, map6);
+            if (s5.indexOf("Invalid Verification Code") > 0) {
+                LeoMessage leoMessage = new LeoMessage();
+                leoMessage.setMsg("验证码错误！");
+                leoMessage.setLoginError(true);
+                return leoMessage;
+            }
             LeoMessage leoMessage = new LeoMessage();
             leoMessage.setMsg(cookie);
             return leoMessage;
-        }catch (Exception e){
-            logger.error(e.getMessage(),e);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
         }
         LeoMessage leoMessage = new LeoMessage();
         leoMessage.setMsg("登录错误：可能是网站连接比较慢。");
@@ -265,8 +266,8 @@ public class LeoServiceImpl implements ILeoService{
     public List<NamePwdCookie> getCookies(List<NamePwdCookie> requestNames) {
         CountDownLatch latch = new CountDownLatch(requestNames.size());
         List<NamePwdCookie> namePwdCookieList = new ArrayList<>();
-        for(NamePwdCookie user:requestNames){
-            Thread thread = new Thread(new GetCookiesThread(this,latch,user));
+        for (NamePwdCookie user : requestNames) {
+            Thread thread = new Thread(new GetCookiesThread(this, latch, user));
             namePwdCookieList.add(user);
             thread.start();
         }
@@ -281,10 +282,10 @@ public class LeoServiceImpl implements ILeoService{
 
     @Override
     public List<OrderDetail> getOrders(String cookie) {
-        String reqURL= "https://www.platform.leocoin.org/CustomerOrderHistory.aspx?Type=Sell&PageID=1";
+        String reqURL = "https://www.platform.leocoin.org/CustomerOrderHistory.aspx?Type=Sell&PageID=1";
         String sendData = "";
-        Map<String,String> map2 = new HashMap<>();
-        Map<String,String> reponseMap = getCookieReponseString(reqURL,cookie);
+        Map<String, String> map2 = new HashMap<>();
+        Map<String, String> reponseMap = getCookieReponseString(reqURL, cookie);
         String reponseHtml = reponseMap.get("reponseHtml");
 
         return getOrderDetailFromHtml(reponseHtml);
@@ -292,15 +293,15 @@ public class LeoServiceImpl implements ILeoService{
 
     @Override
     public OrderDetail cancelOrder(OrderDetail orderDetail) {
-        String reqURL= "https://www.platform.leocoin.org/cancelSellOrder.aspx?Id="+orderDetail.getId();
+        String reqURL = "https://www.platform.leocoin.org/cancelSellOrder.aspx?Id=" + orderDetail.getId();
 
         String sendDataForStep6 = "__VIEWSTATE=/wEPDwULLTExOTc2NzMzMzkPZBYCZg9kFgICAw9kFgICAQ9kFgICAQ9kFgoCAw8WAh4EVGV4dAUBMGQCCQ9kFgICAQ8WAh8AZWQCCw9kFgICAQ8WAh8AZWQCDQ9kFgICAQ8WAh8AZWQCFQ8QZGQWAGRkQ6neP72HoAqi41zUqYFFvZY7csY="
                 + "&__VIEWSTATEGENERATOR=1C0F98BC"
                 + "&__EVENTVALIDATION=/wEWAgLZ5+HBBQKrlNGpBtzBaAkuCf0UNbFWvEAfHqkfpC8i"
                 + "&ctl00$ContentPlaceHolder1$btnConfirm=Confirm";
 
-        Map<String,String> map6 = new HashMap<>();
-        String s5 = sendCancelPostRequest(reqURL,sendDataForStep6,orderDetail.getCookie(),true,null,null,map6);
+        Map<String, String> map6 = new HashMap<>();
+        String s5 = sendCancelPostRequest(reqURL, sendDataForStep6, orderDetail.getCookie(), true, null, null, map6);
 
         orderDetail.setCancelSuccess(true);
         return orderDetail;
@@ -310,10 +311,10 @@ public class LeoServiceImpl implements ILeoService{
     public List<OrderDetail> cancelOrders(List<OrderDetail> orderDetails) {
         CountDownLatch latch = new CountDownLatch(orderDetails.size());
         List<OrderDetail> namePwdCookieList = new ArrayList<>();
-        for(OrderDetail user:orderDetails){
+        for (OrderDetail user : orderDetails) {
 
             namePwdCookieList.add(user);
-            Thread thread = new Thread(new CancleOrderThread(this,latch,user));
+            Thread thread = new Thread(new CancleOrderThread(this, latch, user));
             thread.start();
         }
         try {
@@ -335,7 +336,7 @@ public class LeoServiceImpl implements ILeoService{
 //            logger.debug("name:"+cookie.getName() +" cookie:"+cookie.getCookie());
 //        }
         List<OrderDetail> details = getOrderDetailFromHtml("");
-        details.forEach(o-> logger.debug(o));
+        details.forEach(o -> logger.debug(o));
     }
 
     private static List<OrderDetail> getOrderDetailFromHtml(String html) {
@@ -347,27 +348,27 @@ public class LeoServiceImpl implements ILeoService{
             String tr = matcher.group(1);
             Pattern patternTd = Pattern.compile("<td class=\"(.)*?\">([\\S|\\s]*?)<\\/td>");
             Matcher matcher2 = patternTd.matcher(tr);
-            int i=1;
+            int i = 1;
             OrderDetail detail = new OrderDetail();
             while (matcher2.find()) {
                 String value = matcher2.group(2);
-                if(i==1){
+                if (i == 1) {
                     detail.setOrderType(matcher2.group(2));
-                } else if(i==2){
+                } else if (i == 2) {
                     detail.setVolume(value);
-                } else if(i==3){
+                } else if (i == 3) {
                     detail.setPrice(value);
-                } else if(i==4){
+                } else if (i == 4) {
                     detail.setCost(value);
-                }else if(i==5){
+                } else if (i == 5) {
                     detail.setDateTime(value);
-                }else if(i==6){
+                } else if (i == 6) {
                     detail.setStatus(value);
-                }else if(i==7){
-                    if(value.indexOf("Id=")>0){
-                        detail.setId(value.substring(value.indexOf("Id=")+3,value.indexOf("\">")));
+                } else if (i == 7) {
+                    if (value.indexOf("Id=") > 0) {
+                        detail.setId(value.substring(value.indexOf("Id=") + 3, value.indexOf("\">")));
                     }
-                }else {
+                } else {
 
                 }
                 i++;
@@ -378,9 +379,9 @@ public class LeoServiceImpl implements ILeoService{
     }
 
 
-    private String getReponseStringForStep3(String url,String cookie,Map<String,String> map2) {
-        Map<String,String> map = new HashMap<>();
-        String result="";
+    private String getReponseStringForStep3(String url, String cookie, Map<String, String> map2) {
+        Map<String, String> map = new HashMap<>();
+        String result = "";
         HttpURLConnection conn;
         URL realUrl = null;
         try {
@@ -392,31 +393,31 @@ public class LeoServiceImpl implements ILeoService{
             conn.setReadTimeout(300000);
             conn.setConnectTimeout(300000);
             conn.setInstanceFollowRedirects(false);
-            conn.setRequestProperty("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
-            conn.setRequestProperty("Accept-Language","zh-CN,zh;q=0.8,en;q=0.6");
-            conn.setRequestProperty("Cache-Control","max-age=0");
-            conn.setRequestProperty("Connection","keep-alive");
-            conn.setRequestProperty("Host","www.learnearnown.com");
-            conn.setRequestProperty("Referer","http://www.learnearnown.com/");
-            conn.setRequestProperty("Upgrade-Insecure-Requests","1");
-            conn.setRequestProperty("Cookie",cookie);
-            conn.setRequestProperty("User-Agent","Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
+            conn.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+            conn.setRequestProperty("Accept-Language", "zh-CN,zh;q=0.8,en;q=0.6");
+            conn.setRequestProperty("Cache-Control", "max-age=0");
+            conn.setRequestProperty("Connection", "keep-alive");
+            conn.setRequestProperty("Host", "www.learnearnown.com");
+            conn.setRequestProperty("Referer", "http://www.learnearnown.com/");
+            conn.setRequestProperty("Upgrade-Insecure-Requests", "1");
+            conn.setRequestProperty("Cookie", cookie);
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
             try {
                 int code = conn.getResponseCode();
                 conn.getResponseMessage();
-                if (code == 200|| code==302) {
+                if (code == 200 || code == 302) {
                     List<String> list = conn.getHeaderFields().get("Set-Cookie");
 
                     InputStream is = conn.getInputStream();
                     BufferedReader in = new BufferedReader(new InputStreamReader(is, "UTF-8"));
                     StringBuffer buffer = new StringBuffer();
                     String line = "";
-                    while ((line = in.readLine()) != null){
+                    while ((line = in.readLine()) != null) {
                         buffer.append(line);
                     }
                     result = buffer.toString();
-                    if(map2!=null){
-                        if(map2!=null){
+                    if (map2 != null) {
+                        if (map2 != null) {
 //                            getResponseHeader(map2, response);
 //                            getParamsFromHtml(map2,result);
                         }
@@ -425,7 +426,7 @@ public class LeoServiceImpl implements ILeoService{
                     is.close();
                 }
             } catch (Exception e) {
-                logger.debug( " - error: " + e);
+                logger.debug(" - error: " + e);
             } finally {
                 conn.disconnect();
             }
@@ -437,9 +438,9 @@ public class LeoServiceImpl implements ILeoService{
     }
 
 
-    private Map<String,String> getReponseString(String url){
-        Map<String,String> map = new HashMap<>();
-        String result="";
+    private Map<String, String> getReponseString(String url) {
+        Map<String, String> map = new HashMap<>();
+        String result = "";
         HttpURLConnection conn;
         URL realUrl = null;
         try {
@@ -451,25 +452,25 @@ public class LeoServiceImpl implements ILeoService{
             conn.setReadTimeout(300000);
             conn.setConnectTimeout(300000);
             conn.setInstanceFollowRedirects(true);
-            conn.setRequestProperty("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
-            conn.setRequestProperty("Accept-Language","zh-CN,zh;q=0.8,en;q=0.6");
-            conn.setRequestProperty("Cache-Control","max-age=0");
-            conn.setRequestProperty("Connection","keep-alive");
-            conn.setRequestProperty("Host","www.platform.leocoin.org");
-            conn.setRequestProperty("Referer","http://www.learnearnown.com/");
-            conn.setRequestProperty("Upgrade-Insecure-Requests","1");
-            conn.setRequestProperty("User-Agent","Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
+            conn.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+            conn.setRequestProperty("Accept-Language", "zh-CN,zh;q=0.8,en;q=0.6");
+            conn.setRequestProperty("Cache-Control", "max-age=0");
+            conn.setRequestProperty("Connection", "keep-alive");
+            conn.setRequestProperty("Host", "www.platform.leocoin.org");
+            conn.setRequestProperty("Referer", "http://www.learnearnown.com/");
+            conn.setRequestProperty("Upgrade-Insecure-Requests", "1");
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
             try {
                 int code = conn.getResponseCode();
                 conn.getResponseMessage();
                 if (code == 200) {
                     List<String> list = conn.getHeaderFields().get("Set-Cookie");
-                    map.put("cookie",list.get(0).substring(0,list.get(0).indexOf(";")+1) );
+                    map.put("cookie", list.get(0).substring(0, list.get(0).indexOf(";") + 1));
                     InputStream is = conn.getInputStream();
                     BufferedReader in = new BufferedReader(new InputStreamReader(is, "UTF-8"));
                     StringBuffer buffer = new StringBuffer();
                     String line = "";
-                    while ((line = in.readLine()) != null){
+                    while ((line = in.readLine()) != null) {
                         buffer.append(line);
                     }
                     result = buffer.toString();
@@ -478,74 +479,88 @@ public class LeoServiceImpl implements ILeoService{
                     is.close();
                 }
             } catch (Exception e) {
-                logger.debug( " - error: " + e);
+                logger.debug(" - error: " + e);
             } finally {
                 conn.disconnect();
             }
             map.put("reponseHtml", result);
         } catch (Exception e) {
-            logger.error("",e);
+            logger.error("", e);
         }
         return map;
     }
 
-    private Map<String,String> getCookieReponseString(String url,String cookie){
-        Map<String,String> map = new HashMap<>();
-        String result="";
-        HttpURLConnection conn;
-        URL realUrl = null;
-        try {
-            realUrl = new URL(url);
-
-            conn = (HttpURLConnection) realUrl.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setUseCaches(false);
-            conn.setReadTimeout(300000);
-            conn.setConnectTimeout(300000);
-            conn.setInstanceFollowRedirects(true);
-            conn.setRequestProperty("Accept","text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
-            conn.setRequestProperty("Accept-Language","zh-CN,zh;q=0.8,en;q=0.6");
-            conn.setRequestProperty("Cache-Control","max-age=0");
-            conn.setRequestProperty("Connection","keep-alive");
-            conn.setRequestProperty("Host","www.platform.leocoin.org");
-            conn.setRequestProperty("Referer","https://www.platform.leocoin.org/Default.aspx");
-            conn.setRequestProperty("Upgrade-Insecure-Requests","1");
-            conn.setRequestProperty("User-Agent","Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
-            conn.setRequestProperty("Cookie",cookie);
-            try {
-                int code = conn.getResponseCode();
-                conn.getResponseMessage();
-                if (code == 200) {
-//                    List<String> list = conn.getHeaderFields().get("Set-Cookie");
-//                    map.put("cookie",list.get(0).substring(0,list.get(0).indexOf(";")+1) );
-                    InputStream is = conn.getInputStream();
-                    BufferedReader in = new BufferedReader(new InputStreamReader(is, "UTF-8"));
-                    StringBuffer buffer = new StringBuffer();
-                    String line = "";
-                    while ((line = in.readLine()) != null){
-                        buffer.append(line);
-                    }
-                    result = buffer.toString();
-                    in.close();
-                    is.close();
-                }
-            } catch (Exception e) {
-                logger.error( " - error: " , e);
-            } finally {
-                conn.disconnect();
-            }
-            map.put("reponseHtml", result);
-        } catch (Exception e) {
-            logger.error("",e);
-        }
-        return map;
+    private Map<String, String> getCookieReponseString(String url, String cookie) {
+        Map<String,String> requestHeader = new HashMap<>();
+        requestHeader.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+        requestHeader.put("Accept-Language", "zh-CN,zh;q=0.8,en;q=0.6");
+        requestHeader.put("Cache-Control", "private, max-age=0, no-cache");
+        requestHeader.put("Connection", "keep-alive");
+        requestHeader.put("Host", "www.platform.leocoin.org");
+        requestHeader.put("Referer", "https://www.platform.leocoin.org/Default.aspx");
+        requestHeader.put("Upgrade-Insecure-Requests", "1");
+        requestHeader.put("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
+        requestHeader.put("Cookie", cookie);
+        String resultHtml = HttpClientUtil.sendGetRequest(cookie,url,requestHeader);
+        Map<String, String> map1 = new HashMap<>();
+        map1.put("reponseHtml", resultHtml);
+        return map1;
+//        Map<String, String> map = new HashMap<>();
+//        String result = "";
+//        HttpURLConnection conn;
+//        URL realUrl = null;
+//        try {
+//            realUrl = new URL(url);
+//            conn = (HttpURLConnection) realUrl.openConnection();
+//            conn.setRequestMethod("GET");
+//            conn.setUseCaches(false);
+//            conn.setReadTimeout(300000);
+//            conn.setConnectTimeout(300000);
+//            conn.setInstanceFollowRedirects(true);
+//            conn.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+//            conn.setRequestProperty("Accept-Language", "zh-CN,zh;q=0.8,en;q=0.6");
+//            conn.setRequestProperty("Cache-Control", "max-age=0");
+//            conn.setRequestProperty("Connection", "keep-alive");
+//            conn.setRequestProperty("Host", "www.platform.leocoin.org");
+//            conn.setRequestProperty("Referer", "https://www.platform.leocoin.org/Default.aspx");
+//            conn.setRequestProperty("Upgrade-Insecure-Requests", "1");
+//            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36");
+//            conn.setRequestProperty("Cookie", cookie);
+//            try {
+//                int code = conn.getResponseCode();
+//                conn.getResponseMessage();
+//                if (code == 200) {
+////                    List<String> list = conn.getHeaderFields().get("Set-Cookie");
+////                    map.put("cookie",list.get(0).substring(0,list.get(0).indexOf(";")+1) );
+//                    InputStream is = conn.getInputStream();
+//                    BufferedReader in = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+//                    StringBuffer buffer = new StringBuffer();
+//                    String line = "";
+//                    while ((line = in.readLine()) != null) {
+//                        buffer.append(line);
+//                    }
+//                    result = buffer.toString();
+//                    in.close();
+//                    is.close();
+//                }
+//            } catch (Exception e) {
+//                logger.error(" - error: ", e);
+//            } finally {
+//                conn.disconnect();
+//            }
+//            map.put("reponseHtml", result);
+//        } catch (Exception e) {
+//            logger.error("", e);
+//        }
+//        return map;
     }
 
 
     /**
      * 发送HTTP_POST请求
-     *   <>该方法会自动关闭连接,释放资源</>
-     *   当<code>isEncoder=true</code>时,其会自动对<code>sendData</code>中的[中文][|][ ]等特殊字符进行<code>URLEncoder.encode(string,encodeCharset)</code>
+     * <>该方法会自动关闭连接,释放资源</>
+     * 当<code>isEncoder=true</code>时,其会自动对<code>sendData</code>中的[中文][|][ ]等特殊字符进行<code>URLEncoder.encode(string,encodeCharset)</code>
+     *
      * @param reqURL        请求地址
      * @param sendData      请求参数,若有多个参数则应拼接成param11=value11&22=value22&33=value33的形式后,传入该参数中
      * @param isEncoder     请求数据是否需要encodeCharset编码,true为需要
@@ -553,7 +568,7 @@ public class LeoServiceImpl implements ILeoService{
      * @param decodeCharset 解码字符集,解析响应数据时用之,其为null时默认采用UTF-8解码
      * @return 远程主机响应正文
      */
-    public static String sendPostRequest(String reqURL, String sendData,String cookie, boolean isEncoder, String encodeCharset, String decodeCharset, Map<String,String> map2){
+    public static String sendPostRequest(String reqURL, String sendData, String cookie, boolean isEncoder, String encodeCharset, String decodeCharset, Map<String, String> map2) {
         String responseContent = null;
 //        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
         CloseableHttpClient httpClient = HttpClientSingleton.getHttpClient();
@@ -564,55 +579,56 @@ public class LeoServiceImpl implements ILeoService{
                 .setSocketTimeout(600000).build();
         httpPost.setConfig(requestConfig);
 
-        httpPost.setHeader("Referer" , "https://www.learnearnown.com");
-        httpPost.setHeader("Accept-Language" , "zh-CN,zh;q=0.9");
-        httpPost.setHeader("Origin" , "https://www.learnearnown.com");
-        httpPost.setHeader("Accept" , "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
-        httpPost.setHeader("Upgrade-Insecure-Requests" , "1");
-        httpPost.setHeader("Content-Type" , "application/x-www-form-urlencoded");
-        httpPost.setHeader("Cache-Control" , "max-age=0");
+        httpPost.setHeader("Referer", "https://www.learnearnown.com");
+        httpPost.setHeader("Accept-Language", "zh-CN,zh;q=0.9");
+        httpPost.setHeader("Origin", "https://www.learnearnown.com");
+        httpPost.setHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+        httpPost.setHeader("Upgrade-Insecure-Requests", "1");
+        httpPost.setHeader("Content-Type", "application/x-www-form-urlencoded");
+        httpPost.setHeader("Cache-Control", "max-age=0");
         httpPost.setHeader("Accept-Encoding", "gzip, deflate, br");
-        httpPost.setHeader("User-Agent" , "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36");
-        if(!org.springframework.util.StringUtils.isEmpty(cookie)){
-            httpPost.setHeader("Cookie",cookie);
+        httpPost.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36");
+        if (!org.springframework.util.StringUtils.isEmpty(cookie)) {
+            httpPost.setHeader("Cookie", cookie);
         }
 
         CloseableHttpResponse response = null;
-        try{
-            if(isEncoder){
+        try {
+            if (isEncoder) {
                 List<NameValuePair> formParams = new ArrayList<NameValuePair>();
-                for(String str : sendData.split("&")){
-                    formParams.add(new BasicNameValuePair(str.substring(0,str.indexOf("=")), str.substring(str.indexOf("=")+1)));
+                for (String str : sendData.split("&")) {
+                    formParams.add(new BasicNameValuePair(str.substring(0, str.indexOf("=")), str.substring(str.indexOf("=") + 1)));
                 }
                 ContentType contentType = ContentType.create("text/plain", Consts.UTF_8);
-                httpPost.setEntity(new StringEntity(URLEncodedUtils.format(formParams, encodeCharset==null ? "UTF-8" : encodeCharset), contentType));
-            }else{
+                httpPost.setEntity(new StringEntity(URLEncodedUtils.format(formParams, encodeCharset == null ? "UTF-8" : encodeCharset), contentType));
+            } else {
                 httpPost.setEntity(new StringEntity(sendData));
             }
             response = httpClient.execute(httpPost);
             HttpEntity entity = response.getEntity();
-            if(null != entity){
-                if(entity.getContentEncoding()!=null){
-                    if("gzip".equalsIgnoreCase(entity.getContentEncoding().getValue())){
+            if (null != entity) {
+                if (entity.getContentEncoding() != null) {
+                    if ("gzip".equalsIgnoreCase(entity.getContentEncoding().getValue())) {
                         entity = new GzipDecompressingEntity(entity);
-                    } else if("deflate".equalsIgnoreCase(entity.getContentEncoding().getValue())){
+                    } else if ("deflate".equalsIgnoreCase(entity.getContentEncoding().getValue())) {
                         entity = new DeflateDecompressingEntity(entity);
-                    }}
-                if(entity.getContentLength() > 2147483647L) {
+                    }
+                }
+                if (entity.getContentLength() > 2147483647L) {
                     throw new IllegalArgumentException("HTTP entity too large to be buffered in memory");
                 }
                 responseContent = EntityUtils.toString(entity, "UTF-8");
-                if(map2!=null){
+                if (map2 != null) {
                     getResponseHeader(map2, response);
                 }
             }
-        }catch(Exception e){
+        } catch (Exception e) {
             logger.error("与[" + reqURL + "]通信过程中发生异常,堆栈信息如下", e);
-        }finally{
-            if(response!=null){
+        } finally {
+            if (response != null) {
                 try {
                     response.close();
-                }  catch (IOException e) {
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
@@ -621,7 +637,7 @@ public class LeoServiceImpl implements ILeoService{
     }
 
 
-    public static String sendCancelPostRequest(String reqURL, String sendData,String cookie, boolean isEncoder, String encodeCharset, String decodeCharset, Map<String,String> map2){
+    public static String sendCancelPostRequest(String reqURL, String sendData, String cookie, boolean isEncoder, String encodeCharset, String decodeCharset, Map<String, String> map2) {
         String responseContent = null;
 //        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
         CloseableHttpClient httpClient = HttpClientSingleton.getHttpClient();
@@ -632,71 +648,72 @@ public class LeoServiceImpl implements ILeoService{
                 .setSocketTimeout(600000).build();
         httpPost.setConfig(requestConfig);
 
-        httpPost.setHeader("Referer" , reqURL);
-        httpPost.setHeader("Accept-Language" , "zh-CN,zh;q=0.9");
-        httpPost.setHeader("Host" , "www.platform.leocoin.org");
-        httpPost.setHeader("Origin" , "https://www.platform.leocoin.org");
-        httpPost.setHeader("Accept" , "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
-        httpPost.setHeader("Upgrade-Insecure-Requests" , "1");
-        httpPost.setHeader("Content-Type" , "application/x-www-form-urlencoded");
-        httpPost.setHeader("Cache-Control" , "max-age=0");
+        httpPost.setHeader("Referer", reqURL);
+        httpPost.setHeader("Accept-Language", "zh-CN,zh;q=0.9");
+        httpPost.setHeader("Host", "www.platform.leocoin.org");
+        httpPost.setHeader("Origin", "https://www.platform.leocoin.org");
+        httpPost.setHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+        httpPost.setHeader("Upgrade-Insecure-Requests", "1");
+        httpPost.setHeader("Content-Type", "application/x-www-form-urlencoded");
+        httpPost.setHeader("Cache-Control", "max-age=0");
         httpPost.setHeader("Accept-Encoding", "gzip, deflate, br");
-        httpPost.setHeader("User-Agent" , "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36");
-        if(!org.springframework.util.StringUtils.isEmpty(cookie)){
-            httpPost.setHeader("Cookie",cookie);
+        httpPost.setHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36");
+        if (!org.springframework.util.StringUtils.isEmpty(cookie)) {
+            httpPost.setHeader("Cookie", cookie);
         }
-        try{
-            if(isEncoder){
+        try {
+            if (isEncoder) {
                 List<NameValuePair> formParams = new ArrayList<NameValuePair>();
-                for(String str : sendData.split("&")){
-                    formParams.add(new BasicNameValuePair(str.substring(0,str.indexOf("=")), str.substring(str.indexOf("=")+1)));
+                for (String str : sendData.split("&")) {
+                    formParams.add(new BasicNameValuePair(str.substring(0, str.indexOf("=")), str.substring(str.indexOf("=") + 1)));
                 }
                 ContentType contentType = ContentType.create("text/plain", Consts.UTF_8);
-                httpPost.setEntity(new StringEntity(URLEncodedUtils.format(formParams, encodeCharset==null ? "UTF-8" : encodeCharset), contentType));
-            }else{
+                httpPost.setEntity(new StringEntity(URLEncodedUtils.format(formParams, encodeCharset == null ? "UTF-8" : encodeCharset), contentType));
+            } else {
                 httpPost.setEntity(new StringEntity(sendData));
             }
             HttpResponse response = httpClient.execute(httpPost);
             HttpEntity entity = response.getEntity();
-            if(null != entity){
-                if(entity.getContentEncoding()!=null){
-                    if("gzip".equalsIgnoreCase(entity.getContentEncoding().getValue())){
+            if (null != entity) {
+                if (entity.getContentEncoding() != null) {
+                    if ("gzip".equalsIgnoreCase(entity.getContentEncoding().getValue())) {
                         entity = new GzipDecompressingEntity(entity);
-                    } else if("deflate".equalsIgnoreCase(entity.getContentEncoding().getValue())){
+                    } else if ("deflate".equalsIgnoreCase(entity.getContentEncoding().getValue())) {
                         entity = new DeflateDecompressingEntity(entity);
-                    }}
-                if(entity.getContentLength() > 2147483647L) {
+                    }
+                }
+                if (entity.getContentLength() > 2147483647L) {
                     throw new IllegalArgumentException("HTTP entity too large to be buffered in memory");
                 }
                 responseContent = EntityUtils.toString(entity, "UTF-8");
-                if(map2!=null){
+                if (map2 != null) {
                     getResponseHeader(map2, response);
                 }
             }
-        }catch(Exception e){
+        } catch (Exception e) {
             logger.info("与[" + reqURL + "]通信过程中发生异常,堆栈信息如下", e);
-        }finally{
+        } finally {
 //            httpClient.shutdown();
         }
         return responseContent;
     }
 
     private static void getResponseHeader(Map<String, String> map2, HttpResponse response) {
-        String set_cookie="";
+        String set_cookie = "";
         Header[] responseHeaders = response.getAllHeaders();
-        for(int i=0;i <responseHeaders.length; i++){
+        for (int i = 0; i < responseHeaders.length; i++) {
             Header item = responseHeaders[i];
-            if(item.getName().equals("Set-Cookie")){
+            if (item.getName().equals("Set-Cookie")) {
                 String tempCookieItemValue = item.getValue();
-                tempCookieItemValue = tempCookieItemValue.substring(0,tempCookieItemValue.indexOf(";")+1);
-                if(set_cookie==""){
-                    set_cookie  = tempCookieItemValue;
-                }else {
-                    set_cookie += " "+tempCookieItemValue;
+                tempCookieItemValue = tempCookieItemValue.substring(0, tempCookieItemValue.indexOf(";") + 1);
+                if (set_cookie == "") {
+                    set_cookie = tempCookieItemValue;
+                } else {
+                    set_cookie += " " + tempCookieItemValue;
                 }
             }
         }
-        map2.put("set_cookie",set_cookie);
+        map2.put("set_cookie", set_cookie);
     }
 
 

@@ -787,5 +787,63 @@ public class HttpClientUtil {
         return null;
     }
 
+    public static String sendGetRequest(String cookie, String url, Map<String,String> requestHeader){
 
+        SimpleDateFormat s1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        long responseLength = 0;       //响应长度
+        String result = null; //响应内容
+        CloseableHttpClient httpClient = HttpClientSingleton.getHttpClient();
+
+        HttpGet httpGet = new HttpGet(url);           //创建org.apache.http.client.methods.HttpGet
+        for(Map.Entry<String,String> rheader : requestHeader.entrySet()){
+            httpGet.addHeader(new BasicHeader(rheader.getKey(),rheader.getValue()));
+        }
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(600000).setConnectionRequestTimeout(20000)
+                .setSocketTimeout(600000)
+                .setRedirectsEnabled(true)
+                .build();
+        httpGet.setConfig(requestConfig);
+
+
+        CloseableHttpResponse response=null;
+        try{
+            response = httpClient.execute(httpGet); //执行GET请求
+            HttpEntity entity = response.getEntity();            //获取响应实体
+            if(null != entity){
+                responseLength = entity.getContentLength();
+                if(entity.getContentEncoding()!=null){
+                    if("gzip".equalsIgnoreCase(entity.getContentEncoding().getValue())){
+                        entity = new GzipDecompressingEntity(entity);
+                    } else if("deflate".equalsIgnoreCase(entity.getContentEncoding().getValue())){
+                        entity = new DeflateDecompressingEntity(entity);
+                    }}
+                if(entity.getContentLength() > 2147483647L) {
+                    throw new IllegalArgumentException("HTTP entity too large to be buffered in memory");
+                }
+                result = EntityUtils.toString(entity, "UTF-8");
+
+            }
+            EntityUtils.consume(entity); //Consume response content
+        }catch(ClientProtocolException e){
+            logger.error("该异常通常是协议错误导致,比如构造HttpGet对象时传入的协议不对(将'http'写成'htp')或者服务器端返回的内容不符合HTTP协议要求等,堆栈信息如下", e);
+        }catch(ParseException e){
+            logger.error(e.getMessage(), e);
+        }catch(IOException e){
+            logger.error("该异常通常是网络原因引起的,如HTTP服务器未启动等,堆栈信息如下", e);
+        } finally{
+            httpGet.releaseConnection();
+            if(response != null) {
+                try {
+                    //会自动释放连接
+                    EntityUtils.consume(response.getEntity());
+                    response.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }
+        return result;
+    }
 }
