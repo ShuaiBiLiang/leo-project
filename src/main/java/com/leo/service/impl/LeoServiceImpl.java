@@ -340,7 +340,7 @@ public class LeoServiceImpl implements ILeoService{
 
     private static List<OrderDetail> getOrderDetailFromHtml(String html) {
 
-        Pattern pattern = Pattern.compile("<tr class='Active'>([\\S|\\s]*?)<\\/tr>");
+        Pattern pattern = Pattern.compile("<tr class='(?:Canceled|Active)+'>([\\S|\\s]*?)<\\/tr>");
         Matcher matcher = pattern.matcher(html);
         List<OrderDetail> orderDetails = new ArrayList<>();
         while (matcher.find()) {
