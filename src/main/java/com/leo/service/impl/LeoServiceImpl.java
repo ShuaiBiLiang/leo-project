@@ -160,7 +160,7 @@ public class LeoServiceImpl implements ILeoService {
         LeoMessage leoMessage = new LeoMessage();
         long t2 = System.currentTimeMillis();
         if (responseHtml.indexOf("Your order has been saved") > -1) {
-            leoMessage.setMsg("Your order has been saved! 耗时：" + (t2 - t1) / 1000 + "秒");
+            leoMessage.setMsg("订单已提交! 耗时：" + (t2 - t1) / 1000 + "秒");
             leoMessage.setLoginError(false);
         } else {
             leoMessage.setLoginError(true);
@@ -250,10 +250,11 @@ public class LeoServiceImpl implements ILeoService {
             }else if (s5.indexOf("Invalid Verification Code") > 0) {
                 leoMessage.setMsg("验证码错误！");
                 leoMessage.setLoginError(true);
-                return leoMessage;
+            }else {
+                leoMessage.setMsg(cookie);
+                logger.error("登录成功"+leoMessage);
             }
-            leoMessage.setMsg(cookie);
-            logger.error("登录成功"+leoMessage);
+
             return leoMessage;
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -347,7 +348,7 @@ public class LeoServiceImpl implements ILeoService {
 
     private static List<OrderDetail> getOrderDetailFromHtml(String html) {
 
-        Pattern pattern = Pattern.compile("<tr class='(?:Canceled|Active)+'>([\\S|\\s]*?)<\\/tr>");
+        Pattern pattern = Pattern.compile("<tr class='(?:Canceled|Active|Expired|Complete)+'>([\\S|\\s]*?)<\\/tr>");
         Matcher matcher = pattern.matcher(html);
         List<OrderDetail> orderDetails = new ArrayList<>();
         while (matcher.find()) {
