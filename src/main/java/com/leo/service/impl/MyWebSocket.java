@@ -1,6 +1,7 @@
 package com.leo.service.impl;
 
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
@@ -13,6 +14,11 @@ public class MyWebSocket {
     //静态变量，用来记录当前在线连接数。应该把它设计成线程安全的。
     private static int onlineCount = 0;
 
+    public static int MSG_TYPE_GET_COOKIE = 1;
+    public static int MSG_TYPE_GET_ORDERS = 2;
+    public static int MSG_TYPE_COMMIT_ORDERS = 3;
+    public static int MSG_TYPE_REFRESH_PRICE = 4;
+    public static int MSG_TYPE_CANCLE_ORDER = 5;
 
 
     //concurrent包的线程安全Set，用来存放每个客户端对应的MyWebSocket对象。
@@ -20,6 +26,16 @@ public class MyWebSocket {
 
     //与某个客户端的连接会话，需要通过它来给客户端发送数据
     private Session session;
+
+    private String userName;
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
 
     /**
      * 连接建立成功调用的方法*/
@@ -53,15 +69,15 @@ public class MyWebSocket {
     @OnMessage
     public void onMessage(String message, Session session) {
         System.out.println("来自客户端的消息:" + message);
-
+        this.setUserName(message);
         //群发消息
-        for (MyWebSocket item : webSocketSet) {
-            try {
-                item.sendMessage(message);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+//        for (MyWebSocket item : webSocketSet) {
+//            try {
+//                item.sendMessage(message);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
     }
 
     /**
@@ -75,9 +91,27 @@ public class MyWebSocket {
 
 
      public void sendMessage(String message) throws IOException {
-     this.session.getBasicRemote().sendText(message);
+//     this.session.getBasicRemote().sendText(message);
      //this.session.getAsyncRemote().sendText(message);
      }
+
+    public static void sendMsg(String userName, String json) throws IOException {
+        if(!CollectionUtils.isEmpty(webSocketSet)){
+            MyWebSocket socket = webSocketSet.stream().filter(o->
+                    o.getUserName().equals(userName)).findFirst().orElse(null);
+
+            if(socket!=null){
+                synchronized(socket){
+                    socket.session.getBasicRemote().sendText(json);
+                }
+            }else {
+                System.out.println("用户："+userName+" websocket 连接已断开。");
+            }
+        }else {
+            System.out.println("websocket 连接池里没人。");
+        }
+        //this.session.getAsyncRemote().sendText(message);
+    }
 
 
      /**

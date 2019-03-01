@@ -97,4 +97,20 @@ public class LeoMessage {
     public void setName(String name) {
         this.name = name;
     }
+
+    @Override
+    public String toString() {
+        return "LeoMessage{" +
+                "msg='" + msg + '\'' +
+                ", name='" + name + '\'' +
+                ", price='" + price + '\'' +
+                ", startDate=" + startDate +
+                ", startTime='" + startTime + '\'' +
+                ", endDate=" + endDate +
+                ", endTime='" + endTime + '\'' +
+                ", error='" + error + '\'' +
+                ", cookies=" + cookies +
+                ", loginError=" + loginError +
+                '}';
+    }
 }

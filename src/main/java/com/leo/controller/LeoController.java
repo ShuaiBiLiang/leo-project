@@ -7,9 +7,11 @@ import com.leo.model.domain.LeoUser;
 import com.leo.service.ILeoService;
 import com.leo.service.LeoUserService;
 import com.leo.service.impl.LeoServiceImpl;
+import com.leo.service.impl.MyWebSocket;
 import com.leo.util.ExecutorPool;
 import com.leo.util.RefreshPriceThread;
 import com.leo.util.UserLeoUtil;
+import com.leo.util.UserThreadUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -47,14 +50,31 @@ public class LeoController {
     @RequestMapping(value = "/leo/price",method = RequestMethod.POST)
     @ResponseBody
     public ServerResponse<LeoMessage> refreshPrice(@RequestBody Map<String,String> userInfo) {
-        String cookie = userInfo.get("userInfo");
-        String currentPrice = userInfo.get("currentPrice");
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
-        String d1 = dateFormat.format(new Date());
-        LeoMessage leoMessage = leoService.refreshPrice(cookie,currentPrice);
-        ServerResponse<LeoMessage> response = ServerResponse.createBySuccess(leoMessage.getMsg(),leoMessage);
-        String d2 = dateFormat.format(new Date());
-        logger.error("刷新请求：开始-"+d1+"  "+leoMessage.getMsg()+"  结束："+d2);
+        LeoUser currentLoginUser = UserThreadUtil.getLeoUser();
+            ExecutorPool.executeWithManualPool(() ->{
+                String cookie = userInfo.get("userInfo");
+                String currentPrice = userInfo.get("currentPrice");
+                SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+                String d1 = dateFormat.format(new Date());
+                LeoMessage leoMessage = leoService.refreshPrice(cookie,currentPrice);
+                ServerResponse<LeoMessage> response = ServerResponse.createBySuccess("success",leoMessage);
+                response.setMsgType(MyWebSocket.MSG_TYPE_REFRESH_PRICE);
+                String d2 = dateFormat.format(new Date());
+                try {
+                    logger.debug("刷新价格:"+currentLoginUser.getName()+"开始-"+d1+"    结束："+d2);
+                    MyWebSocket.sendMsg(currentLoginUser.getName(),new Gson().toJson(response));
+                } catch (IOException e) {
+                    System.out.println("刷新价格，通过websocket发送结果给用户："+currentLoginUser+",失败！");
+                }
+            });
+//        String cookie = userInfo.get("userInfo");
+//        String currentPrice = userInfo.get("currentPrice");
+//        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+//        String d1 = dateFormat.format(new Date());
+//        LeoMessage leoMessage = leoService.refreshPrice(cookie,currentPrice);
+        ServerResponse<LeoMessage> response = ServerResponse.createBySuccess(null);
+//        String d2 = dateFormat.format(new Date());
+//        logger.error("刷新请求：开始-"+d1+"  "+leoMessage.getMsg()+"  结束："+d2);
         return response;
     }
 
@@ -63,17 +83,27 @@ public class LeoController {
     public ServerResponse<List<LeoMessage>> commitForm(@RequestBody List<CommitParam> userInfo) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
         List<LeoMessage> result = new ArrayList<>();
+        LeoUser currentLoginUser = UserThreadUtil.getLeoUser();
         for(CommitParam param:userInfo){
-            String cookie = param.getCookie();
-            String currentPrice = param.getPrice();
-            String totalCoin = param.getNum();
-            String d1 = dateFormat.format(new Date());
-            logger.debug("提交请求开始。。。"+cookie.substring(0,20));
-            LeoMessage leoMessage = leoService.commitForm(cookie,currentPrice,totalCoin);
-            result.add(leoMessage);
-            String d2 = dateFormat.format(new Date());
-            leoMessage.setName(param.getName());
-            logger.error("提交请求：开始-"+d1+"  "+leoMessage.getMsg()+"  结束："+d2);
+            ExecutorPool.executeWithManualPool(() ->{
+                String cookie = param.getCookie();
+                String currentPrice = param.getPrice();
+                String totalCoin = param.getNum();
+                String d1 = dateFormat.format(new Date());
+                logger.debug("提交请求开始。。。"+cookie.substring(0,20));
+                LeoMessage leoMessage = leoService.commitForm(cookie,currentPrice,totalCoin);
+                String d2 = dateFormat.format(new Date());
+                leoMessage.setName(param.getName());
+                logger.error("提交订单请求：开始-"+d1+"  "+leoMessage.getMsg()+"  结束："+d2);
+                ServerResponse<LeoMessage> response = ServerResponse.createBySuccess("success",leoMessage);
+                response.setMsgType(MyWebSocket.MSG_TYPE_COMMIT_ORDERS);
+                try {
+                    logger.debug("提交订单请求:"+param.getName()+"开始-"+d1+"    结束："+d2);
+                    MyWebSocket.sendMsg(currentLoginUser.getName(),new Gson().toJson(response));
+                } catch (IOException e) {
+                    System.out.println("提交订单请求"+leoMessage.toString()+"，通过websocket发送结果给用户："+currentLoginUser+",失败！");
+                }
+            });
         }
         ServerResponse<List<LeoMessage>> response = ServerResponse.createBySuccess("",result);
         return response;
@@ -156,14 +186,24 @@ public class LeoController {
     public ServerResponse<Map<String,List<OrderDetail>>> getOrders(@RequestBody List<CommitParam> userInfo) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
         Map<String,List<OrderDetail>> result = new HashMap<>();
+        LeoUser currentLoginUser = UserThreadUtil.getLeoUser();
         for(CommitParam param:userInfo){
-            String cookie = param.getCookie();
-            String d1 = dateFormat.format(new Date());
-            List<OrderDetail> leoMessage = leoService.getOrders(cookie);
-//            leoMessage.setName(param.getName());
-            result.put(param.getName(),leoMessage);
-            String d2 = dateFormat.format(new Date());
-            logger.debug("查询订单明细:"+param.getName()+"开始-"+d1+"    结束："+d2);
+            ExecutorPool.executeWithManualPool(() ->{
+                String cookie = param.getCookie();
+                String d1 = dateFormat.format(new Date());
+                List<OrderDetail> leoMessage = leoService.getOrders(cookie);
+                result.put(param.getName(),leoMessage);
+                String d2 = dateFormat.format(new Date());
+                GetOrdersVo vo = new GetOrdersVo(leoMessage,param.getName());
+                ServerResponse<GetOrdersVo> response = ServerResponse.createBySuccess("success",vo);
+                response.setMsgType(MyWebSocket.MSG_TYPE_GET_ORDERS);
+                try {
+                    logger.debug("查询订单明细:"+param.getName()+"开始-"+d1+"    结束："+d2);
+                    MyWebSocket.sendMsg(currentLoginUser.getName(),new Gson().toJson(response));
+                } catch (IOException e) {
+                    System.out.println("查询订单明细，通过websocket发送结果给用户："+currentLoginUser+",失败！");
+                }
+            });
         }
         ServerResponse<Map<String,List<OrderDetail>>> response = ServerResponse.createBySuccess("success",result);
         return response;

@@ -3,11 +3,9 @@ package com.leo.service.impl;
 import com.leo.model.LeoMessage;
 import com.leo.model.NamePwdCookie;
 import com.leo.model.OrderDetail;
+import com.leo.model.domain.LeoUser;
 import com.leo.service.ILeoService;
-import com.leo.util.CancleOrderThread;
-import com.leo.util.GetCookiesThread;
-import com.leo.util.HttpClientSingleton;
-import com.leo.util.HttpClientUtil;
+import com.leo.util.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.*;
@@ -22,6 +20,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -179,7 +178,7 @@ public class LeoServiceImpl implements ILeoService {
         } else {
             return null;
         }
-        user = user.replaceAll("  ", " ");
+        user = user.trim().replaceAll("  ", " ");
         String[] userArr = user.split(" ");
 
         try {
@@ -214,7 +213,7 @@ public class LeoServiceImpl implements ILeoService {
                 return leoMessage;
             }
 
-            logger.error("step-3,访问Leo平台，获取Etoken");
+            logger.warn("step-3,访问Leo平台，获取Etoken");
             String urlForStep3_1 = "https://www.learnearnown.com/Backoffice/LEOcoinPlatform.aspx";
             Map<String, String> map3_1 = new HashMap<>();
             String htmlForStep3_1 = getReponseStringForStep3(urlForStep3_1, cookie, map3_1);
@@ -225,16 +224,16 @@ public class LeoServiceImpl implements ILeoService {
             if (matcher.find()) {
                 EToken = matcher.group(1);
             }
-            logger.error("step-3,返回值：" + EToken);
+            logger.warn("step-3,返回值：" + EToken);
 
-            logger.error("step-4,用Etoken使cookie在leo平台生效");
+            logger.warn("step-4,用Etoken使cookie在leo平台生效");
             String urlForStep4 = "https://www.platform.leocoin.org/Authentication.aspx";
             String sendDataForStep4 = "EToken=" + EToken;
             Map<String, String> map4 = new HashMap<>();
             String s4 = sendPostRequest(urlForStep4, sendDataForStep4, cookie, true, null, null, map4);
 //        logger.error("step-4:返回值："+s4);
 
-            logger.error("step-5,leo平台输入验证码");
+            logger.warn("step-5,leo平台输入验证码");
             String sendDataForStep6 = "__VIEWSTATE=/wEPDwUKMTIyNjE2NTc0NWRkq0vAtrZufxJRxDI0GAMwS+ShEt4="
                     + "&__VIEWSTATEGENERATOR=19A82BBE"
                     + "&__EVENTVALIDATION=/wEWBALZh5GQDQKy88z7BwKOxfX2BQKV5d6EAzyRY4b92Dh/JgORfk5gIr3Cf2Op" +
@@ -243,14 +242,18 @@ public class LeoServiceImpl implements ILeoService {
             String urlForStep6 = "https://www.platform.leocoin.org/VerificationCode.aspx";
             Map<String, String> map6 = new HashMap<>();
             String s5 = sendPostRequest(urlForStep6, sendDataForStep6, cookie, true, null, null, map6);
-            if (s5.indexOf("Invalid Verification Code") > 0) {
-                LeoMessage leoMessage = new LeoMessage();
+            LeoMessage leoMessage = new LeoMessage();
+
+            if(s5 ==null){
+                leoMessage.setMsg("与[https://www.platform.leocoin.org/VerificationCode.aspx]通信过程中发生异常！");
+                leoMessage.setLoginError(true);
+            }else if (s5.indexOf("Invalid Verification Code") > 0) {
                 leoMessage.setMsg("验证码错误！");
                 leoMessage.setLoginError(true);
                 return leoMessage;
             }
-            LeoMessage leoMessage = new LeoMessage();
             leoMessage.setMsg(cookie);
+            logger.error("登录成功"+leoMessage);
             return leoMessage;
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -265,16 +268,17 @@ public class LeoServiceImpl implements ILeoService {
     public List<NamePwdCookie> getCookies(List<NamePwdCookie> requestNames) {
         CountDownLatch latch = new CountDownLatch(requestNames.size());
         List<NamePwdCookie> namePwdCookieList = new ArrayList<>();
+        LeoUser currentLoginUser = UserThreadUtil.getLeoUser();
         for (NamePwdCookie user : requestNames) {
-            Thread thread = new Thread(new GetCookiesThread(this, latch, user));
+            Thread thread = new Thread(new GetCookiesThread(currentLoginUser,this, latch, user));
             namePwdCookieList.add(user);
             thread.start();
         }
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            latch.await();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
         return namePwdCookieList;
     }
@@ -310,17 +314,20 @@ public class LeoServiceImpl implements ILeoService {
     public List<OrderDetail> cancelOrders(List<OrderDetail> orderDetails) {
         CountDownLatch latch = new CountDownLatch(orderDetails.size());
         List<OrderDetail> namePwdCookieList = new ArrayList<>();
+
+        LeoUser currentLoginUser = UserThreadUtil.getLeoUser();
+
         for (OrderDetail user : orderDetails) {
 
             namePwdCookieList.add(user);
-            Thread thread = new Thread(new CancleOrderThread(this, latch, user));
+            Thread thread = new Thread(new CancleOrderThread(currentLoginUser,this, latch, user));
             thread.start();
         }
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            latch.await();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
         return namePwdCookieList;
     }
