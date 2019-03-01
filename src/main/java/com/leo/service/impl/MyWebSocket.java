@@ -113,6 +113,20 @@ public class MyWebSocket {
         //this.session.getAsyncRemote().sendText(message);
     }
 
+    public static void closeWebsocket(String userName) throws IOException {
+        if(!CollectionUtils.isEmpty(webSocketSet)){
+            MyWebSocket socket = webSocketSet.stream().filter(o->
+                    o.getUserName().equals(userName)).findFirst().orElse(null);
+
+            if(socket!=null){
+                System.out.println("用户正在登录，关掉他之前开启的websocket.");
+                socket.session.close();
+            }
+        }else {
+            System.out.println("websocket 连接池里没人。");
+        }
+    }
+
 
      /**
       * 群发自定义消息

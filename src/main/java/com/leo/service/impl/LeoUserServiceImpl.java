@@ -7,15 +7,18 @@ import com.leo.model.UserSaveAccept;
 import com.leo.model.domain.LeoUser;
 import com.leo.service.LeoUserService;
 import com.leo.util.UserLeoUtil;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
 @Service("leoUserService")
 public class LeoUserServiceImpl extends BaseServiceImpl<LeoUser, Long> implements LeoUserService {
+    private static Log logger = LogFactory.getLog(LeoServiceImpl.class);
 
     @Override
     public ServerResponse<LeoUserVo> login(NamePwdCookie userInfo) {
@@ -39,6 +42,12 @@ public class LeoUserServiceImpl extends BaseServiceImpl<LeoUser, Long> implement
             }
             long days = diff / (1000 * 60 * 60 * 24);
             vo.setDays(days);
+
+            try {
+                MyWebSocket.closeWebsocket(selectOne.getName());
+            } catch (IOException e) {
+                logger.error("登录时关闭webSocket错误",e);
+            }
             return ServerResponse.createBySuccess(vo);
         }
         return ServerResponse.createByErrorMessage("用户名不存在或密码错误");
