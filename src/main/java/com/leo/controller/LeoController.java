@@ -227,7 +227,7 @@ public class LeoController {
             namePwdCookie.setCookie(param.getCookie());
             namePwdCookie.setName(param.getName());
 //            Thread thread = new Thread(new RefreshPriceThread(leoService,namePwdCookie));
-            ExecutorPool.executeWithManualPool(new RefreshPriceThread(leoService,namePwdCookie));
+            ExecutorPool.scheduleExecute(new RefreshPriceThread(leoService,namePwdCookie),0);
 //            thread.start();
         }
         ServerResponse<Map<String,List<OrderDetail>>> response = ServerResponse.createBySuccess("success",result);

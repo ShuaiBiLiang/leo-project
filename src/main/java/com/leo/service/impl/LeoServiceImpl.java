@@ -290,8 +290,9 @@ public class LeoServiceImpl implements ILeoService {
         String sendData = "";
         Map<String, String> map2 = new HashMap<>();
         Map<String, String> reponseMap = getCookieReponseString(reqURL, cookie);
+        logger.error("查看订单开始：cookie："+cookie);
         String reponseHtml = reponseMap.get("reponseHtml");
-
+        logger.error("查看订单结束：cookie："+cookie);
         return getOrderDetailFromHtml(reponseHtml);
     }
 

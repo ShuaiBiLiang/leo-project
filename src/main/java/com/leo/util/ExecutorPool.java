@@ -60,9 +60,10 @@ public class ExecutorPool {
 	 * @param task
 	 */
 	public static void executeWithManualPool(Runnable task) {
-		if (task != null) {
-			fixedPoolManual.execute(task);
-		}
+		new Thread(task).start();
+//		if (task != null) {
+//			fixedPoolManual.execute(task);
+//		}
 	}
 
 	/**
