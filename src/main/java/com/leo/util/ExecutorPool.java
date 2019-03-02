@@ -82,9 +82,12 @@ public class ExecutorPool {
 	 * @param delay  单位（秒）
 	 */
 	public static void scheduleExecute(Runnable task, long delay) {
-		if (task != null && delay >= 0) {
-			scheduledPool.schedule(task, delay, TimeUnit.SECONDS);
+        if (task != null) {
+			fixedPoolManual.execute(task);
 		}
+//		if (task != null && delay >= 0) {
+//			scheduledPool.schedule(task, delay, TimeUnit.SECONDS);
+//		}
 	}
 
 
