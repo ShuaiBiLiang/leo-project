@@ -39,7 +39,7 @@ public class LeoController {
     @Autowired
     protected LeoUserService leoUserService;
 
-
+    SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
 
     @RequestMapping("/leo_in")
     @ResponseBody
@@ -51,7 +51,7 @@ public class LeoController {
     @ResponseBody
     public ServerResponse<LeoMessage> refreshPrice(@RequestBody Map<String,String> userInfo) {
         LeoUser currentLoginUser = UserThreadUtil.getLeoUser();
-            ExecutorPool.executeWithManualPool(() ->{
+            ExecutorPool.executeOnCachedPool(() ->{
                 String cookie = userInfo.get("userInfo");
                 String currentPrice = userInfo.get("currentPrice");
                 SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
@@ -85,7 +85,7 @@ public class LeoController {
         List<LeoMessage> result = new ArrayList<>();
         LeoUser currentLoginUser = UserThreadUtil.getLeoUser();
         for(CommitParam param:userInfo){
-            ExecutorPool.executeWithManualPool(() ->{
+            ExecutorPool.executeOnCachedPool(() ->{
                 String cookie = param.getCookie();
                 String currentPrice = param.getPrice();
                 String totalCoin = param.getNum();
@@ -134,13 +134,18 @@ public class LeoController {
             namePwdCookieList = new ArrayList<>();
         }
         int sizeInt = Integer.parseInt(size);
-        int newCount = countNewLeoNum(requestNames,namePwdCookieList);
+        List<NamePwdCookie> newRequestList = countNewLeoNum(requestNames,namePwdCookieList);
+        int newCount = newRequestList.size();
         if((namePwdCookieList.size()+newCount)>sizeInt){
             String message = "挂币账号超过上限!";
 
             if(namePwdCookieList.size()>0){
                 if(namePwdCookieList.size()<sizeInt){
-                    message+="<br/> 只能再挂("+(sizeInt-namePwdCookieList.size())+"个)。";
+                    message+="<br/> 只能在以下账号";
+                    for (NamePwdCookie namePwdCookie:newRequestList){
+                        message+="【"+namePwdCookie.getName()+"】";
+                    }
+                    message+="再挂("+(sizeInt-namePwdCookieList.size())+"个)。";
                 }
 
                 message+="<br/> 已挂账号("+namePwdCookieList.size()+"个)：";
@@ -152,43 +157,30 @@ public class LeoController {
         }
 
         List<NamePwdCookie> leoMessage = leoService.getCookies(requestNames);
-
-
-
         ServerResponse<List<NamePwdCookie>> response = ServerResponse.createBySuccess("success",leoMessage);
-
-        if(UserLeoUtil.getInstance()!=null){
-
-            for(NamePwdCookie namePwdCookie:response.getData()){
-                if(!namePwdCookie.isLoginError() && !namePwdCookieList.contains(namePwdCookie)){
-                    namePwdCookieList.add(namePwdCookie);
-                }
-            }
-            UserLeoUtil.getInstance().put(name,namePwdCookieList);
-        }
         return response;
     }
 
-    private int countNewLeoNum(List<NamePwdCookie> requestNames, List<NamePwdCookie> namePwdCookieList) {
-
+    private List<NamePwdCookie> countNewLeoNum(List<NamePwdCookie> requestNames, List<NamePwdCookie> namePwdCookieList) {
+        List<NamePwdCookie> newRequestList = new ArrayList<>();
         int count=0;
         for(NamePwdCookie requestItem:requestNames){
             if(!namePwdCookieList.contains(requestItem)){
-                count++;
+                newRequestList.add(requestItem);
             }
         }
 
-        return count;
+        return newRequestList;
     }
 
     @RequestMapping(value = "/leo/getOrders",method = RequestMethod.POST)
     @ResponseBody
     public ServerResponse<Map<String,List<OrderDetail>>> getOrders(@RequestBody List<CommitParam> userInfo) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+
         Map<String,List<OrderDetail>> result = new HashMap<>();
         LeoUser currentLoginUser = UserThreadUtil.getLeoUser();
         for(CommitParam param:userInfo){
-            ExecutorPool.executeWithManualPool(() ->{
+            ExecutorPool.executeOnCachedPool(() ->{
                 String cookie = param.getCookie();
                 String d1 = dateFormat.format(new Date());
                 List<OrderDetail> leoMessage = leoService.getOrders(cookie);
@@ -198,7 +190,7 @@ public class LeoController {
                 ServerResponse<GetOrdersVo> response = ServerResponse.createBySuccess("success",vo);
                 response.setMsgType(MyWebSocket.MSG_TYPE_GET_ORDERS);
                 try {
-                    logger.debug("查询订单明细:"+param.getName()+"开始-"+d1+"    结束："+d2);
+                    logger.error("查询订单明细:"+param.getName()+"开始-"+d1+"    结束："+d2);
                     MyWebSocket.sendMsg(currentLoginUser.getName(),new Gson().toJson(response));
                 } catch (IOException e) {
                     System.out.println("查询订单明细，通过websocket发送结果给用户："+currentLoginUser+",失败！");
@@ -226,9 +218,7 @@ public class LeoController {
             NamePwdCookie namePwdCookie = new NamePwdCookie();
             namePwdCookie.setCookie(param.getCookie());
             namePwdCookie.setName(param.getName());
-//            Thread thread = new Thread(new RefreshPriceThread(leoService,namePwdCookie));
-            ExecutorPool.scheduleExecute(new RefreshPriceThread(leoService,namePwdCookie),0);
-//            thread.start();
+            ExecutorPool.executeOnCachedPool(new RefreshPriceThread(leoService,namePwdCookie));
         }
         ServerResponse<Map<String,List<OrderDetail>>> response = ServerResponse.createBySuccess("success",result);
         return response;

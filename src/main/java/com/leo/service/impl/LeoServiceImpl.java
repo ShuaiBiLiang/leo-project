@@ -43,9 +43,10 @@ import java.util.regex.Pattern;
 public class LeoServiceImpl implements ILeoService {
     private static Log logger = LogFactory.getLog(LeoServiceImpl.class);
 
-
+    static int count = 0;
     @Override
     public LeoMessage refreshPrice(String cookie, String currentPrice) {
+        System.out.println("线程——"+count++);
         return refreshPrice(cookie, currentPrice, false);
     }
 
@@ -160,11 +161,13 @@ public class LeoServiceImpl implements ILeoService {
         LeoMessage leoMessage = new LeoMessage();
         long t2 = System.currentTimeMillis();
         if (responseHtml.indexOf("Your order has been saved") > -1) {
-            leoMessage.setMsg("订单已提交! 耗时：" + (t2 - t1) / 1000 + "秒");
+//            leoMessage.setMsg("订单提交成功! 耗时：" + (t2 - t1) / 1000 + "秒");
+            leoMessage.setMsg("订单提交成功!");
             leoMessage.setLoginError(false);
         } else {
             leoMessage.setLoginError(true);
-            leoMessage.setMsg("订单提交失败！ 耗时：" + (t2 - t1) / 1000 + "秒");
+//            leoMessage.setMsg("订单提交失败！ 耗时：" + (t2 - t1) / 1000 + "秒");
+            leoMessage.setMsg("订单提交失败！");
         }
         logger.debug(leoMessage.getMsg());
         return leoMessage;
@@ -275,25 +278,21 @@ public class LeoServiceImpl implements ILeoService {
             namePwdCookieList.add(user);
             thread.start();
         }
-//        try {
-//            latch.await();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-
         return namePwdCookieList;
     }
 
     @Override
     public List<OrderDetail> getOrders(String cookie) {
-        String reqURL = "https://www.platform.leocoin.org/CustomerOrderHistory.aspx?Type=Sell&PageID=1";
-        String sendData = "";
-        Map<String, String> map2 = new HashMap<>();
-        Map<String, String> reponseMap = getCookieReponseString(reqURL, cookie);
-        logger.error("查看订单开始：cookie："+cookie);
-        String reponseHtml = reponseMap.get("reponseHtml");
-        logger.error("查看订单结束：cookie："+cookie);
-        return getOrderDetailFromHtml(reponseHtml);
+        for(int i=0;i<3;i++){
+            String reqURL = "https://www.platform.leocoin.org/CustomerOrderHistory.aspx?Type=Sell&PageID=1";
+            Map<String, String> reponseMap = getCookieReponseString(reqURL, cookie);
+            String reponseHtml = reponseMap.get("reponseHtml");
+            List<OrderDetail> orders =  getOrderDetailFromHtml(reponseHtml);
+            if(orders.size()>0){
+                return orders;
+            }
+        }
+        return new ArrayList<>();
     }
 
     @Override
@@ -307,8 +306,9 @@ public class LeoServiceImpl implements ILeoService {
 
         Map<String, String> map6 = new HashMap<>();
         String s5 = sendCancelPostRequest(reqURL, sendDataForStep6, orderDetail.getCookie(), true, null, null, map6);
-
-        orderDetail.setCancelSuccess(true);
+        if(StringUtils.hasText(s5)){
+            orderDetail.setCancelSuccess(true);
+        }
         return orderDetail;
     }
 
@@ -369,8 +369,21 @@ public class LeoServiceImpl implements ILeoService {
                 } else if (i == 4) {
                     detail.setCost(value);
                 } else if (i == 5) {
+                    if(value!=null){
+                        value = value.replaceAll("Mar","三月");
+                    }
                     detail.setDateTime(value);
                 } else if (i == 6) {
+                    if(value!=null && value.trim().equals("Canceled")){
+                        value = "已取消";
+                    }else if(value!=null && value.trim().equals("Active")){
+                        value = "正在出售";
+                    }else if(value!=null && value.trim().equals("Expired")){
+                        value = "已过期";
+                    }else if(value!=null && value.trim().equals("Complete")){
+                        value = "成功出售";
+                    }
+
                     detail.setStatus(value);
                 } else if (i == 7) {
                     if (value.indexOf("Id=") > 0) {

@@ -9,6 +9,7 @@ import com.leo.service.ILeoService;
 import com.leo.service.impl.MyWebSocket;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -42,6 +43,17 @@ public class GetCookiesThread implements Runnable{
                 MyWebSocket.sendMsg(this.user.getName(),new Gson().toJson(response));
             } catch (IOException e) {
                 System.out.println("登录leo帐号，通过websocket发送结果给用户："+this.user.getName()+",失败！");
+            }
+            String name = user.getName();
+            if(UserLeoUtil.getInstance()!=null){
+                List<NamePwdCookie> namePwdCookieList= UserLeoUtil.getInstance().get(name);
+                if(namePwdCookieList==null){
+                    namePwdCookieList = new ArrayList<>();
+                }
+                if(!namePwdCookie.isLoginError() && !namePwdCookieList.contains(namePwdCookie)){
+                    namePwdCookieList.add(namePwdCookie);
+                }
+                UserLeoUtil.getInstance().put(name,namePwdCookieList);
             }
             latch.countDown();
         }

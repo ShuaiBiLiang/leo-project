@@ -17,7 +17,7 @@ public class ExecutorPool {
 //	/**
 //	 * 可缓存线程池，如果线程池长度超过处理需要，可灵活回收空闲线程，若无可回收，则新建线程
 //	 */
-//	private static ExecutorService cachedPool = Executors.newCachedThreadPool();
+	private static ExecutorService cachedPool = Executors.newCachedThreadPool();
 
 	/**
 	 * 定长线程池，可控制线程最大并发数，超出的线程会在队列中等待
@@ -56,14 +56,23 @@ public class ExecutorPool {
 	}
 
 	/**
+	 * 线程执行
+	 * @param task
+	 */
+	public static void executeOnCachedPool(Runnable task) {
+		if (task != null) {
+			cachedPool.execute(task);
+		}
+	}
+
+	/**
 	 * 通过手动创建线程池执行线程
 	 * @param task
 	 */
 	public static void executeWithManualPool(Runnable task) {
-		new Thread(task).start();
-//		if (task != null) {
-//			fixedPoolManual.execute(task);
-//		}
+		if (task != null) {
+			fixedPoolManual.execute(task);
+		}
 	}
 
 	/**
