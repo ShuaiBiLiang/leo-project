@@ -377,7 +377,7 @@ public class LeoServiceImpl implements ILeoService {
                     if(value!=null && value.trim().equals("Canceled")){
                         value = "已取消";
                     }else if(value!=null && value.trim().equals("Active")){
-                        value = "正在出售";
+                        value = "挂单中";
                     }else if(value!=null && value.trim().equals("Expired")){
                         value = "已过期";
                     }else if(value!=null && value.trim().equals("Complete")){
