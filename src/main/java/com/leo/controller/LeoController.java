@@ -8,14 +8,12 @@ import com.leo.service.ILeoService;
 import com.leo.service.LeoUserService;
 import com.leo.service.impl.LeoServiceImpl;
 import com.leo.service.impl.MyWebSocket;
-import com.leo.util.ExecutorPool;
-import com.leo.util.RefreshPriceThread;
-import com.leo.util.UserLeoUtil;
-import com.leo.util.UserThreadUtil;
+import com.leo.util.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -53,16 +51,26 @@ public class LeoController {
         LeoUser currentLoginUser = UserThreadUtil.getLeoUser();
             ExecutorPool.executeOnCachedPool(() ->{
                 String cookie = userInfo.get("userInfo");
-                String currentPrice = userInfo.get("currentPrice");
+                String name = userInfo.get("name");
                 SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
                 String d1 = dateFormat.format(new Date());
-                LeoMessage leoMessage = leoService.refreshPrice(cookie,currentPrice);
+                LeoMessage leoMessage = leoService.refreshPrice(cookie,name);
                 ServerResponse<LeoMessage> response = ServerResponse.createBySuccess("success",leoMessage);
                 response.setMsgType(MyWebSocket.MSG_TYPE_REFRESH_PRICE);
                 String d2 = dateFormat.format(new Date());
                 try {
+
+                    if(StringUtils.hasText(leoMessage.getPrice()) && !Objects.equals(leoMessage.getPrice(),MyWebSocket.price)){
+                        MyWebSocket.price = leoMessage.getPrice();
+                    }
+
                     logger.debug("刷新价格:"+currentLoginUser.getName()+"开始-"+d1+"    结束："+d2);
-                    MyWebSocket.sendMsg(currentLoginUser.getName(),new Gson().toJson(response));
+                    if(response.getData().isLoginError()){
+                        MyWebSocket.sendMsg(currentLoginUser.getName(),new Gson().toJson(response));
+                    }else {
+                        MyWebSocket.priceTime = DateUtil.getCurrentTime();
+                        MyWebSocket.sendMsg(currentLoginUser.getName(),new Gson().toJson(response),true);
+                    }
                 } catch (IOException e) {
                     System.out.println("刷新价格，通过websocket发送结果给用户："+currentLoginUser+",失败！");
                 }
@@ -215,10 +223,11 @@ public class LeoController {
     public ServerResponse<Map<String,List<OrderDetail>>> activeCookie(@RequestBody List<CommitParam> userInfo) {
         Map<String,List<OrderDetail>> result = new HashMap<>();
         for(CommitParam param:userInfo){
-            NamePwdCookie namePwdCookie = new NamePwdCookie();
-            namePwdCookie.setCookie(param.getCookie());
-            namePwdCookie.setName(param.getName());
-            ExecutorPool.executeOnCachedPool(new RefreshPriceThread(leoService,namePwdCookie));
+//            NamePwdCookie namePwdCookie = new NamePwdCookie();
+//            namePwdCookie.setCookie(param.getCookie());
+//            namePwdCookie.setName(param.getName());
+//            ExecutorPool.executeOnCachedPool(new RefreshPriceThread(leoService,namePwdCookie));
+            ExecutorPool.executeOnCachedPool(new LoadDataThread(param.getCookie()));
         }
         ServerResponse<Map<String,List<OrderDetail>>> response = ServerResponse.createBySuccess("success",result);
         return response;
@@ -252,6 +261,9 @@ public class LeoController {
             return ServerResponse.createByError();
         }
         LeoUser user = leoUserService.save(accept);
+        if(user ==null){
+            return ServerResponse.createByError();
+        }
         ServerResponse<LeoUser> response = ServerResponse.createBySuccess(user);
         return response;
     }
@@ -264,21 +276,10 @@ public class LeoController {
             return ServerResponse.createByError();
         }
         ServerResponse<LeoUser> response = leoUserService.resetPwd(name,accept);
-        /*if(user==null){
-            return ServerResponse.createByError();
-        }
-        ServerResponse<LeoUser> response = ServerResponse.createBySuccess(user);*/
         return response;
     }
 
     public static void main(String[] args) {
-        /*List<NamePwdCookie> leoMessage = new ArrayList<>();
-        NamePwdCookie n1 = new NamePwdCookie("zhangsan","zxxxxx","de42","phpcookie=asdfjxoxcj2342342;");
-        NamePwdCookie n2 = new NamePwdCookie("lisi","zxxxxx","d342","phpcookie=asdasdfadsfacj22341111;");
-        leoMessage.add(n1);
-        leoMessage.add(n2);
-        ServerResponse<List<NamePwdCookie>> response = ServerResponse.createBySuccess("success",leoMessage);
-        logger.debug(new Gson().toJson(response));*/
         Map<String,String> i = new HashMap<>();
         i.put("userInfo","asdfsda asdfasdf  sadfas");
         i.put("userInfo2","asdfsda asdfasdf  sadfas");

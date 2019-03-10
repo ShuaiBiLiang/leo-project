@@ -19,6 +19,26 @@ public class UserSaveAccept {
 
     private Integer useSize;
 
+    private Long buyDay;
+
+    private Long addDay;
+
+    public Long getBuyDay() {
+        return buyDay;
+    }
+
+    public void setBuyDay(Long buyDay) {
+        this.buyDay = buyDay;
+    }
+
+    public Long getAddDay() {
+        return addDay;
+    }
+
+    public void setAddDay(Long addDay) {
+        this.addDay = addDay;
+    }
+
     public Long getId() {
         return id;
     }

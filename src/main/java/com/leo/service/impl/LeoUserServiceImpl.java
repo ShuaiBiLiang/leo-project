@@ -6,6 +6,7 @@ import com.leo.model.NamePwdCookie;
 import com.leo.model.UserSaveAccept;
 import com.leo.model.domain.LeoUser;
 import com.leo.service.LeoUserService;
+import com.leo.util.DateUtil;
 import com.leo.util.UserLeoUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,7 +46,7 @@ public class LeoUserServiceImpl extends BaseServiceImpl<LeoUser, Long> implement
 
             try {
                 MyWebSocket.closeWebsocket(selectOne.getName());
-            } catch (IOException e) {
+            } catch (Exception e) {
                 logger.error("登录时关闭webSocket错误",e);
             }
             return ServerResponse.createBySuccess(vo);
@@ -56,11 +57,21 @@ public class LeoUserServiceImpl extends BaseServiceImpl<LeoUser, Long> implement
     @Override
     public LeoUser save(UserSaveAccept accept) {
         LeoUser user=null;
+        Long endtime = 0L;
         if(accept.getId()==null){
             user = new LeoUser();
             user.setName(accept.getName());
             user.setPwd(accept.getPwd());
-            user.setEndtime(accept.getEndtime());
+
+            if(accept.getEndtime()!=null && accept.getEndtime()>0){
+                endtime = accept.getEndtime();
+            }else if(accept.getBuyDay()!=null && accept.getBuyDay()>0){
+                endtime = DateUtil.getTimeByDay(accept.getBuyDay().intValue());
+            }else {
+                return null;
+            }
+
+            user.setEndtime(endtime);
             user.setUseSize(accept.getUseSize());
             insert(user);
         }else{
@@ -73,7 +84,17 @@ public class LeoUserServiceImpl extends BaseServiceImpl<LeoUser, Long> implement
                 return null;
             }
             user.setPwd(accept.getPwd());
-            user.setEndtime(accept.getEndtime());
+
+
+            if(accept.getEndtime()!=null && accept.getEndtime()>0){
+                endtime = accept.getEndtime();
+            }else if(accept.getAddDay()!=null && accept.getAddDay()>0){
+                endtime = user.getEndtime()+(24*60*60*1000)*accept.getAddDay();
+            }else {
+                return null;
+            }
+
+            user.setEndtime(endtime);
             user.setUseSize(accept.getUseSize());
             update(user);
 

@@ -45,13 +45,13 @@ public class LeoServiceImpl implements ILeoService {
 
     static int count = 0;
     @Override
-    public LeoMessage refreshPrice(String cookie, String currentPrice) {
+    public LeoMessage refreshPrice(String cookie, String name) {
         System.out.println("线程——"+count++);
-        return refreshPrice(cookie, currentPrice, false);
+        return refreshPrice(cookie, name, false);
     }
 
     @Override
-    public LeoMessage refreshPrice(String cookie, String currentPrice, boolean notRecive) {
+    public LeoMessage refreshPrice(String cookie, String name, boolean notRecive) {
         SimpleDateFormat s1 = new SimpleDateFormat("HH:mm:ss");
         String d1 = s1.format(new Date());
         long t1 = System.currentTimeMillis();
@@ -105,17 +105,21 @@ public class LeoServiceImpl implements ILeoService {
                     }
                     String msg = "【开始:" + d1 + "结束:" + d2 + ";响应耗时：" + (l2 - t1) / 1000 + "秒;价格：" + pricePiece + "】";
                     leoMessage.setPrice(pricePiece);
-                    leoMessage.setMsg(msg);
+                    leoMessage.setLoginError(false);
+                    leoMessage.setMsg("价格刷新成功！");
                 }
                 in.close();
                 is.close();
             } else {
                 leoMessage.setPrice("");
-                leoMessage.setMsg("【刷新价格】页面访问失败；可能是cookie失效；");
+                leoMessage.setMsg("价格获取失败，请点击重新登录！");
+                leoMessage.setLoginError(true);
             }
-
         } catch (Exception e) {
             logger.error("刷新价格出错", e);
+            leoMessage.setPrice("");
+            leoMessage.setMsg("刷新失败，Leo平台网络繁忙!");
+            leoMessage.setLoginError(true);
         } finally {
             if (conn != null) {
                 conn.disconnect();
@@ -126,6 +130,7 @@ public class LeoServiceImpl implements ILeoService {
         if (!notRecive) {
             logger.error((notRecive ? "(激活cookie)" : "") + "返回时间：" + d2 + "  耗时：" + (t2 - t1) + "ms");
         }
+        leoMessage.setName(name);
         return leoMessage;
     }
 
@@ -209,7 +214,7 @@ public class LeoServiceImpl implements ILeoService {
             Map<String, String> map2 = new HashMap<>();
             String s = sendPostRequest(reqURL, sendData, cookie, true, null, null, map2);
 //        logger.error("step-2:返回值，"+s.substring(0,100));
-            if (s.indexOf("Object moved to") < 0) {
+            if (s!=null && s.indexOf("Object moved to") < 0) {
                 LeoMessage leoMessage = new LeoMessage();
                 leoMessage.setMsg("密码错误");
                 leoMessage.setLoginError(true);
@@ -248,7 +253,7 @@ public class LeoServiceImpl implements ILeoService {
             LeoMessage leoMessage = new LeoMessage();
 
             if(s5 ==null){
-                leoMessage.setMsg("与[https://www.platform.leocoin.org/VerificationCode.aspx]通信过程中发生异常！");
+                leoMessage.setMsg("登录失败：连接不到卖币平台，请稍后再试！");
                 leoMessage.setLoginError(true);
             }else if (s5.indexOf("Invalid Verification Code") > 0) {
                 leoMessage.setMsg("验证码错误！");

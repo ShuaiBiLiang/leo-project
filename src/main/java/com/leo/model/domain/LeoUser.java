@@ -21,6 +21,8 @@ public class LeoUser implements Serializable {
 
     private Integer useSize;
 
+    private Integer state; // 0正常  1停用 2删除
+
     private static final long serialVersionUID = 1L;
 
     public LeoUser() {
@@ -33,13 +35,14 @@ public class LeoUser implements Serializable {
         this.endtime = endtime;
     }
 
-    public LeoUser(Long id, String name, String pwd, Long endtime, String token, Integer useSize) {
+    public LeoUser(Long id, String name, String pwd, Long endtime, String token, Integer useSize, Integer state) {
         this.id = id;
         this.name = name;
         this.pwd = pwd;
         this.endtime = endtime;
         this.token = token;
         this.useSize = useSize;
+        this.state = state;
     }
 
     public Long getId() {
@@ -98,5 +101,13 @@ public class LeoUser implements Serializable {
                 .add("pwd", pwd)
                 .add("endtime", endtime)
                 .toString();
+    }
+
+    public Integer getState() {
+        return state;
+    }
+
+    public void setState(Integer state) {
+        this.state = state;
     }
 }

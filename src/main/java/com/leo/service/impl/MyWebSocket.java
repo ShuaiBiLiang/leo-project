@@ -5,13 +5,17 @@ import com.leo.common.ServerResponse;
 import com.leo.model.LeoMessage;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Collectors;
 
 @ServerEndpoint(value = "/websocket")
 @Component
@@ -29,6 +33,10 @@ public class MyWebSocket {
 
     //concurrent包的线程安全Set，用来存放每个客户端对应的MyWebSocket对象。
     private static CopyOnWriteArraySet<MyWebSocket> webSocketSet = new CopyOnWriteArraySet<MyWebSocket>();
+
+    public static String price = "";
+
+    public static String priceTime = "";
 
     //与某个客户端的连接会话，需要通过它来给客户端发送数据
     private Session session;
@@ -53,8 +61,15 @@ public class MyWebSocket {
         addOnlineCount();           //在线数加1
         System.out.println("有新连接加入！当前在线人数为" + getOnlineCount());
         try {
-            sendMessage("");
-        } catch (IOException e) {
+            if(StringUtils.hasText(MyWebSocket.price)){
+                LeoMessage leoMessage = new LeoMessage();
+                leoMessage.setPrice(MyWebSocket.price);
+                leoMessage.setEndTime(MyWebSocket.priceTime);
+                ServerResponse<LeoMessage> response = ServerResponse.createBySuccess("success",leoMessage);
+                response.setMsgType(MyWebSocket.MSG_TYPE_REFRESH_PRICE);
+                sendMessage(new Gson().toJson(response));
+            }
+        } catch (Exception e) {
             System.out.println("IO异常");
         }
     }
@@ -106,16 +121,20 @@ public class MyWebSocket {
          if(error instanceof IOException){
              webSocketSet.remove(this);
          }
-         error.printStackTrace();
+//         error.printStackTrace();
      }
 
 
      public void sendMessage(String message) throws IOException {
-//     this.session.getBasicRemote().sendText(message);
+     this.session.getBasicRemote().sendText(message);
      //this.session.getAsyncRemote().sendText(message);
      }
 
     public static void sendMsg(String userName, String json) throws IOException {
+        sendMsg(userName,json,false);
+    }
+
+    public static void sendMsg(String userName, String json, boolean sendOther) throws IOException {
         if(!CollectionUtils.isEmpty(webSocketSet)){
             MyWebSocket socket = webSocketSet.stream().filter(o->o.getUserName()!=null &&
                     o.getUserName().equals(userName)).findFirst().orElse(null);
@@ -127,12 +146,26 @@ public class MyWebSocket {
             }else {
                 System.out.println("用户："+userName+" websocket 连接已断开。");
             }
+
+            if(sendOther){
+                List<MyWebSocket> others = webSocketSet.stream().filter(o->o.getUserName()!=null &&
+                        !o.getUserName().equals(userName)).collect(Collectors.toList());
+                if(!CollectionUtils.isEmpty(others)){
+                    for(MyWebSocket o :others){
+                        if(o!=null){
+                            synchronized(o){
+                                o.session.getBasicRemote().sendText(json);
+                            }
+                        }
+                    }
+                }
+            }
         }else {
             System.out.println("websocket 连接池里没人。");
         }
     }
 
-    public static void closeWebsocket(String userName) throws IOException {
+    public static void closeWebsocket(String userName) throws Exception {
         if(!CollectionUtils.isEmpty(webSocketSet)){
             Iterator<MyWebSocket> it = webSocketSet.iterator();
             while(it.hasNext()){
@@ -141,7 +174,7 @@ public class MyWebSocket {
                     ServerResponse<LeoMessage> response = ServerResponse.createBySuccess("success",null);
                     response.setMsgType(MyWebSocket.MSG_TYPE_STOP_LINK);
                     item.session.getBasicRemote().sendText(new Gson().toJson(response));
-                    it.remove();
+                    MyWebSocket.webSocketSet.remove(item);
                     System.out.println(userName+",用户正在登录，关掉他之前开启的websocket.");
                 }
             }
@@ -175,4 +208,19 @@ public class MyWebSocket {
     public static synchronized void subOnlineCount() {
         MyWebSocket.onlineCount--;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MyWebSocket that = (MyWebSocket) o;
+        return Objects.equals(userName, that.userName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(userName);
+    }
+
+
 }
