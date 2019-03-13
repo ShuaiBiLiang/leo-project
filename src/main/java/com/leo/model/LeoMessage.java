@@ -15,7 +15,7 @@ public class LeoMessage {
     Date endDate;
     String endTime;
     String error;
-    List<String> cookies;
+    String cookie;
     boolean loginError;
 
     public String getPrice() {
@@ -58,6 +58,14 @@ public class LeoMessage {
         this.endTime = endTime;
     }
 
+    public String getCookie() {
+        return cookie;
+    }
+
+    public void setCookie(String cookie) {
+        this.cookie = cookie;
+    }
+
     public String getMsg() {
         return msg;
     }
@@ -66,13 +74,6 @@ public class LeoMessage {
         this.msg = msg;
     }
 
-    public List<String> getCookies() {
-        return cookies;
-    }
-
-    public void setCookies(List<String> cookies) {
-        this.cookies = cookies;
-    }
 
     public String getError() {
         return error;
@@ -109,7 +110,6 @@ public class LeoMessage {
                 ", endDate=" + endDate +
                 ", endTime='" + endTime + '\'' +
                 ", error='" + error + '\'' +
-                ", cookies=" + cookies +
                 ", loginError=" + loginError +
                 '}';
     }

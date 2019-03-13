@@ -75,14 +75,7 @@ public class LeoController {
                     System.out.println("刷新价格，通过websocket发送结果给用户："+currentLoginUser+",失败！");
                 }
             });
-//        String cookie = userInfo.get("userInfo");
-//        String currentPrice = userInfo.get("currentPrice");
-//        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
-//        String d1 = dateFormat.format(new Date());
-//        LeoMessage leoMessage = leoService.refreshPrice(cookie,currentPrice);
         ServerResponse<LeoMessage> response = ServerResponse.createBySuccess(null);
-//        String d2 = dateFormat.format(new Date());
-//        logger.error("刷新请求：开始-"+d1+"  "+leoMessage.getMsg()+"  结束："+d2);
         return response;
     }
 
