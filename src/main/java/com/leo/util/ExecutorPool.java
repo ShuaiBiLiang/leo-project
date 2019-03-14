@@ -29,9 +29,9 @@ public class ExecutorPool {
 	 * 参考资料：https://www.cnblogs.com/sunhaoyu/articles/6955923.html
      * 终止策略：当线程池满，队列也满后，使用调用者线程去执行(CallerRunsPolicy)。
 	 */
-	private static ExecutorService fixedPoolManual = new ThreadPoolExecutor(5, 200, 0,
+	private static ExecutorService fixedPoolManual = new ThreadPoolExecutor(100, 200, 0,
 			TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>(1024),
-			new ThreadPoolExecutor.CallerRunsPolicy());
+			new ThreadPoolExecutor.DiscardPolicy());
 
 
 	/**

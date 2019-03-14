@@ -220,7 +220,7 @@ public class LeoController {
 //            namePwdCookie.setCookie(param.getCookie());
 //            namePwdCookie.setName(param.getName());
 //            ExecutorPool.executeOnCachedPool(new RefreshPriceThread(leoService,namePwdCookie));
-            ExecutorPool.executeOnCachedPool(new LoadDataThread(param.getCookie()));
+            ExecutorPool.executeWithManualPool(new LoadDataThread(param.getCookie()));
         }
         ServerResponse<Map<String,List<OrderDetail>>> response = ServerResponse.createBySuccess("success",result);
         return response;
