@@ -32,17 +32,11 @@ public class LeoUserServiceImpl extends BaseServiceImpl<LeoUser, Long> implement
             selectOne.setToken(userInfo.getCookie());
             update(selectOne);
             LeoUserVo vo = new LeoUserVo();
-            BeanUtils.copyProperties(selectOne,vo);
-            long time1 = System.currentTimeMillis();
-            long time2 = vo.getEndtime();
-            long diff ;
-            if(time1<time2) {
-                diff = time2 - time1;
-            } else {
-                diff = time1 - time2;
-            }
-            long days = diff / (1000 * 60 * 60 * 24);
-            vo.setDays(days);
+            vo.setName(selectOne.getName());
+            vo.setUseSize(selectOne.getUseSize());
+            vo.setToken(selectOne.getToken());
+            vo.setId(selectOne.getId());
+            vo.setEndtime(selectOne.getEndtime());
 
             try {
                 MyWebSocket.closeWebsocket(selectOne.getName());

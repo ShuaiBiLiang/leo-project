@@ -46,7 +46,6 @@ public class LeoServiceImpl implements ILeoService {
     static int count = 0;
     @Override
     public LeoMessage refreshPrice(String cookie, String name) {
-        System.out.println("线程——"+count++);
         return refreshPrice(cookie, name, false);
     }
 

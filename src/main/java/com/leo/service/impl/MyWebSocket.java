@@ -101,6 +101,10 @@ public class MyWebSocket {
             System.out.println("接收用户："+message+"，发生错误。");
         }
         System.out.println("来自客户端的消息:" + message);
+        List<String> userNames = webSocketSet.stream().map(MyWebSocket::getUserName).collect(Collectors.toList());
+        if(userNames!=null){
+            System.out.println("当前在线人数："+userNames.size()+"  详细："+userNames);
+        }
         this.setUserName(message);
         //群发消息
 //        for (MyWebSocket item : webSocketSet) {

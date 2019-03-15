@@ -71,6 +71,11 @@ public class ExecutorPool {
 	 */
 	public static void executeWithManualPool(Runnable task) {
 		if (task != null) {
+			String name = "";
+			if(UserThreadUtil.getLeoUser()!=null){
+				name = UserThreadUtil.getLeoUser().getName();
+			}
+			System.out.println(Thread.currentThread()+" active cookie thread Start! user:"+name);
 			fixedPoolManual.execute(task);
 		}
 	}

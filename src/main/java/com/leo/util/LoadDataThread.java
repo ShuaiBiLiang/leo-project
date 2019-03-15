@@ -79,11 +79,11 @@ public class LoadDataThread implements Runnable{
                     if (entity.getContentLength() > 2147483647L) {
                         throw new IllegalArgumentException("HTTP entity too large to be buffered in memory");
                     }
-                    responseContent = EntityUtils.toString(entity, "UTF-8");
-                    System.out.println(responseContent.substring(0,20));
+//                    responseContent = EntityUtils.toString(entity, "UTF-8");
+//                    System.out.println(responseContent.substring(0,20));
                 }
             } catch (Exception e) {
-                System.out.println("通信过程中发生异常,堆栈信息如下");
+                System.out.println("loadData,激活用户登录信息失败!");
             } finally {
                 if (response != null) {
                     try {
