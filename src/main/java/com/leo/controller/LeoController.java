@@ -118,6 +118,19 @@ public class LeoController {
         return response;
     }
 
+    @RequestMapping(value = "/leo/getCode",method = RequestMethod.POST)
+    @ResponseBody
+    public ServerResponse<LeoMessage> getCode(@RequestBody List<NamePwdCookie> userInfo, Model model) {
+        LeoUser user = UserThreadUtil.getLeoUser();
+        for(NamePwdCookie namePwdCookie:userInfo){
+
+            Thread thread = new Thread(new GetCodeThread(user, leoService, namePwdCookie));
+            ExecutorPool.executeOnCachedPool(thread);
+        }
+        ServerResponse<LeoMessage> response = ServerResponse.createBySuccess(null);
+        return response;
+    }
+
     @RequestMapping(value = "/leo/getCookies",method = RequestMethod.POST)
     @ResponseBody
     public ServerResponse<List<NamePwdCookie>> getCookies(HttpServletRequest request,HttpServletResponse resp,@RequestBody Map<String,String> userInfo) {

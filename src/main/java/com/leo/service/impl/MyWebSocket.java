@@ -29,6 +29,7 @@ public class MyWebSocket {
     public static int MSG_TYPE_REFRESH_PRICE = 4;
     public static int MSG_TYPE_CANCLE_ORDER = 5;
     public static int MSG_TYPE_STOP_LINK = 6;
+    public static int MSG_TYPE_GET_CODE = 7;
 
 
     //concurrent包的线程安全Set，用来存放每个客户端对应的MyWebSocket对象。

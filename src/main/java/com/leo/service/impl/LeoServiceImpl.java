@@ -177,8 +177,13 @@ public class LeoServiceImpl implements ILeoService {
         return leoMessage;
     }
 
+
     @Override
     public LeoMessage getCookie(String userInfo) {
+        return getCookieOrCode(userInfo, true);
+    }
+
+    public LeoMessage getCookieOrCode(String userInfo, boolean getCookie) {
         String user = "";
         if (StringUtils.hasText(userInfo)) {
             user = userInfo;
@@ -239,29 +244,51 @@ public class LeoServiceImpl implements ILeoService {
             Map<String, String> map4 = new HashMap<>();
             String s4 = sendPostRequest(urlForStep4, sendDataForStep4, cookie, true, null, null, map4);
 //        logger.error("step-4:返回值："+s4);
-
-            logger.warn("step-5,leo平台输入验证码");
-            String sendDataForStep6 = "__VIEWSTATE=/wEPDwUKMTIyNjE2NTc0NWRkq0vAtrZufxJRxDI0GAMwS+ShEt4="
-                    + "&__VIEWSTATEGENERATOR=19A82BBE"
-                    + "&__EVENTVALIDATION=/wEWBALZh5GQDQKy88z7BwKOxfX2BQKV5d6EAzyRY4b92Dh/JgORfk5gIr3Cf2Op" +
-                    "&ctl00$ContentPlaceHolder1$txtVerificationCode_value=" + userArr[2] +
-                    "&ctl00$ContentPlaceHolder1$btnVerify=Verify";
-            String urlForStep6 = "https://www.platform.leocoin.org/VerificationCode.aspx";
-            Map<String, String> map6 = new HashMap<>();
-            String s5 = sendPostRequest(urlForStep6, sendDataForStep6, cookie, true, null, null, map6);
             LeoMessage leoMessage = new LeoMessage();
+            if(getCookie){
+                logger.warn("step-5,leo平台输入验证码");
+                String sendDataForStep6 = "__VIEWSTATE=/wEPDwUKMTIyNjE2NTc0NWRkq0vAtrZufxJRxDI0GAMwS+ShEt4="
+                        + "&__VIEWSTATEGENERATOR=19A82BBE"
+                        + "&__EVENTVALIDATION=/wEWBALZh5GQDQKy88z7BwKOxfX2BQKV5d6EAzyRY4b92Dh/JgORfk5gIr3Cf2Op" +
+                        "&ctl00$ContentPlaceHolder1$txtVerificationCode_value=" + userArr[2] +
+                        "&ctl00$ContentPlaceHolder1$btnVerify=Verify";
+                String urlForStep6 = "https://www.platform.leocoin.org/VerificationCode.aspx";
+                Map<String, String> map6 = new HashMap<>();
+                String s5 = sendPostRequest(urlForStep6, sendDataForStep6, cookie, true, null, null, map6);
+                leoMessage.setCookie(cookie);
+                if(s5 ==null){
+                    leoMessage.setMsg("登录失败：连接不到卖币平台，请稍后再试！");
+                    leoMessage.setLoginError(true);
+                }else if (s5.indexOf("Invalid Verification Code") > 0) {
+                    leoMessage.setMsg("验证码错误！");
+                    leoMessage.setLoginError(true);
+                }else {
+                    leoMessage.setMsg(cookie);
+                    logger.error("登录成功"+leoMessage);
+                }
+            }else{
 
-            leoMessage.setCookie(cookie);
-            if(s5 ==null){
-                leoMessage.setMsg("登录失败：连接不到卖币平台，请稍后再试！");
-                leoMessage.setLoginError(true);
-            }else if (s5.indexOf("Invalid Verification Code") > 0) {
-                leoMessage.setMsg("验证码错误！");
-                leoMessage.setLoginError(true);
-            }else {
-                leoMessage.setMsg(cookie);
-                logger.error("登录成功"+leoMessage);
+                String sendDataForStep6 = "__VIEWSTATE=/wEPDwUKMTIyNjE2NTc0NWRkq0vAtrZufxJRxDI0GAMwS+ShEt4="
+                        + "&__VIEWSTATEGENERATOR=19A82BBE"
+                        + "&__EVENTVALIDATION=/wEWBALZh5GQDQKy88z7BwKOxfX2BQKV5d6EAzyRY4b92Dh/JgORfk5gIr3Cf2Op" +
+                        "&ctl00$ContentPlaceHolder1$txtVerificationCode_value="+
+                        "&ctl00$ContentPlaceHolder1$btnVerificationCode=Get Code";
+                String urlForStep6 = "https://www.platform.leocoin.org/VerificationCode.aspx";
+                Map<String, String> map6 = new HashMap<>();
+                String s5 = sendPostRequest(urlForStep6, sendDataForStep6, cookie, true, null, null, map6);
+                leoMessage.setCookie(cookie);
+                if(s5 ==null){
+                    leoMessage.setMsg("登录失败：连接不到卖币平台，请稍后再试！");
+                    leoMessage.setLoginError(true);
+                }else if (s5.indexOf("Your verification code has been sent") > 0) {
+                    leoMessage.setMsg("获取验证码成功！");
+                    leoMessage.setLoginError(false);
+                }else {
+                    leoMessage.setMsg("");
+                    leoMessage.setLoginError(true);
+                }
             }
+
 
             return leoMessage;
         } catch (Exception e) {
@@ -274,17 +301,8 @@ public class LeoServiceImpl implements ILeoService {
     }
 
 
-    public boolean getCode(String cookie){
-        String sendDataForStep6 = "__VIEWSTATE=/wEPDwUKMTIyNjE2NTc0NWRkq0vAtrZufxJRxDI0GAMwS+ShEt4="
-                + "&__VIEWSTATEGENERATOR=19A82BBE"
-                + "&__EVENTVALIDATION=/wEWBALZh5GQDQKy88z7BwKOxfX2BQKV5d6EAzyRY4b92Dh/JgORfk5gIr3Cf2Op" +
-                "ctl00$ContentPlaceHolder1$txtVerificationCode_value="+
-                "ctl00$ContentPlaceHolder1$btnVerificationCode=Get Code";
-        String urlForStep6 = "https://www.platform.leocoin.org/VerificationCode.aspx";
-        Map<String, String> map6 = new HashMap<>();
-        String s5 = sendPostRequest(urlForStep6, sendDataForStep6, cookie, true, null, null, map6);
-        // Your verification code has been sent to your mobile and email address
-        return true;
+    public LeoMessage getCode(String cookie){
+        return getCookieOrCode(cookie, false);
     }
 
     @Override

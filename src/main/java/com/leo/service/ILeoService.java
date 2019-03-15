@@ -26,4 +26,6 @@ public interface ILeoService {
     OrderDetail cancelOrder(OrderDetail orderDetail);
 
     List<OrderDetail> cancelOrders(List<OrderDetail> orderDetails);
+
+    LeoMessage getCode(String userInfo);
 }
