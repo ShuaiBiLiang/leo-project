@@ -29,7 +29,7 @@ public class ExecutorPool {
 	 * 参考资料：https://www.cnblogs.com/sunhaoyu/articles/6955923.html
      * 终止策略：当线程池满，队列也满后，使用调用者线程去执行(CallerRunsPolicy)。
 	 */
-	private static ExecutorService fixedPoolManual = new ThreadPoolExecutor(100, 200, 0,
+	private static ThreadPoolExecutor fixedPoolManual = new ThreadPoolExecutor(300, 350, 10,
 			TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>(1024),
 			new ThreadPoolExecutor.DiscardPolicy());
 
@@ -44,6 +44,11 @@ public class ExecutorPool {
 	 */
 	private static ScheduledExecutorService scheduledPool = Executors.newScheduledThreadPool(5);
 	private static Map<String, ScheduleTask> scheduleMap = new ConcurrentHashMap<String, ScheduleTask>();
+
+
+	static {
+		fixedPoolManual.allowCoreThreadTimeOut(true);
+	}
 
 	/**
 	 * 线程执行
@@ -75,8 +80,9 @@ public class ExecutorPool {
 			if(UserThreadUtil.getLeoUser()!=null){
 				name = UserThreadUtil.getLeoUser().getName();
 			}
-			System.out.println(Thread.currentThread()+" active cookie thread Start! user:"+name);
 			fixedPoolManual.execute(task);
+			System.out.println(Thread.currentThread()+" active cookie thread Start! user:"+name+" 线程池中线程数目：" + fixedPoolManual.getPoolSize() + "，队列中等待执行的任务数目：" +
+					fixedPoolManual.getQueue().size() + "，已执行完的任务数目：" + fixedPoolManual.getCompletedTaskCount());
 		}
 	}
 
