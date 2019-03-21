@@ -58,7 +58,6 @@ public class LeoController {
                 ServerResponse<LeoMessage> response = ServerResponse.createBySuccess("success",leoMessage);
                 response.setMsgType(MyWebSocket.MSG_TYPE_REFRESH_PRICE);
                 String d2 = dateFormat.format(new Date());
-                try {
 
                     if(StringUtils.hasText(leoMessage.getPrice()) && !Objects.equals(leoMessage.getPrice(),MyWebSocket.price)){
                         MyWebSocket.price = leoMessage.getPrice();
@@ -71,9 +70,7 @@ public class LeoController {
                         MyWebSocket.priceTime = DateUtil.getCurrentTime();
                         MyWebSocket.sendMsg(currentLoginUser.getName(),new Gson().toJson(response),true);
                     }
-                } catch (IOException e) {
-                    System.out.println("刷新价格，通过websocket发送结果给用户："+currentLoginUser+",失败！");
-                }
+
             });
         ServerResponse<LeoMessage> response = ServerResponse.createBySuccess(null);
         return response;
@@ -98,12 +95,10 @@ public class LeoController {
                 logger.error("提交订单请求：开始-"+d1+"  "+leoMessage.getMsg()+"  结束："+d2);
                 ServerResponse<LeoMessage> response = ServerResponse.createBySuccess("success",leoMessage);
                 response.setMsgType(MyWebSocket.MSG_TYPE_COMMIT_ORDERS);
-                try {
+
                     logger.debug("提交订单请求:"+param.getName()+"开始-"+d1+"    结束："+d2);
                     MyWebSocket.sendMsg(currentLoginUser.getName(),new Gson().toJson(response));
-                } catch (IOException e) {
-                    System.out.println("提交订单请求"+leoMessage.toString()+"，通过websocket发送结果给用户："+currentLoginUser+",失败！");
-                }
+
             });
         }
         ServerResponse<List<LeoMessage>> response = ServerResponse.createBySuccess("",result);
@@ -203,12 +198,10 @@ public class LeoController {
                 GetOrdersVo vo = new GetOrdersVo(leoMessage,param.getName());
                 ServerResponse<GetOrdersVo> response = ServerResponse.createBySuccess("success",vo);
                 response.setMsgType(MyWebSocket.MSG_TYPE_GET_ORDERS);
-                try {
+
                     logger.error("查询订单明细:"+param.getName()+"开始-"+d1+"    结束："+d2);
                     MyWebSocket.sendMsg(currentLoginUser.getName(),new Gson().toJson(response));
-                } catch (IOException e) {
-                    System.out.println("查询订单明细，通过websocket发送结果给用户："+currentLoginUser+",失败！");
-                }
+
             });
         }
         ServerResponse<Map<String,List<OrderDetail>>> response = ServerResponse.createBySuccess("success",result);
@@ -237,6 +230,22 @@ public class LeoController {
         }
         ServerResponse<Map<String,List<OrderDetail>>> response = ServerResponse.createBySuccess("success",result);
         return response;
+    }
+
+    @RequestMapping(value = "/leo/showAccount",method = RequestMethod.POST)
+    @ResponseBody
+    public ServerResponse<List<LeoMessage>> showAccount(@RequestBody List<CommitParam> userInfo) {
+        LeoUser currentLoginUser = UserThreadUtil.getLeoUser();
+        for(CommitParam o:userInfo){
+            ExecutorPool.executeOnCachedPool(()->{
+                o.setUserName(currentLoginUser.getName());
+                LeoMessage leoMessage = leoService.showAccount(o);
+                ServerResponse<LeoMessage> response = ServerResponse.createBySuccess("success",leoMessage);
+                response.setMsgType(MyWebSocket.MSG_TYPE_SHOW_ACCOUNT);
+                MyWebSocket.sendMsg(o.getUserName(),new Gson().toJson(response));
+            });
+        }
+        return ServerResponse.createBySuccess();
     }
 
     @RequestMapping(value = "/leo/login",method = RequestMethod.POST)

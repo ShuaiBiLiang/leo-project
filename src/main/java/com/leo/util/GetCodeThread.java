@@ -35,11 +35,9 @@ public class GetCodeThread implements Runnable{
             msg.setName(namePwdCookie.getName());
             ServerResponse<LeoMessage> response = ServerResponse.createBySuccess("success",msg);
             response.setMsgType(MyWebSocket.MSG_TYPE_GET_CODE);
-            try {
+
                 MyWebSocket.sendMsg(this.user.getName(),new Gson().toJson(response));
-            } catch (IOException e) {
-                System.out.println("发送验证码错误，通过websocket发送结果给用户："+this.user.getName()+",失败！");
-            }
+
 
         }
 

@@ -1,5 +1,6 @@
 package com.leo.service.impl;
 
+import com.leo.model.CommitParam;
 import com.leo.model.LeoMessage;
 import com.leo.model.NamePwdCookie;
 import com.leo.model.OrderDetail;
@@ -50,26 +51,80 @@ public class LeoServiceImpl implements ILeoService {
     }
 
     @Override
+    public LeoMessage showAccount(CommitParam commitParam) {
+        String htmlResponse = getLeoIndexHtml(commitParam.getCookie());
+        int index = htmlResponse.indexOf("ctl00$ContentPlaceHolder1$txtBuyMinPrice_value");
+        LeoMessage leoMessage = new LeoMessage();
+        if (index > 0) {
+            String pricePiece = htmlResponse.substring(index, index + 80);
+            Matcher matcher = patternPrice.matcher(pricePiece);
+            if (matcher.find()) {
+                pricePiece = matcher.group(1);
+            }
+            Matcher matcher2 = patternBalance.matcher(htmlResponse);
+            if (matcher2.find()) {
+                String s2 = matcher2.group(1);
+                leoMessage.setAvailableBalance(s2);
+            }
+            Matcher matcher3 = patternAccount.matcher(htmlResponse);
+            if (matcher3.find()) {
+                String s2 = matcher3.group(1);
+                leoMessage.setEarningAccount(s2);
+            }
+            leoMessage.setPrice(pricePiece);
+            leoMessage.setLoginError(false);
+            leoMessage.setMsg("价格刷新成功！");
+        }else {
+            logger.error("刷新价格出错");
+            leoMessage.setPrice("");
+            leoMessage.setEarningAccount("");
+            leoMessage.setAvailableBalance("");
+            leoMessage.setMsg("刷新失败，Leo平台网络繁忙!");
+            leoMessage.setLoginError(true);
+        }
+        leoMessage.setName(commitParam.getName());
+        return leoMessage;
+    }
+
+    @Override
     public LeoMessage refreshPrice(String cookie, String name, boolean notRecive) {
         SimpleDateFormat s1 = new SimpleDateFormat("HH:mm:ss");
         String d1 = s1.format(new Date());
         long t1 = System.currentTimeMillis();
-        logger.error((notRecive ? "(激活cookie)" : "") + "刷新价格-访问时间：" + d1);
         LeoMessage leoMessage = new LeoMessage();
         URL realUrl = null;
+        String htmlResponse = getLeoIndexHtml(cookie);
+        int index = htmlResponse.indexOf("ctl00$ContentPlaceHolder1$txtBuyMinPrice_value");
+        if (index > 0) {
+            String pricePiece = htmlResponse.substring(index, index + 80);
+            Matcher matcher = patternPrice.matcher(pricePiece);
+            if (matcher.find()) {
+                pricePiece = matcher.group(1);
+            }
+            leoMessage.setPrice(pricePiece);
+            leoMessage.setLoginError(false);
+            leoMessage.setMsg("价格刷新成功！");
+        }else {
+            logger.error("刷新价格出错");
+            leoMessage.setPrice("");
+            leoMessage.setMsg("刷新失败，Leo平台网络繁忙!");
+            leoMessage.setLoginError(true);
+        }
+        leoMessage.setName(name);
+        return leoMessage;
+    }
+
+    private String getLeoIndexHtml(String cookie) {
+        URL realUrl;
         HttpURLConnection conn = null;
+        String htmlResponse = "";
         try {
             realUrl = new URL("http://www.platform.leocoin.org/Default.aspx");
             conn = (HttpURLConnection) realUrl.openConnection();
             conn.setRequestMethod("GET");
             conn.setUseCaches(false);
-            if (notRecive) {
-                conn.setReadTimeout(30000);
-                conn.setConnectTimeout(3000);
-            } else {
-                conn.setReadTimeout(500000);
-                conn.setConnectTimeout(300000);
-            }
+            conn.setReadTimeout(500000);
+            conn.setConnectTimeout(300000);
             conn.setInstanceFollowRedirects(false);
             conn.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
             conn.setRequestProperty("Accept-Language", "zh-CN,zh;q=0.8,en;q=0.6");
@@ -91,46 +146,18 @@ public class LeoServiceImpl implements ILeoService {
                 while ((line = in.readLine()) != null) {
                     buffer.append(line);
                 }
-                String result = buffer.toString();
-                int index = result.indexOf("ctl00$ContentPlaceHolder1$txtBuyMinPrice_value");
-                long l2 = System.currentTimeMillis();
-                String d2 = s1.format(new Date());
-                if (index > 0) {
-                    String pricePiece = result.substring(index, index + 80);
-                    Pattern pattern = Pattern.compile("value=\"([\\d|.]*)\"");
-                    Matcher matcher = pattern.matcher(pricePiece);
-                    if (matcher.find()) {
-                        pricePiece = matcher.group(1);
-                    }
-                    String msg = "【开始:" + d1 + "结束:" + d2 + ";响应耗时：" + (l2 - t1) / 1000 + "秒;价格：" + pricePiece + "】";
-                    leoMessage.setPrice(pricePiece);
-                    leoMessage.setLoginError(false);
-                    leoMessage.setMsg("价格刷新成功！");
-                }
+                htmlResponse = buffer.toString();
                 in.close();
                 is.close();
-            } else {
-                leoMessage.setPrice("");
-                leoMessage.setMsg("价格获取失败，请点击重新登录！");
-                leoMessage.setLoginError(true);
             }
         } catch (Exception e) {
             logger.error("刷新价格出错", e);
-            leoMessage.setPrice("");
-            leoMessage.setMsg("刷新失败，Leo平台网络繁忙!");
-            leoMessage.setLoginError(true);
         } finally {
             if (conn != null) {
                 conn.disconnect();
             }
         }
-        long t2 = System.currentTimeMillis();
-        String d2 = s1.format(new Date());
-        if (!notRecive) {
-            logger.error((notRecive ? "(激活cookie)" : "") + "返回时间：" + d2 + "  耗时：" + (t2 - t1) + "ms");
-        }
-        leoMessage.setName(name);
-        return leoMessage;
+        return htmlResponse;
     }
 
     @Override
@@ -381,8 +408,20 @@ public class LeoServiceImpl implements ILeoService {
 //        for(NamePwdCookie cookie:cookies){
 //            logger.debug("name:"+cookie.getName() +" cookie:"+cookie.getCookie());
 //        }
-        List<OrderDetail> details = getOrderDetailFromHtml("");
-        details.forEach(o -> logger.debug(o));
+//        List<OrderDetail> details = getOrderDetailFromHtml("");
+//        details.forEach(o -> logger.debug(o));
+
+        String s = "<input name=\"ctl00$ContentPlaceHolder1$txtEarningAccount_value\" type=\"text\" value=\"Â£68.46\" readonly=\"readonly\" id=\"ctl00_ContentPlaceHolder1_txtEarningAccount_value\" class=\"pull-right\" />";
+        Pattern p = Pattern.compile("ctl00\\$ContentPlaceHolder1\\$txtEarningAccount_value\" type=\"text\" value=\"([\\S|\\s]*?)\"");
+        Matcher matcher = p.matcher(s);
+
+
+        if (matcher.find()) {
+            String s2 = matcher.group(1);
+//            String s3 = matcher.group(2);
+            System.out.println(s2);
+        }
+
     }
 
     private static List<OrderDetail> getOrderDetailFromHtml(String html) {

@@ -34,11 +34,9 @@ public class CancleOrderThread implements Runnable{
             OrderDetail msg = leoService.cancelOrder(orderDetail);
             ServerResponse<OrderDetail> response = ServerResponse.createBySuccess("success",msg);
             response.setMsgType(MyWebSocket.MSG_TYPE_CANCLE_ORDER);
-            try {
+
                 MyWebSocket.sendMsg(this.user.getName(), new Gson().toJson(response));
-            } catch (IOException e) {
-                System.out.println("取消订单，通过websocket发送结果给用户："+this.user.getName()+",失败！");
-            }
+
             latch.countDown();
         }
 

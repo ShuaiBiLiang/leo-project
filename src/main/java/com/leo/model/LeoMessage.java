@@ -16,6 +16,8 @@ public class LeoMessage {
     String endTime;
     String error;
     String cookie;
+    String availableBalance;
+    String earningAccount;
     boolean loginError;
 
     public String getPrice() {
@@ -112,5 +114,21 @@ public class LeoMessage {
                 ", error='" + error + '\'' +
                 ", loginError=" + loginError +
                 '}';
+    }
+
+    public String getAvailableBalance() {
+        return availableBalance;
+    }
+
+    public void setAvailableBalance(String availableBalance) {
+        this.availableBalance = availableBalance;
+    }
+
+    public String getEarningAccount() {
+        return earningAccount;
+    }
+
+    public void setEarningAccount(String earningAccount) {
+        this.earningAccount = earningAccount;
     }
 }

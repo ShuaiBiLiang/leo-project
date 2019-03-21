@@ -39,11 +39,9 @@ public class GetCookiesThread implements Runnable{
 
             ServerResponse<NamePwdCookie> response = ServerResponse.createBySuccess("success",namePwdCookie);
             response.setMsgType(MyWebSocket.MSG_TYPE_GET_COOKIE);
-            try {
+
                 MyWebSocket.sendMsg(this.user.getName(),new Gson().toJson(response));
-            } catch (IOException e) {
-                System.out.println("登录leo帐号，通过websocket发送结果给用户："+this.user.getName()+",失败！");
-            }
+
             String name = user.getName();
             if(UserLeoUtil.getInstance()!=null){
                 List<NamePwdCookie> namePwdCookieList= UserLeoUtil.getInstance().get(name);

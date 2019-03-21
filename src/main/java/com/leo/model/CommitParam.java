@@ -5,6 +5,7 @@ public class CommitParam {
     String cookie;
     String price;
     String num;
+    String userName;
 
     public String getCookie() {
         return cookie;
@@ -36,5 +37,13 @@ public class CommitParam {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 }

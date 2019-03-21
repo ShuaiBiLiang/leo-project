@@ -34,6 +34,7 @@ public class MyWebSocket {
     public static int MSG_TYPE_CANCLE_ORDER = 5;
     public static int MSG_TYPE_STOP_LINK = 6;
     public static int MSG_TYPE_GET_CODE = 7;
+    public static int MSG_TYPE_SHOW_ACCOUNT = 8;
 
     private static ConcurrentHashMap<String,Session> sessionMap = new ConcurrentHashMap<>();
 
@@ -127,21 +128,22 @@ public class MyWebSocket {
      @OnError
      public void onError(Session session, Throwable error) {
          log.error("发生错误：{}，Session ID： {}",error.getMessage(),session.getId());
-         error.printStackTrace();
+//         error.printStackTrace();
      }
 
 
-    public static void sendMsg(String userName, String json) throws IOException {
+    public static void sendMsg(String userName, String json) {
         sendMsg(userName,json,false);
     }
 
-    public static void sendMsg(String userName, String json, boolean sendOther) throws IOException {
+    public static void sendMsg(String userName, String json, boolean sendOther) {
+        try {
         if(!CollectionUtils.isEmpty(sessionMap)){
             Session socket = sessionMap.get(userName);
 
             if(socket!=null){
                 synchronized(socket){
-                    socket.getBasicRemote().sendText(json);
+                        socket.getBasicRemote().sendText(json);
                 }
             }else {
                 log.error("发送消息失败！用户："+userName+" websocket 连接已断开。");
@@ -162,6 +164,9 @@ public class MyWebSocket {
             }
         }else {
             log.error("发送消息失败！websocket 连接池里没人。");
+        }
+        } catch (IOException e) {
+            log.error("发送消息给"+userName+"失败！",e);
         }
     }
 
