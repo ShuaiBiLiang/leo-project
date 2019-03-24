@@ -33,6 +33,10 @@ public class ExecutorPool {
 			TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>(1024),
 			new ThreadPoolExecutor.DiscardPolicy());
 
+	private static ThreadPoolExecutor poolForShowAccount = new ThreadPoolExecutor(150, 150, 10,
+			TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>(1024),
+			new ThreadPoolExecutor.DiscardPolicy());
+
 
 	/**
 	 *  单线程化的线程池，它只会用唯一的工作线程来执行任务，保证所有任务按照指定顺序(FIFO, LIFO, 优先级)执行
@@ -83,6 +87,22 @@ public class ExecutorPool {
 			fixedPoolManual.execute(task);
 			System.out.println(Thread.currentThread()+" active cookie thread Start! user:"+name+" 线程池中线程数目：" + fixedPoolManual.getPoolSize() + "，队列中等待执行的任务数目：" +
 					fixedPoolManual.getQueue().size() + "，已执行完的任务数目：" + fixedPoolManual.getCompletedTaskCount());
+		}
+	}
+
+	/**
+	 * 通过手动创建线程池执行线程
+	 * @param task
+	 */
+	public static void executeForShowAccount(Runnable task) {
+		if (task != null) {
+			String name = "";
+			if(UserThreadUtil.getLeoUser()!=null){
+				name = UserThreadUtil.getLeoUser().getName();
+			}
+			poolForShowAccount.execute(task);
+			System.out.println(Thread.currentThread()+" show account thread Start! user:"+name+" 线程池中线程数目：" + poolForShowAccount.getPoolSize() + "，队列中等待执行的任务数目：" +
+					poolForShowAccount.getQueue().size() + "，已执行完的任务数目：" + poolForShowAccount.getCompletedTaskCount());
 		}
 	}
 

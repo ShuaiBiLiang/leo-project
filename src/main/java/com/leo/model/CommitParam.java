@@ -7,6 +7,9 @@ public class CommitParam {
     String num;
     String userName;
 
+    String availableBalance;
+    String earningAccount;
+
     public String getCookie() {
         return cookie;
     }
@@ -45,5 +48,21 @@ public class CommitParam {
 
     public void setUserName(String userName) {
         this.userName = userName;
+    }
+
+    public String getAvailableBalance() {
+        return availableBalance;
+    }
+
+    public void setAvailableBalance(String availableBalance) {
+        this.availableBalance = availableBalance;
+    }
+
+    public String getEarningAccount() {
+        return earningAccount;
+    }
+
+    public void setEarningAccount(String earningAccount) {
+        this.earningAccount = earningAccount;
     }
 }

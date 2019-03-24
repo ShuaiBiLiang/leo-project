@@ -19,13 +19,11 @@ import java.util.concurrent.CountDownLatch;
 public class GetCookiesThread implements Runnable{
 
     ILeoService leoService;
-    CountDownLatch latch;
     NamePwdCookie namePwdCookie;
     LeoUser user;
 
-    public GetCookiesThread(LeoUser user, ILeoService service, CountDownLatch countDownLatch, NamePwdCookie namePwdCookie){
+    public GetCookiesThread(LeoUser user, ILeoService service, NamePwdCookie namePwdCookie){
         this.leoService = service;
-        this.latch = countDownLatch;
         this.namePwdCookie = namePwdCookie;
         this.user = user;
     }
@@ -33,8 +31,11 @@ public class GetCookiesThread implements Runnable{
         public void run() {
 
             LeoMessage msg = leoService.getCookie(namePwdCookie.getName()+" "+namePwdCookie.getPwd()+" "+namePwdCookie.getCode());
-            String cookie = msg.getMsg();
-            namePwdCookie.setCookie(cookie);
+            String cookie = msg.getCookie();
+            if(!msg.isLoginError()){
+                namePwdCookie.setCookie(cookie);
+            }
+            namePwdCookie.setLoginMsg(msg.getMsg());
             namePwdCookie.setLoginError(msg.isLoginError());
 
             ServerResponse<NamePwdCookie> response = ServerResponse.createBySuccess("success",namePwdCookie);
@@ -53,7 +54,6 @@ public class GetCookiesThread implements Runnable{
                 }
                 UserLeoUtil.getInstance().put(name,namePwdCookieList);
             }
-            latch.countDown();
         }
 
 }

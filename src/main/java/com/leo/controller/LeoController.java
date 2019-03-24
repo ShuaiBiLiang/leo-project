@@ -199,10 +199,14 @@ public class LeoController {
                 ServerResponse<GetOrdersVo> response = ServerResponse.createBySuccess("success",vo);
                 response.setMsgType(MyWebSocket.MSG_TYPE_GET_ORDERS);
 
-                    logger.error("查询订单明细:"+param.getName()+"开始-"+d1+"    结束："+d2);
-                    MyWebSocket.sendMsg(currentLoginUser.getName(),new Gson().toJson(response));
+                logger.error("查询订单明细:"+param.getName()+"开始-"+d1+"    结束："+d2);
+                MyWebSocket.sendMsg(currentLoginUser.getName(),new Gson().toJson(response));
 
             });
+            if(StringUtils.isEmpty(param.getAvailableBalance())||
+                    StringUtils.isEmpty(param.getEarningAccount())){
+                ExecutorPool.executeOnCachedPool(new GetBalanceAccountThread(currentLoginUser.getName(),param.getName(),param.getCookie()));
+            }
         }
         ServerResponse<Map<String,List<OrderDetail>>> response = ServerResponse.createBySuccess("success",result);
         return response;
@@ -237,7 +241,7 @@ public class LeoController {
     public ServerResponse<List<LeoMessage>> showAccount(@RequestBody List<CommitParam> userInfo) {
         LeoUser currentLoginUser = UserThreadUtil.getLeoUser();
         for(CommitParam o:userInfo){
-            ExecutorPool.executeOnCachedPool(()->{
+            ExecutorPool.executeForShowAccount(()->{
                 o.setUserName(currentLoginUser.getName());
                 LeoMessage leoMessage = leoService.showAccount(o);
                 ServerResponse<LeoMessage> response = ServerResponse.createBySuccess("success",leoMessage);

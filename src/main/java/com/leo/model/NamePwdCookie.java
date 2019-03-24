@@ -11,6 +11,7 @@ public class NamePwdCookie {
     private String pwd;
     private String code;
     private String cookie;
+    private String loginMsg;
     private boolean loginError;
 
     public NamePwdCookie() {
@@ -74,5 +75,13 @@ public class NamePwdCookie {
     @Override
     public int hashCode() {
         return Objects.hash(name);
+    }
+
+    public String getLoginMsg() {
+        return loginMsg;
+    }
+
+    public void setLoginMsg(String loginMsg) {
+        this.loginMsg = loginMsg;
     }
 }

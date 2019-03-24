@@ -290,7 +290,8 @@ public class LeoServiceImpl implements ILeoService {
                     leoMessage.setMsg("验证码错误！");
                     leoMessage.setLoginError(true);
                 }else {
-                    leoMessage.setMsg(cookie);
+                    leoMessage.setMsg("成功");
+                    leoMessage.setLoginError(false);
                     logger.error("登录成功"+leoMessage);
                 }
             }else{
@@ -338,7 +339,7 @@ public class LeoServiceImpl implements ILeoService {
         List<NamePwdCookie> namePwdCookieList = new ArrayList<>();
         LeoUser currentLoginUser = UserThreadUtil.getLeoUser();
         for (NamePwdCookie user : requestNames) {
-            Thread thread = new Thread(new GetCookiesThread(currentLoginUser,this, latch, user));
+            Thread thread = new Thread(new GetCookiesThread(currentLoginUser,this, user));
             namePwdCookieList.add(user);
             user.setLoginError(true);
             thread.start();
