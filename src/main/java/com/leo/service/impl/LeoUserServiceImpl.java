@@ -83,7 +83,9 @@ public class LeoUserServiceImpl extends BaseServiceImpl<LeoUser, Long> implement
             if(accept.getEndtime()!=null && accept.getEndtime()>0){
                 endtime = accept.getEndtime();
             }else if(accept.getAddDay()!=null && accept.getAddDay()>0){
-                endtime = user.getEndtime()+(24*60*60*1000)*accept.getAddDay();
+                long ct = System.currentTimeMillis();
+                long bigTime = ct>user.getEndtime()?ct:user.getEndtime();
+                endtime = bigTime+(24*60*60*1000)*accept.getAddDay();
             }else {
                 return null;
             }

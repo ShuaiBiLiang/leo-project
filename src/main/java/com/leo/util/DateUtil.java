@@ -277,10 +277,10 @@ public class DateUtil {
 	public static long getTimeByDay(int day) {
 		Calendar calendar = getCalendarInstance();
 
-		calendar.set(Calendar.HOUR_OF_DAY, 23);
-		calendar.set(Calendar.MINUTE, 59);
-		calendar.set(Calendar.SECOND, 59);
-		calendar.set(Calendar.MILLISECOND,0);
+//		calendar.set(Calendar.HOUR_OF_DAY, 23);
+//		calendar.set(Calendar.MINUTE, 59);
+//		calendar.set(Calendar.SECOND, 59);
+//		calendar.set(Calendar.MILLISECOND,0);
 		calendar.set(Calendar.DATE, calendar.get(Calendar.DATE) + day);
 		return calendar.getTime().getTime();
 	}
