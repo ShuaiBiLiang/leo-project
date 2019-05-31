@@ -25,8 +25,11 @@ import java.util.Arrays;
 @EnableScheduling
 // extends SpringBootServletInitializer
 public class DemoApplication {
-
+//	static JframeMain f = new JframeMain();
 	public static void main(String[] args) {
+		System. setProperty("java.awt.headless", "false");
+		JframeMain f = new JframeMain();
+		f.launchFrame();
 		SpringApplication.run(DemoApplication.class, args);
 	}
 
@@ -53,14 +56,6 @@ public class DemoApplication {
 //	@Bean
 	public CommandLineRunner commandLineRunner(ApplicationContext ctx) {
 		return args -> {
-
-			System.out.println("Let's inspect the beans provided by Spring Boot:");
-
-			String[] beanNames = ctx.getBeanDefinitionNames();
-			Arrays.sort(beanNames);
-			for (String beanName : beanNames) {
-				System.out.println(beanName);
-			}
 			// 打开浏览器，输入地址。
 			try {
 				Runtime.getRuntime().exec(
